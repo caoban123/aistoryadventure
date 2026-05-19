@@ -20,7 +20,7 @@ Frontend:
 cd frontend
 python -m http.server 5500
 ```
-
+python3 -m http.server 5500
 Open:
 
 - Player: `http://localhost:5500`
