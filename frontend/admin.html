@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Story Adventure Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="admin.css?v=admin-v2-readiness-1" />
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <main class="admin-app">
+    <section id="adminLoginView" class="admin-login-view">
+      <div class="admin-login-card glass-panel">
+        <p class="eyebrow">Admin Realm</p>
+        <h1>Control Console</h1>
+        <p class="admin-muted">
+          Sign in with a Firebase account that has the backend admin claim.
+        </p>
+
+        <button id="adminGoogleLoginBtn" type="button" class="primary-btn">
+          Continue with Google
+        </button>
+
+        <div class="admin-login-divider">or</div>
+
+        <label>
+          <span>Email</span>
+          <input id="adminEmailInput" type="email" autocomplete="email" />
+        </label>
+
+        <label>
+          <span>Password</span>
+          <input id="adminPasswordInput" type="password" autocomplete="current-password" />
+        </label>
+
+        <button id="adminEmailLoginBtn" type="button" class="ghost">
+          Sign In
+        </button>
+
+        <p id="adminLoginStatus" class="admin-status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section id="adminDeniedView" class="admin-denied-view hidden">
+      <div class="admin-login-card glass-panel">
+        <p class="eyebrow">Access Denied</p>
+        <h1>No Admin Claim</h1>
+        <p id="adminDeniedText" class="admin-muted">
+          This account is signed in, but the backend did not confirm admin access.
+        </p>
+        <div class="admin-action-row">
+          <button id="adminRetryAccessBtn" type="button" class="primary-btn">Retry Access</button>
+          <button id="adminDeniedLogoutBtn" type="button" class="ghost">Logout</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="adminDashboardView" class="admin-dashboard-view hidden">
+      <header class="admin-topbar glass-panel">
+        <div>
+          <p class="eyebrow">AI Story Adventure</p>
+          <h1>Admin Control</h1>
+          <p id="adminStatus" class="admin-status" aria-live="polite">Loading admin data...</p>
+        </div>
+        <div class="admin-topbar-actions">
+          <span id="adminIdentity" class="admin-identity"></span>
+          <button id="adminRefreshBtn" type="button" class="primary-btn">Refresh</button>
+          <button id="adminLogoutBtn" type="button" class="ghost">Logout</button>
+        </div>
+      </header>
+
+      <nav class="admin-tabs glass-panel" aria-label="Admin sections">
+        <button class="admin-tab active" type="button" data-admin-tab="overview">Overview</button>
+        <button class="admin-tab" type="button" data-admin-tab="usage">AI Usage</button>
+        <button class="admin-tab" type="button" data-admin-tab="users">Users</button>
+        <button class="admin-tab" type="button" data-admin-tab="sessions">Sessions</button>
+        <button class="admin-tab" type="button" data-admin-tab="system">System Config</button>
+        <button class="admin-tab" type="button" data-admin-tab="audit">Audit</button>
+      </nav>
+
+      <section class="admin-stats-grid" aria-label="Admin overview">
+        <article class="admin-stat-card glass-panel">
+          <span>Sessions</span>
+          <strong id="adminTotalSessions">-</strong>
+        </article>
+        <article class="admin-stat-card glass-panel">
+          <span>Users</span>
+          <strong id="adminUsersCount">-</strong>
+        </article>
+        <article class="admin-stat-card glass-panel">
+          <span>Usage Today</span>
+          <strong id="adminUsageToday">-</strong>
+        </article>
+        <article class="admin-stat-card glass-panel">
+          <span>Errors Today</span>
+          <strong id="adminUsageErrorsToday">-</strong>
+        </article>
+        <article class="admin-stat-card glass-panel">
+          <span>Est. Tokens Today</span>
+          <strong id="adminEstimatedTokensToday">-</strong>
+        </article>
+        <article class="admin-stat-card glass-panel">
+          <span>Points Spent Today</span>
+          <strong id="adminPointsSpentToday">-</strong>
+        </article>
+        <article class="admin-stat-card glass-panel">
+          <span>Banned</span>
+          <strong id="adminBannedCount">-</strong>
+        </article>
+        <article class="admin-stat-card glass-panel">
+          <span>Rate Limit</span>
+          <strong id="adminRateLimitState">-</strong>
+        </article>
+      </section>
+
+      <section class="admin-tab-panel active" data-admin-panel="overview">
+        <section class="admin-grid">
+          <article class="admin-card glass-panel">
+            <p class="eyebrow">System</p>
+            <h2>Backend Status</h2>
+            <div id="adminSystemFacts" class="admin-kv-grid" aria-live="polite"></div>
+          </article>
+
+          <article class="admin-card glass-panel">
+            <p class="eyebrow">Usage</p>
+            <h2>Cost Guard</h2>
+            <div id="adminUsageFacts" class="admin-kv-grid" aria-live="polite"></div>
+          </article>
+
+          <article class="admin-card glass-panel">
+            <p class="eyebrow">Production</p>
+            <h2>Readiness</h2>
+            <div id="adminReadinessSummary" class="admin-readiness-summary" aria-live="polite"></div>
+            <div id="adminReadinessList" class="admin-readiness-list" aria-live="polite"></div>
+          </article>
+        </section>
+
+        <section class="admin-grid wide">
+          <article class="admin-card glass-panel">
+            <p class="eyebrow">Errors</p>
+            <h2>Recent AI Errors</h2>
+            <div id="adminRecentErrorsList" class="admin-list compact" aria-live="polite"></div>
+          </article>
+
+          <article class="admin-card glass-panel">
+            <p class="eyebrow">Audit</p>
+            <h2>Recent Admin Actions</h2>
+            <pre id="adminAuditPreview" class="admin-output compact" aria-live="polite"></pre>
+          </article>
+        </section>
+      </section>
+
+      <section class="admin-tab-panel" data-admin-panel="usage">
+        <section class="admin-grid">
+          <article class="admin-card glass-panel">
+            <p class="eyebrow">Today</p>
+            <h2>AI Usage</h2>
+            <div id="adminUsageTodayFacts" class="admin-kv-grid" aria-live="polite"></div>
+          </article>
+
+          <article class="admin-card glass-panel">
+            <p class="eyebrow">30 Days</p>
+            <h2>Usage Window</h2>
+            <div id="adminUsageThirtyFacts" class="admin-kv-grid" aria-live="polite"></div>
+          </article>
+        </section>
+
+        <section class="admin-grid wide">
+          <article class="admin-card glass-panel">
+            <p class="eyebrow">Users</p>
+            <h2>Top Usage</h2>
+            <div id="adminUsageUsersList" class="admin-list" aria-live="polite"></div>
+          </article>
+
+          <article class="admin-card glass-panel">
+            <p class="eyebrow">Events</p>
+            <h2>Recent Usage Logs</h2>
+            <div id="adminUsageList" class="admin-list" aria-live="polite"></div>
+          </article>
+        </section>
+      </section>
+
+      <section class="admin-tab-panel" data-admin-panel="users">
+        <section class="admin-grid">
+          <article class="admin-card glass-panel">
+            <p class="eyebrow">User Control</p>
+            <h2>Points & Ban</h2>
+
+            <label>
+              <span>Target UID</span>
+              <input id="adminTargetUid" type="text" placeholder="Firebase uid" />
+            </label>
+
+            <div class="admin-action-row">
+              <label>
+                <span>Point delta</span>
+                <input id="adminPointDelta" type="number" step="1" placeholder="100" />
+              </label>
+              <label>
+                <span>Reason</span>
+                <input id="adminPointReason" type="text" maxlength="240" placeholder="Manual grant" />
+              </label>
+            </div>
+
+            <button id="adminAdjustPointsBtn" type="button" class="primary-btn">
+              Apply Points
+            </button>
+
+            <label>
+              <span>Ban reason</span>
+              <input id="adminBanReason" type="text" maxlength="240" placeholder="Reason shown to the player" />
+            </label>
+
+            <div class="admin-action-row">
+              <button id="adminBanUserBtn" type="button" class="danger-btn">Ban User</button>
+              <button id="adminUnbanUserBtn" type="button" class="ghost">Unban User</button>
+            </div>
+          </article>
+
+          <article class="admin-card glass-panel">
+            <p class="eyebrow">Privacy</p>
+            <h2>Log Viewer Policy</h2>
+            <p class="admin-muted">
+              This dashboard shows user metadata, short story previews, usage events, and error kinds only.
+              It does not render full player conversations.
+            </p>
+          </article>
+        </section>
+
+        <article class="admin-card glass-panel">
+          <p class="eyebrow">Users</p>
+          <h2>Known Players</h2>
+          <div id="adminUsersList" class="admin-list" aria-live="polite"></div>
+        </article>
+      </section>
+
+      <section class="admin-tab-panel" data-admin-panel="sessions">
+        <article class="admin-card glass-panel">
+          <p class="eyebrow">Sessions</p>
+          <h2>Recent Activity</h2>
+          <p class="admin-muted">
+            Metadata and short previews only. Full conversation content is intentionally hidden in this admin v2.
+          </p>
+          <div id="adminSessionsList" class="admin-list" aria-live="polite"></div>
+        </article>
+      </section>
+
+      <section class="admin-tab-panel" data-admin-panel="system">
+        <section class="admin-grid">
+          <article class="admin-card glass-panel">
+            <p class="eyebrow">Controls</p>
+            <h2>Maintenance & Points</h2>
+
+            <label class="admin-toggle-row">
+              <input id="adminMaintenanceToggle" type="checkbox" />
+              <span>Maintenance mode</span>
+            </label>
+
+            <label>
+              <span>Maintenance message</span>
+              <textarea id="adminMaintenanceMessage" rows="3"></textarea>
+            </label>
+
+            <label class="admin-toggle-row">
+              <input id="adminPointsToggle" type="checkbox" />
+              <span>Enable point spending</span>
+            </label>
+
+            <div class="admin-cost-grid">
+              <label>
+                <span>Adventure</span>
+                <input id="adminCostAdventure" type="number" min="0" step="1" />
+              </label>
+              <label>
+                <span>Novel World</span>
+                <input id="adminCostNovelWorld" type="number" min="0" step="1" />
+              </label>
+              <label>
+                <span>Novel Foundation</span>
+                <input id="adminCostNovelFoundation" type="number" min="0" step="1" />
+              </label>
+              <label>
+                <span>Turn</span>
+                <input id="adminCostTurn" type="number" min="0" step="1" />
+              </label>
+            </div>
+          </article>
+
+          <article class="admin-card glass-panel">
+            <p class="eyebrow">Rate Limit</p>
+            <h2>Daily Limits</h2>
+
+            <label class="admin-toggle-row">
+              <input id="adminRateLimitToggle" type="checkbox" />
+              <span>Enable daily rate limit</span>
+            </label>
+
+            <div class="admin-cost-grid">
+              <label>
+                <span>Turns / day</span>
+                <input id="adminDailyTurnLimit" type="number" min="0" step="1" />
+              </label>
+              <label>
+                <span>Creates / day</span>
+                <input id="adminDailyCreateLimit" type="number" min="0" step="1" />
+              </label>
+              <label>
+                <span>Log retention days</span>
+                <input id="adminUsageRetentionDays" type="number" min="1" max="365" step="1" />
+              </label>
+            </div>
+
+            <p class="admin-muted">
+              API keys are not editable in this web console. Rotate keys through server secrets or `.env`,
+              then restart the backend.
+            </p>
+          </article>
+        </section>
+
+        <button id="adminSaveSettingsBtn" type="button" class="primary-btn admin-save-wide">
+          Save System Settings
+        </button>
+      </section>
+
+      <section class="admin-tab-panel" data-admin-panel="audit">
+        <article class="admin-card glass-panel">
+          <p class="eyebrow">Audit</p>
+          <h2>Recent Admin Actions</h2>
+          <pre id="adminOutput" class="admin-output" aria-live="polite"></pre>
+        </article>
+      </section>
+    </section>
+  </main>
+
+  <script src="config.js?v=config-1"></script>
+  <script type="module" src="admin.js?v=admin-v2-readiness-1"></script>
+</body>
+</html>

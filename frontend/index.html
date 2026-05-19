@@ -1,0 +1,2027 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Story Adventure</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=player-app-5" />
+</head>
+<body data-page="loginPage">
+
+  <!-- Ambient background -->
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+  <div class="ambient ambient-three"></div>
+
+  <!-- Particle canvas -->
+  <canvas id="particleCanvas"></canvas>
+<header class="portal-navbar glass-panel">
+  <div class="nav-left">
+    <button id="homeNavBtn" class="nav-logo-btn" type="button" aria-label="Go to Home">
+      <svg class="nav-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="20" fill="url(#navCoreGlow)" opacity="0.4"/>
+        <ellipse cx="50" cy="50" rx="42" ry="12" transform="rotate(30 50 50)" stroke="var(--accent)" stroke-width="1.5" fill="none" opacity="0.6"/>
+        <ellipse cx="50" cy="50" rx="42" ry="12" transform="rotate(-30 50 50)" stroke="var(--accent)" stroke-width="1.5" fill="none" opacity="0.6"/>
+        <ellipse cx="50" cy="50" rx="42" ry="12" transform="rotate(90 50 50)" stroke="var(--accent2)" stroke-width="1" fill="none" opacity="0.4"/>
+        <circle cx="50" cy="50" r="28" stroke="var(--accent)" stroke-width="1" fill="none" opacity="0.5" stroke-dasharray="4 4"/>
+        <path d="M50 15 C50 38, 38 50, 15 50 C38 50, 50 62, 50 85 C50 62, 62 50, 85 50 C62 50, 50 38, 50 15 Z" fill="var(--accent)"/>
+        <circle cx="50" cy="50" r="4" fill="#ffffff"/>
+        <circle cx="20" cy="25" r="1.5" fill="var(--accent2)"/>
+        <circle cx="80" cy="75" r="1.5" fill="var(--accent2)"/>
+        <circle cx="75" cy="20" r="1.5" fill="var(--accent2)"/>
+        <circle cx="25" cy="80" r="1.5" fill="var(--accent2)"/>
+        <defs>
+          <radialGradient id="navCoreGlow" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0%" stop-color="var(--accent)" stop-opacity="1"/>
+            <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+      </svg>
+    </button>
+
+    <button id="homeTabBtn" class="nav-tab active" type="button">
+      <span class="nav-tab-icon">⌂</span>
+      <span>Home</span>
+    </button>
+
+    <button id="discoverTabBtn" class="nav-tab" type="button">
+      <span class="nav-tab-icon">◒</span>
+      <span>Discover</span>
+    </button>
+
+    <button id="savesTabBtn" class="nav-tab" type="button">
+      <span class="nav-tab-icon">▰</span>
+      <span>History</span>
+    </button>
+  </div>
+
+  <div class="nav-search">
+    <span class="nav-search-icon">⌕</span>
+    <input
+      id="globalSearchInput"
+      type="text"
+      placeholder="Search"
+      autocomplete="off"
+    />
+  </div>
+
+  <div class="nav-right">
+    <button
+      id="globalSearchToggle"
+      class="nav-search-toggle"
+      type="button"
+      aria-label="Open search"
+      aria-expanded="false"
+      aria-controls="globalSearchInput"
+    >
+      ⌕
+    </button>
+
+    <div class="nav-user-menu">
+  <button id="navAvatarBtn" class="nav-avatar-btn" type="button" aria-label="Open profile menu" aria-haspopup="menu" aria-expanded="false">
+    <div id="navAvatar" class="nav-avatar-empty">
+      <span>●</span>
+    </div>
+  </button>
+
+  <div id="avatarDropdown" class="avatar-dropdown hidden">
+    <div class="avatar-dropdown-profile">
+      <div id="dropdownAvatar" class="dropdown-avatar">
+        <span>?</span>
+      </div>
+
+      <div>
+        <strong id="dropdownUserName">Guest</strong>
+        <span id="dropdownUserEmail">Not signed in</span>
+      </div>
+    </div>
+
+    <div class="avatar-dropdown-divider"></div>
+
+    <button id="dropdownProfileBtn" type="button">
+      <span>◉</span>
+      Profile Settings
+    </button>
+
+    <div class="avatar-dropdown-divider"></div>
+
+    <button id="dropdownLogoutBtn" type="button" class="danger-dropdown-btn">
+      <span>↪</span>
+      Logout
+    </button>
+  </div>
+</div>
+
+    <button id="aboutBtn" class="nav-outline-btn" type="button">
+      About
+    </button>
+
+    <button id="createBtn" class="nav-create-btn" type="button">
+      Create
+    </button>
+  </div>
+</header>
+
+<nav class="mobile-bottom-nav glass-panel" aria-label="Mobile navigation">
+  <button id="mobileHomeBtn" type="button" class="mobile-nav-item active">
+    <span>⌂</span>
+    <strong>Home</strong>
+  </button>
+  <button id="mobileDiscoverBtn" type="button" class="mobile-nav-item">
+    <span>◒</span>
+    <strong>Discover</strong>
+  </button>
+  <button id="mobileHistoryBtn" type="button" class="mobile-nav-item">
+    <span>▰</span>
+    <strong>History</strong>
+  </button>
+  <button id="mobileCreateBtn" type="button" class="mobile-nav-item mobile-nav-create">
+    <span>✦</span>
+    <strong>Create</strong>
+  </button>
+</nav>
+  <main class="app-shell">
+
+    <!-- ════════════════════════════════ PAGE: LOGIN ══ -->
+    <section id="loginPage" class="page login-page">
+      <div class="login-portal-bg">
+        <div class="magic-ring ring-1"></div>
+        <div class="magic-ring ring-2"></div>
+        <div class="magic-ring ring-3"></div>
+      </div>
+      <div class="login-layout">
+
+        <!-- Left: branding column -->
+        <div class="login-brand animate-in-left">
+          <div class="meteor-shower">
+            <span class="meteor"></span>
+            <span class="meteor"></span>
+            <span class="meteor"></span>
+            <span class="meteor"></span>
+            <span class="meteor"></span>
+          </div>
+          <div class="brand-emblem">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="50" cy="50" r="20" fill="url(#coreGlow)" opacity="0.4"/>
+              <ellipse cx="50" cy="50" rx="42" ry="12" transform="rotate(30 50 50)" stroke="var(--accent)" stroke-width="1.5" fill="none" opacity="0.6"/>
+              <ellipse cx="50" cy="50" rx="42" ry="12" transform="rotate(-30 50 50)" stroke="var(--accent)" stroke-width="1.5" fill="none" opacity="0.6"/>
+              <ellipse cx="50" cy="50" rx="42" ry="12" transform="rotate(90 50 50)" stroke="var(--accent2)" stroke-width="1" fill="none" opacity="0.4"/>
+              <circle cx="50" cy="50" r="28" stroke="var(--accent)" stroke-width="1" fill="none" opacity="0.5" stroke-dasharray="4 4"/>
+              <path d="M50 15 C50 38, 38 50, 15 50 C38 50, 50 62, 50 85 C50 62, 62 50, 85 50 C62 50, 50 38, 50 15 Z" fill="var(--accent)"/>
+              <circle cx="50" cy="50" r="4" fill="#ffffff"/>
+              <circle cx="20" cy="25" r="1.5" fill="var(--accent2)"/>
+              <circle cx="80" cy="75" r="1.5" fill="var(--accent2)"/>
+              <circle cx="75" cy="20" r="1.5" fill="var(--accent2)"/>
+              <circle cx="25" cy="80" r="1.5" fill="var(--accent2)"/>
+              <defs>
+                <radialGradient id="coreGlow" cx="0.5" cy="0.5" r="0.5">
+                  <stop offset="0%" stop-color="var(--accent)" stop-opacity="1"/>
+                  <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+                </radialGradient>
+              </defs>
+            </svg>
+          </div>
+          <p class="eyebrow">AI Story Adventure</p>
+          <h1 class="brand-title">Legendary<br/><em>Journey</em></h1>
+          <p class="brand-sub">Write the story no world has seen before..</p>
+          <div class="brand-lore">
+            <div class="lore-line">
+              <span class="lore-dot"></span>
+              <span>Dynamic stories shaped by AI</span>
+            </div>
+            <div class="lore-line">
+              <span class="lore-dot"></span>
+              <span>Every decision becomes part of your legend</span>
+            </div>
+            <div class="lore-line">
+              <span class="lore-dot"></span>
+              <span>A living world created only for you</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: auth card -->
+        <div class="login-card animate-in-up delay-1">
+          <div class="login-card-inner">
+            <p class="card-overline">Start Journey</p>
+            <h2 class="card-title">Login</h2>
+            <p class="card-desc">Continue your legend whenever you are ready.</p>
+
+            <div id="accountStatusPanel" class="account-status-panel hidden" aria-live="polite">
+              <p id="accountStatusEyebrow" class="account-status-eyebrow">Status</p>
+              <h3 id="accountStatusTitle">Account Notice</h3>
+              <p id="accountStatusMessage"></p>
+              <button id="accountStatusLogoutBtn" type="button" class="ghost small-status-btn">
+                Sign out
+              </button>
+            </div>
+
+            <button id="loginGoogleBtn" type="button" class="google-btn">
+              <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z"/>
+                <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 16 19 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+                <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.4 35.5 26.8 36 24 36c-5.2 0-9.6-3.3-11.3-8H6.4C9.7 35.7 16.3 44 24 44z"/>
+                <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.3 5.6l6.2 5.2C36.6 36.2 44 30 44 24c0-1.3-.1-2.6-.4-3.9z"/>
+              </svg>
+              <span>Continue with Google</span>
+            </button>
+            <div class="auth-form">
+              <input
+                id="loginEmail"
+                type="email"
+                placeholder="Email"
+                class="auth-input"
+              />
+
+              <div class="password-field">
+  <input
+    id="loginPassword"
+    type="password"
+    placeholder="Password"
+    class="auth-input"
+  />
+
+  <button
+    type="button"
+    id="toggleLoginPassword"
+    class="password-toggle"
+  >
+    👁
+  </button>
+</div>
+
+              <button
+                id="loginEmailBtn"
+                type="button"
+                class="primary-btn big-btn"
+              >
+                Login
+              </button>
+            <p id="loginError" class="auth-error hidden"></p>
+            </div>
+
+            <p class="auth-switch">
+              Don't have Account?
+              <button id="goToRegisterBtn" class="link-btn">
+                Register
+              </button>
+            </p>
+            <div class="divider"><span>or</span></div>
+
+            <p class="guest-note">
+              Play as guest
+            </p>
+            <button id="guestBtn" type="button" class="ghost roll-btn" style="display: none;">
+              Guest
+            </button>
+
+            <p class="login-footer">
+              Login to continue.
+              <button id="openTrustFromLogin" type="button" class="inline-trust-link">
+                Trust & Safety
+              </button>
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  
+    <section id="registerPage" class="page register-page">
+      <div class="login-portal-bg">
+        <div class="magic-ring ring-1"></div>
+        <div class="magic-ring ring-2"></div>
+        <div class="magic-ring ring-3"></div>
+      </div>
+  <div class="auth-card glass-panel animate-in-up">
+    <div class="auth-logo">✦</div>
+
+    <h1>Create Account</h1>
+
+    <p class="auth-subtitle">
+      Create Account to start journey
+    </p>
+
+    <div class="auth-form">
+      <input
+        id="registerEmail"
+        type="email"
+        placeholder="Email"
+        class="auth-input"
+      />
+
+      <div class="password-field">
+  <input
+    id="registerPassword"
+    type="password"
+    placeholder="Password"
+    class="auth-input"
+  />
+
+  <button
+    type="button"
+    id="toggleRegisterPassword"
+    class="password-toggle"
+  >
+    👁
+  </button>
+</div>
+
+<div class="password-field">
+  <input
+    id="registerPasswordConfirm"
+    type="password"
+    placeholder="Confirm Password"
+    class="auth-input"
+  />
+
+  <button
+    type="button"
+    id="toggleRegisterPasswordConfirm"
+    class="password-toggle"
+  >
+    👁
+  </button>
+</div>
+      <button
+        id="registerSubmitBtn"
+        type="button"
+        class="primary-btn big-btn"
+      >
+        Register
+      </button>
+      <p id="registerError" class="auth-error hidden"></p>
+    </div>
+
+    <p class="auth-switch">
+      Have account?
+      <button id="goToLoginBtn" class="link-btn">
+        Login
+      </button>
+    </p>
+
+  </div>
+</section>
+    
+
+    <!-- ════════════════════════════════ PAGE: LANDING ══ -->
+    <section id="landingPage" class="page landing-page active">
+  <div class="home-shell">
+
+    <section class="home-hero glass-panel">
+      <div class="home-cosmic-layer home-layer-back"></div>
+      <div class="home-cosmic-layer home-layer-mid"></div>
+      <div class="home-cosmic-layer home-layer-front"></div>
+
+      <div class="hero-dots">
+        <span class="active"></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+
+      <div class="home-hero-content">
+        <p class="eyebrow">Featured World</p>
+
+        <h1 id="featuredTitle">
+          Start your first adventure.
+        </h1>
+
+        <p id="featuredDescription" class="home-hero-desc">
+          You're seconds away from infinite possibilities.
+        </p>
+
+        <button
+          id="featuredStartBtn"
+          type="button"
+          class="home-hero-btn"
+        >
+          <span>▷</span>
+          Start
+        </button>
+      </div>
+
+      <button
+  id="heroNextBtn"
+  class="hero-side-arrow"
+  type="button"
+  aria-label="Next world"
+>
+  <span>›</span>
+</button>
+    </section>
+    <section class="home-section">
+      <div class="section-heading">
+        <p class="eyebrow">AI Story Originals</p>
+        <h2>Creator-made worlds</h2>
+      </div>
+
+      <div id="originalsGrid" class="world-card-grid"></div>
+    </section>
+
+    <section class="home-section">
+      <div class="section-heading">
+        <p class="eyebrow">Novel Experiences</p>
+        <h2>Begin a living novel</h2>
+      </div>
+
+      <div id="novelWorldsGrid" class="world-card-grid"></div>
+    </section>
+
+  </div>
+</section>
+    <section id="presetDetailPage" class="page preset-detail-page">
+  <div class="preset-detail-shell">
+
+    <button
+      id="backToHomeFromPreset"
+      type="button"
+      class="ghost preset-back-btn"
+    >
+      ← Back
+    </button>
+
+    <section id="presetDetailHero" class="preset-detail-hero glass-panel">
+      <div class="preset-cosmic-layer preset-layer-back"></div>
+      <div class="preset-cosmic-layer preset-layer-front"></div>
+      <div class="preset-detail-overlay"></div>
+
+      <div class="preset-detail-content">
+        <span id="presetDetailMode" class="preset-detail-mode">
+          Novel
+        </span>
+
+        <h1 id="presetDetailTitle">
+          World Title
+        </h1>
+
+        <p id="presetDetailDescription" class="preset-detail-desc">
+          World description.
+        </p>
+
+        <div id="presetDetailTags" class="preset-detail-tags"></div>
+
+        <div class="preset-detail-actions">
+          <button
+            id="startPresetWorldBtn"
+            type="button"
+            class="primary-btn big-btn"
+          >
+            Start This World
+          </button>
+
+          <button
+            id="previewPresetSeedBtn"
+            type="button"
+            class="ghost big-btn"
+          >
+            Read World Lore
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="preset-lore-section glass-panel">
+      <p class="eyebrow">World Lore</p>
+      <div id="presetDetailLore" class="preset-detail-lore"></div>
+    </section>
+
+  </div>
+</section>
+
+    <!-- ════════════════════════════════ PAGE: CHARACTER SETUP ══ -->
+    <section id="setupPage" class="page adventure-setup-page adventure-dossier-page">
+  <div class="adventure-dossier-shell glass-panel">
+
+    <header class="adventure-dossier-header">
+      <button
+        id="backToLandingFromSetup"
+        type="button"
+        class="ghost adventure-dossier-back"
+      >
+        Back
+      </button>
+
+      <div class="adventure-dossier-title">
+        <p class="eyebrow">Survival Run</p>
+        <h1>Expedition Loadout</h1>
+      </div>
+
+      <span id="adventureStepLabel" class="adventure-dossier-step">
+        Step 1 of 5
+      </span>
+    </header>
+
+    <div class="adventure-dossier-progress">
+      <div class="active" data-progress="0">
+        <span>01</span>
+        <strong>Name</strong>
+      </div>
+
+      <div data-progress="1">
+        <span>02</span>
+        <strong>Condition</strong>
+      </div>
+
+      <div data-progress="2">
+        <span>03</span>
+        <strong>Role</strong>
+      </div>
+
+      <div data-progress="3">
+        <span>04</span>
+        <strong>Region</strong>
+      </div>
+
+      <div data-progress="4">
+        <span>05</span>
+        <strong>Objective</strong>
+      </div>
+
+      <div data-progress="5">
+        <span>06</span>
+        <strong>Threat</strong>
+      </div>
+
+      <div data-progress="6">
+        <span>07</span>
+        <strong>Loadout</strong>
+      </div>
+
+      <div data-progress="7">
+        <span>08</span>
+        <strong>Briefing</strong>
+      </div>
+
+    </div>
+
+    <div class="adventure-dossier-body">
+
+      <section class="adventure-question-card glass-panel">
+        <div class="adventure-step active" data-step="0">
+          <p class="adventure-question-kicker">Loadout 01</p>
+          <h2>Who is entering the run?</h2>
+
+          <input
+            id="playerName"
+            class="adventure-big-input"
+            type="text"
+            placeholder="Callsign, name, or title..."
+            autocomplete="off"
+          />
+
+          <div class="adventure-suggestions">
+            <button type="button" class="suggestion-chip" data-target="playerName">Thắng</button>
+            <button type="button" class="suggestion-chip" data-target="playerName">An</button>
+            <button type="button" class="suggestion-chip" data-target="playerName">Kha</button>
+            <button type="button" class="suggestion-chip" data-target="playerName">Linh</button>
+          </div>
+        </div>
+
+        <div class="adventure-step" data-step="1">
+          <p class="adventure-question-kicker">Loadout 02</p>
+          <h2>What condition do you start in?</h2>
+
+          <input
+            id="gender"
+            class="adventure-big-input"
+            type="text"
+            placeholder="Wounded, hunted, exhausted, prepared, or let AI decide..."
+            autocomplete="off"
+          />
+
+          <div class="adventure-suggestions">
+            <button type="button" class="suggestion-chip" data-target="gender">Wounded but moving</button>
+            <button type="button" class="suggestion-chip" data-target="gender">Hunted and outnumbered</button>
+            <button type="button" class="suggestion-chip" data-target="gender">Prepared but low on time</button>
+            <button type="button" class="suggestion-chip" data-target="gender">Auto by AI</button>
+          </div>
+        </div>
+
+        <div class="adventure-step" data-step="2">
+          <p class="adventure-question-kicker">Loadout 03</p>
+          <h2>What is your survival role?</h2>
+
+          <textarea
+            id="personality"
+            class="adventure-big-textarea"
+            placeholder="Scout, medic, deserter, relic hunter, negotiator..."
+          ></textarea>
+
+          <div class="adventure-suggestions">
+            <button type="button" class="suggestion-chip" data-target="personality">Scout</button>
+            <button type="button" class="suggestion-chip" data-target="personality">Field medic</button>
+            <button type="button" class="suggestion-chip" data-target="personality">Relic hunter</button>
+            <button type="button" class="suggestion-chip" data-target="personality">Deserter</button>
+          </div>
+        </div>
+
+        <div class="adventure-step" data-step="3">
+          <p class="adventure-question-kicker">Loadout 04</p>
+          <h2>Which region are you crossing?</h2>
+
+          <textarea
+            id="storyStyle"
+            class="adventure-big-textarea"
+            placeholder="Black sand sea, dead city, frozen pass, memory market..."
+          ></textarea>
+
+          <div class="adventure-suggestions">
+            <button type="button" class="suggestion-chip" data-target="storyStyle">Black sand sea</button>
+            <button type="button" class="suggestion-chip" data-target="storyStyle">Flooded catacombs</button>
+            <button type="button" class="suggestion-chip" data-target="storyStyle">Sunless city gates</button>
+            <button type="button" class="suggestion-chip" data-target="storyStyle">Frozen pilgrim road</button>
+          </div>
+        </div>
+
+        <div class="adventure-step" data-step="4">
+          <p class="adventure-question-kicker">Loadout 05</p>
+          <h2>What objective keeps you moving?</h2>
+
+          <textarea
+            id="adventureOrigin"
+            class="adventure-big-textarea"
+            placeholder="Reach the signal fire, extract a survivor, cross before dawn..."
+          ></textarea>
+
+          <div class="adventure-suggestions">
+            <button type="button" class="suggestion-chip" data-target="adventureOrigin">Reach the last signal fire</button>
+            <button type="button" class="suggestion-chip" data-target="adventureOrigin">Extract a trapped survivor</button>
+            <button type="button" class="suggestion-chip" data-target="adventureOrigin">Cross before the gate closes</button>
+            <button type="button" class="suggestion-chip" data-target="adventureOrigin">Recover the only map</button>
+          </div>
+        </div>
+
+        <div class="adventure-step" data-step="5">
+          <p class="adventure-question-kicker">Loadout 06</p>
+          <h2>What threat is closing in?</h2>
+
+          <textarea
+            id="adventureGoal"
+            class="adventure-big-textarea"
+            placeholder="Hunters, thirst, storm, plague, rival expedition..."
+          ></textarea>
+
+          <div class="adventure-suggestions">
+            <button type="button" class="suggestion-chip" data-target="adventureGoal">A hunter knows your trail</button>
+            <button type="button" class="suggestion-chip" data-target="adventureGoal">A storm is eating the road</button>
+            <button type="button" class="suggestion-chip" data-target="adventureGoal">Supplies are running out</button>
+            <button type="button" class="suggestion-chip" data-target="adventureGoal">A rival expedition moves first</button>
+          </div>
+        </div>
+
+        <div class="adventure-step" data-step="6">
+          <p class="adventure-question-kicker">Loadout 07</p>
+          <h2>What do you carry?</h2>
+
+          <textarea
+            id="adventureRisk"
+            class="adventure-big-textarea"
+            placeholder="Lantern, medkit, rope, relic compass, water skin..."
+          ></textarea>
+
+          <div class="adventure-suggestions">
+            <button type="button" class="suggestion-chip" data-target="adventureRisk">Lantern, rope, two rations</button>
+            <button type="button" class="suggestion-chip" data-target="adventureRisk">Medkit and cracked compass</button>
+            <button type="button" class="suggestion-chip" data-target="adventureRisk">One relic and no food</button>
+            <button type="button" class="suggestion-chip" data-target="adventureRisk">Water skin, knife, flare</button>
+          </div>
+        </div>
+
+        <div class="adventure-step" data-step="7">
+          <p class="adventure-question-kicker">Final Briefing</p>
+          <h2>Ready to survive the first stretch?</h2>
+
+          <div class="adventure-summary glass-panel">
+            <p><strong>Name:</strong> <span id="summaryPlayerName">Unknown</span></p>
+            <p><strong>Condition:</strong> <span id="summaryGender">AI decides</span></p>
+            <p><strong>Role:</strong> <span id="summaryPersonality">Wanderer</span></p>
+            <p><strong>Region:</strong> <span id="summaryStoryStyle">AI creates</span></p>
+            <p><strong>Objective:</strong> <span id="summaryAdventureOrigin">Survive</span></p>
+            <p><strong>Threat:</strong> <span id="summaryAdventureGoal">AI creates</span></p>
+            <p><strong>Loadout:</strong> <span id="summaryAdventureRisk">Light supplies</span></p>
+            <p><strong>Survival seed:</strong> <span id="summaryAdventureSeed">Will stay under 200 characters.</span></p>
+          </div>
+        </div>
+
+        <div class="adventure-wizard-actions">
+          <button
+            id="adventurePrevBtn"
+            type="button"
+            class="ghost big-btn"
+          >
+            Back
+          </button>
+
+          <button
+            id="adventureNextBtn"
+            type="button"
+            class="primary-btn big-btn"
+          >
+            Next
+          </button>
+        </div>
+      </section>
+
+      <aside class="adventure-dossier-preview">
+        <p class="eyebrow">Survival Profile</p>
+
+        <h3>Expedition</h3>
+
+        <div class="preview-line">
+          <span>Name</span>
+          <strong id="previewPlayerName">Waiting...</strong>
+        </div>
+
+        <div class="preview-line">
+          <span>Condition</span>
+          <strong id="previewGender">AI decides</strong>
+        </div>
+
+        <div class="preview-line">
+          <span>Role</span>
+          <strong id="previewPersonality">Not defined</strong>
+        </div>
+
+        <div class="preview-line">
+          <span>Region</span>
+          <strong id="previewStoryStyle">Not defined</strong>
+        </div>
+
+        <div class="preview-line">
+          <span>Objective</span>
+          <strong id="previewAdventureOrigin">Not defined</strong>
+        </div>
+
+        <div class="preview-line">
+          <span>Threat</span>
+          <strong id="previewAdventureGoal">Not defined</strong>
+        </div>
+
+        <div class="preview-line">
+          <span>Loadout</span>
+          <strong id="previewAdventureRisk">Not defined</strong>
+        </div>
+
+        <div class="preview-line">
+          <span>Pressure</span>
+          <strong id="previewAdventureSeed">Waiting for answers...</strong>
+        </div>
+
+        <p class="preview-note">
+          Your answers will shape the opening scene, tone, character behavior, and the first choices.
+        </p>
+      </aside>
+
+    </div>
+  </div>
+</section>
+
+    <!-- ════════════════════════════════ PAGE: NOVEL WORLD SETUP ══ -->
+<section id="novelWorldPage" class="page novel-wizard-page novel-world-v2">
+  <div class="novel-world-shell-v2">
+
+    <div class="novel-world-top-v2">
+      <button
+        id="backToLandingFromNovelWorld"
+        type="button"
+        class="novel-icon-back"
+        aria-label="Back"
+      >
+        ✦
+      </button>
+
+      <div class="novel-world-brand-v2">
+        <span>AI Novel Adventure</span>
+      </div>
+
+      <div class="novel-world-step-v2">
+        Step 1 of 3
+      </div>
+    </div>
+
+    <div class="novel-world-layout-v2">
+      <section class="novel-world-copy-v2">
+        <p class="novel-kicker-v2">World Seed</p>
+
+        <h1>
+          Forge the world<br />
+          your story begins in.
+        </h1>
+
+        <p>
+          Write a setting, a strange rule, a place, a conflict, or just one haunting image.
+          The AI will turn it into a living world for your novel.
+        </p>
+
+        <div class="novel-world-guide-v2">
+          <p class="guide-title">You can begin with...</p>
+
+          <div class="guide-row">
+            <span>01</span>
+            <p>A strange rule that controls the world.</p>
+          </div>
+
+          <div class="guide-row">
+            <span>02</span>
+            <p>A place that should not exist.</p>
+          </div>
+
+          <div class="guide-row">
+            <span>03</span>
+            <p>A conflict people are afraid to name.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="novel-world-input-panel-v2 glass-panel">
+        <div class="novel-input-header-v2">
+          <div>
+            <span class="novel-kicker-v2">Your Idea</span>
+            <h2>World concept</h2>
+          </div>
+        </div>
+
+        <textarea
+          id="novelWorldSeed"
+          class="novel-big-input-v2"
+          rows="8"
+          placeholder="Ví dụ: Một thế giới nơi ký ức được đóng chai, mua bán, đánh cắp và dùng như tiền tệ..."
+        ></textarea>
+
+        <label class="novel-word-limit-v2">
+          <span>Target words per scene</span>
+          <input id="novelInitialTargetWords" type="number" min="150" max="2000" value="700" />
+        </label>
+
+        <div class="novel-wizard-actions-v2">
+          <button id="skipNovelWorldBtn" type="button" class="ghost big-btn">
+            Skip
+          </button>
+
+          <button id="createNovelWorldBtn" type="button" class="primary-btn big-btn">
+            Create World
+          </button>
+        </div>
+      </section>
+    </div>
+
+  </div>
+</section>
+
+    <!-- ════════════════════════════════ PAGE: NOVEL QUESTIONS ══ -->
+    <section id="novelQuestionPage" class="page novel-question-page novel-question-v2">
+  <div class="novel-question-shell-v2">
+    <div class="novel-question-topbar-v2">
+      <button
+        id="backToNovelWorldFromQuestion"
+        type="button"
+        class="novel-icon-back"
+        aria-label="Back"
+      >
+        ✦
+      </button>
+
+      <strong>Shape Your Novel</strong>
+
+      <span id="novelQuestionStepLabel">Step 1 of 5</span>
+    </div>
+
+    <div class="novel-question-layout-v2">
+      <section class="novel-question-copy-v2">
+        <button
+          id="viewWorldDraftBtn"
+          type="button"
+          class="world-preview-btn"
+        >
+          <span class="world-preview-icon">◈</span>
+          <span>World Preview</span>
+        </button>
+
+        <p class="novel-kicker-v2">Question</p>
+
+        <h1 id="novelQuestionText">
+          Bạn sẽ nhập vai một Nhà Thu Hoạch dày dạn kinh nghiệm?
+        </h1>
+
+        <p class="novel-question-help-v2">
+          Trả lời bằng vài câu ngắn hoặc chọn một gợi ý bên dưới.
+        </p>
+      </section>
+
+      <section class="novel-answer-panel-v2 glass-panel">
+        <div class="answer-panel-header-v2">
+          <div>
+            <p class="novel-kicker-v2">Your Answer</p>
+            <h2>Make your Profile</h2>
+          </div>
+        </div>
+
+        <textarea
+          id="novelQuestionAnswer"
+          rows="6"
+          placeholder="Type your answer..."
+        ></textarea>
+
+        <div
+          id="novelQuestionSuggestions"
+          class="novel-question-suggestions-v2"
+        ></div>
+
+        <div class="novel-question-actions-v2">
+          <button
+            id="novelQuestionBackBtn"
+            type="button"
+            class="ghost big-btn"
+          >
+            Back
+          </button>
+
+          <button
+            id="novelQuestionNextBtn"
+            type="button"
+            class="primary-btn big-btn"
+          >
+            Next
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+    <!-- ════════════════════════════════ PAGE: NOVEL CHARACTER ══ -->
+    <section id="novelCharacterPage" class="page novel-wizard-page novel-character-dossier-page">
+      <div class="novel-character-shell">
+        <div class="novel-character-topbar">
+          <button id="backToNovelQuestionsBtn" type="button" class="ghost novel-icon-back">Back</button>
+          <span>Step 3 of 3</span>
+        </div>
+
+        <div class="novel-character-layout">
+          <section class="novel-character-form-panel">
+            <p class="novel-kicker-v2">Character Dossier</p>
+            <h1>Define the soul of your novel.</h1>
+            <p class="novel-character-lede">
+              Shape the protagonist the AI will use when forging your opening foundation.
+            </p>
+
+            <div class="novel-character-grid">
+          <label>
+            <span class="label-text">Name</span>
+            <input id="novelPlayerName" placeholder="An" autocomplete="off" aria-describedby="novelNameError" />
+            <small id="novelNameError" class="field-error"></small>
+          </label>
+          <label>
+            <span class="label-text">Gender</span>
+            <input id="novelGender" placeholder="Nam, nữ, phi giới tính..." />
+          </label>
+          <label>
+            <span class="label-text">Age</span>
+            <input id="novelAge" placeholder="24" autocomplete="off" />
+          </label>
+          <label>
+            <span class="label-text">Occupation / Role</span>
+            <input id="novelOccupation" placeholder="Kẻ Sưu Tầm Ký Ức" />
+          </label>
+            </div>
+            <label class="novel-character-field novel-character-field-full">
+          <span class="label-text">Personality</span>
+          <textarea id="novelPersonality" rows="3" placeholder="Trầm lặng, tò mò, ám ảnh bởi quá khứ..."></textarea>
+              <small id="novelPersonalityHint" class="field-hint">
+                Optional, but stronger details help the AI keep the character consistent.
+              </small>
+            </label>
+
+            <label class="novel-word-limit novel-character-word-limit">
+          <span>Opening scene target words</span>
+          <input id="novelFoundationTargetWords" type="number" min="150" max="2000" value="700" aria-describedby="novelTargetWordsError" />
+              <small id="novelTargetWordsError" class="field-error"></small>
+            </label>
+
+            <p id="novelCharacterFormError" class="novel-character-form-error" aria-live="polite"></p>
+
+            <button id="createNovelFoundationBtn" type="button" class="primary-btn roll-btn novel-character-create-btn">Create My Novel</button>
+          </section>
+
+          <aside class="novel-character-preview-panel glass-panel">
+            <p class="novel-kicker-v2">Live Dossier</p>
+            <h2 id="novelPreviewName">The Wanderer</h2>
+            <p id="novelPreviewIdentity" class="novel-preview-identity">
+              Identity, age, and role will appear here.
+            </p>
+
+            <dl class="novel-preview-grid">
+              <div>
+                <dt>Role</dt>
+                <dd id="novelPreviewRole">Not defined</dd>
+              </div>
+              <div>
+                <dt>Target</dt>
+                <dd id="novelPreviewTargetWords">700 words</dd>
+              </div>
+              <div>
+                <dt>Answers</dt>
+                <dd id="novelPreviewAnswers">0 saved</dd>
+              </div>
+            </dl>
+
+            <section class="novel-preview-section">
+              <h3>Personality Trace</h3>
+              <p id="novelPreviewPersonality">
+                Add a personality note to shape the protagonist's voice.
+              </p>
+            </section>
+
+            <section class="novel-preview-section">
+              <h3>World Recap</h3>
+              <p id="novelPreviewWorld">
+                Your generated world and question answers will guide the opening foundation.
+              </p>
+            </section>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <div id="worldDraftModal" class="world-draft-modal hidden">
+      <div class="world-draft-box">
+        <button id="closeWorldDraftBtn" type="button" class="ghost small-btn">Close</button>
+        <h3>World Preview</h3>
+        <p id="worldDraftText"></p>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════ PAGE: CONTINUE ══ -->
+<section id="discoverPage" class="page discover-page">
+  <div class="portal-page-shell discover-shell">
+    <section class="discover-hero glass-panel">
+      <div>
+        <p class="eyebrow">Discover</p>
+        <h1>World Catalog</h1>
+        <p class="subtitle">
+          Browse curated worlds served by the backend catalog, then open a world profile before starting.
+        </p>
+      </div>
+
+      <div class="discover-stats">
+        <div>
+          <span>Total</span>
+          <strong id="discoverTotalCount">0</strong>
+        </div>
+
+        <div>
+          <span>Adventure</span>
+          <strong id="discoverAdventureCount">0</strong>
+        </div>
+
+        <div>
+          <span>Novel</span>
+          <strong id="discoverNovelCount">0</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="discover-toolbar glass-panel" aria-label="Discover filters">
+      <label class="discover-search">
+        <span>Search</span>
+        <input
+          id="discoverSearchInput"
+          type="search"
+          placeholder="Search worlds, tags, or descriptions..."
+          autocomplete="off"
+        />
+      </label>
+
+      <label class="discover-filter">
+        <span>Mode</span>
+        <select id="discoverModeFilter">
+          <option value="all">All</option>
+          <option value="adventure">Adventure</option>
+          <option value="novel">Novel</option>
+        </select>
+      </label>
+
+      <button id="discoverRefreshBtn" type="button" class="ghost discover-tool-btn">
+        Refresh
+      </button>
+    </section>
+
+    <p id="discoverStatus" class="discover-status" aria-live="polite"></p>
+
+    <div id="discoverWorldGrid" class="discover-world-grid"></div>
+
+    <div id="discoverEmptyState" class="empty-state glass-panel hidden">
+      <svg class="empty-state-icon" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="60" r="48" stroke="var(--border-accent)" stroke-width="1.5" stroke-dasharray="4 8" opacity="0.6" class="spin-slow"/>
+        <path d="M45 40 L75 40 L85 60 L75 80 L45 80 L35 60 Z" stroke="var(--muted)" stroke-width="2" fill="var(--panel-hover)" opacity="0.8"/>
+        <circle cx="60" cy="60" r="12" fill="var(--accent)" opacity="0.3"/>
+        <circle cx="60" cy="60" r="4" fill="var(--accent)"/>
+      </svg>
+      <h3>No worlds found</h3>
+      <p>
+        Try a different search term or mode filter.
+      </p>
+    </div>
+  </div>
+</section>
+<section id="profilePage" class="page profile-page">
+  <div class="profile-shell">
+    <section class="profile-account-card glass-panel" aria-labelledby="profileDisplayName">
+      <div class="profile-account-main">
+        <div id="profileAvatar" class="profile-avatar">
+          <span>?</span>
+        </div>
+
+        <div class="profile-hero-copy">
+          <p class="eyebrow">Profile Settings</p>
+          <div class="profile-name-row">
+            <h1 id="profileDisplayName">Player</h1>
+            <button id="profileEditNameBtn" type="button" class="ghost profile-edit-name-btn">
+              Edit Name
+            </button>
+          </div>
+          <p id="profileEmail">Not signed in</p>
+          <span id="profileLoginState" class="profile-state">Firebase account</span>
+        </div>
+      </div>
+
+      <div id="profileNameEditPanel" class="profile-name-edit-panel hidden">
+        <label class="profile-edit-label" for="profileNameInput">
+          Display name
+        </label>
+        <div class="profile-edit-row">
+          <input
+            id="profileNameInput"
+            type="text"
+            maxlength="50"
+            autocomplete="name"
+          />
+          <button id="profileNameSaveBtn" type="button" class="primary-btn profile-save-name-btn">
+            Save
+          </button>
+          <button id="profileNameCancelBtn" type="button" class="ghost profile-cancel-name-btn">
+            Cancel
+          </button>
+        </div>
+        <p id="profileNameError" class="profile-inline-error" aria-live="polite"></p>
+      </div>
+
+      <dl class="profile-account-details">
+        <div class="profile-info-item">
+          <dt>Display Name</dt>
+          <dd id="profileDossierName">Player</dd>
+        </div>
+        <div class="profile-info-item">
+          <dt>Email</dt>
+          <dd id="profileDossierEmail">Not signed in</dd>
+        </div>
+        <div class="profile-info-item">
+          <dt>Provider</dt>
+          <dd id="profileProvider">Unavailable</dd>
+        </div>
+        <div class="profile-info-item">
+          <dt>Email Verified</dt>
+          <dd id="profileEmailVerified" class="profile-status-value">Unavailable</dd>
+        </div>
+        <div class="profile-info-item">
+          <dt>UID</dt>
+          <dd id="profileUid">Unavailable</dd>
+        </div>
+        <div class="profile-info-item">
+          <dt>Linked Identities</dt>
+          <dd id="profileProviderCount">Unavailable</dd>
+        </div>
+        <div class="profile-info-item">
+          <dt>Created</dt>
+          <dd id="profileCreatedAt">Unavailable</dd>
+        </div>
+        <div class="profile-info-item">
+          <dt>Last Sign In</dt>
+          <dd id="profileLastSignIn">Unavailable</dd>
+        </div>
+      </dl>
+    </section>
+  </div>
+</section>
+<section id="aboutPage" class="page about-page">
+  <div class="about-v2-shell">
+
+    <section class="about-v2-hero glass-panel about-reveal">
+      <div class="about-v2-hero-bg"></div>
+      <div class="about-v2-orbit about-v2-orbit-one"></div>
+      <div class="about-v2-orbit about-v2-orbit-two"></div>
+
+      <div class="about-v2-hero-content">
+        <p class="eyebrow">About AI Story Adventure</p>
+
+        <h1>
+          Stories that remember<br />
+          every choice you make.
+        </h1>
+
+        <p>
+          AI Story Adventure is an interactive storytelling platform where players
+          create worlds, shape characters, and continue living stories powered by AI.
+        </p>
+
+        <div class="about-v2-actions">
+          <button id="aboutCreateBtn" type="button" class="primary-btn big-btn">
+            Create a Story
+          </button>
+
+          <button id="aboutHomeBtn" type="button" class="ghost big-btn">
+            Explore Worlds
+          </button>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="about-v2-section about-reveal">
+      <div class="about-v2-split">
+        <div>
+          <p class="eyebrow">The Idea</p>
+          <h2>A living story engine.</h2>
+        </div>
+
+        <p>
+          This project is built around one idea: stories should not be fixed.
+          The world should react, remember, and evolve based on what the player does.
+          Instead of hard-coded scenes, AI generates worlds, characters, conflicts,
+          narrative turns, and meaningful choices dynamically.
+        </p>
+      </div>
+    </section>
+
+    <section class="about-v2-modes about-reveal">
+      <article class="about-v2-mode-card adventure">
+        <span class="about-mode-kicker">Mode One</span>
+        <h3>Adventure Mode</h3>
+        <p>
+          A fast-paced AI text adventure where players act directly inside the world.
+          Every turn is driven by action, exploration, risk, and immediate choices.
+        </p>
+
+        <ul>
+          <li>Dynamic world generation</li>
+          <li>Choice-based gameplay</li>
+          <li>Action-focused turns</li>
+          <li>Save and continue anytime</li>
+        </ul>
+      </article>
+
+      <article class="about-v2-mode-card novel">
+        <span class="about-mode-kicker">Mode Two</span>
+        <h3>Novel Mode</h3>
+        <p>
+          A long-form interactive novel experience where players co-write cinematic prose
+          with AI. The system builds a story bible, then writes scenes while still offering choices.
+        </p>
+
+        <ul>
+          <li>World seed or AI-generated world</li>
+          <li>Question wizard setup</li>
+          <li>Long-form prose generation</li>
+          <li>Narrative direction choices</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="about-v2-how about-reveal">
+      <div class="section-heading">
+        <p class="eyebrow">How It Works</p>
+        <h2>From idea to living story.</h2>
+      </div>
+
+      <div class="about-v2-steps">
+        <article>
+          <span>01</span>
+          <h3>Choose a World</h3>
+          <p>Start from creator-made worlds or create your own custom setting.</p>
+        </article>
+
+        <article>
+          <span>02</span>
+          <h3>Answer Questions</h3>
+          <p>The setup wizard shapes your protagonist, tone, role, and story direction.</p>
+        </article>
+
+        <article>
+          <span>03</span>
+          <h3>AI Builds the Profile</h3>
+          <p>The backend creates a world profile and story foundation for future turns.</p>
+        </article>
+
+        <article>
+          <span>04</span>
+          <h3>Play and Continue</h3>
+          <p>Choose actions, write custom directions, and return later from your History.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="about-v2-memory glass-panel about-reveal">
+      <div>
+        <p class="eyebrow">Memory Architecture</p>
+        <h2>The story does not forget.</h2>
+        <p>
+          The app combines raw messages, summaries, important facts, and vector memory
+          retrieval so the AI can keep continuity across long sessions.
+        </p>
+      </div>
+
+      <div class="about-v2-memory-grid">
+        <article>
+          <span>✦</span>
+          <strong>Story Summary</strong>
+          <p>Compresses long sessions into stable narrative memory.</p>
+        </article>
+
+        <article>
+          <span>◈</span>
+          <strong>Important Facts</strong>
+          <p>Keeps rules, promises, relationships, items, and major events.</p>
+        </article>
+
+        <article>
+          <span>▰</span>
+          <strong>Vector Memories</strong>
+          <p>Finds relevant past moments for the current scene.</p>
+        </article>
+
+        <article>
+          <span>⌁</span>
+          <strong>Persistent History</strong>
+          <p>Stores each user’s sessions for continuing later.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="about-v2-tech about-reveal">
+      <div class="section-heading">
+        <p class="eyebrow">Project Stack</p>
+        <h2>Built as a full-stack AI story project.</h2>
+      </div>
+
+      <div class="about-v2-tech-grid">
+        <article>
+          <h3>Frontend</h3>
+          <p>Game portal UI, story reader, setup wizards, History, and responsive interaction flow.</p>
+        </article>
+
+        <article>
+          <h3>Backend</h3>
+          <p>FastAPI routes for sessions, turns, novel setup, memory, and AI provider abstraction.</p>
+        </article>
+
+        <article>
+          <h3>AI Providers</h3>
+          <p>Gemini, OpenAI, Groq, Ollama, and mock providers through a shared interface.</p>
+        </article>
+
+        <article>
+          <h3>Persistence</h3>
+          <p>Firebase Auth, Firestore sessions, summaries, facts, and save/load behavior.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="about-v2-final glass-panel about-reveal">
+      <p class="eyebrow">Begin</p>
+      <h2>Ready to enter a world that remembers you?</h2>
+      <p>
+        Create an adventure, write a novel, or continue a story already waiting in your History.
+      </p>
+
+      <button id="aboutFinalCreateBtn" type="button" class="primary-btn big-btn">
+        Start Creating
+      </button>
+    </section>
+
+  </div>
+</section>
+<section id="trustPage" class="page trust-page">
+  <div class="trust-shell">
+    <section class="trust-hero glass-panel">
+      <div class="trust-hero-orbit trust-hero-orbit-one"></div>
+      <div class="trust-hero-orbit trust-hero-orbit-two"></div>
+
+      <div class="trust-hero-copy">
+        <p class="eyebrow">Trust & Safety</p>
+        <h1>Clear rules for a living AI story world.</h1>
+        <p>
+          This page explains how AI Story Adventure handles data, AI-generated content,
+          player conduct, and support requests.
+        </p>
+        <p class="trust-vi">
+          Trang này giải thích cách AI Story Adventure xử lý dữ liệu, nội dung do AI tạo,
+          quy tắc sử dụng và yêu cầu hỗ trợ/xóa dữ liệu.
+        </p>
+      </div>
+
+      <div class="trust-actions">
+        <button id="trustBackToLoginBtn" type="button" class="ghost big-btn">
+          Back to Login
+        </button>
+        <button id="trustHomeBtn" type="button" class="primary-btn big-btn">
+          Continue
+        </button>
+      </div>
+    </section>
+
+    <section class="trust-section glass-panel">
+      <div class="trust-section-heading">
+        <p class="eyebrow">Privacy Policy</p>
+        <h2>What we collect and why</h2>
+      </div>
+
+      <div class="trust-language-grid">
+        <article>
+          <h3>English</h3>
+          <p>
+            AI Story Adventure uses Firebase Authentication to identify your account,
+            including your email, display name, avatar, provider, and account metadata when available.
+          </p>
+          <p>
+            When you create or save a story, the app stores your sessions, world profile,
+            story summaries, important facts, choices, and messages needed to continue the story.
+            Manual save controls whether a story appears in History.
+          </p>
+          <p>
+            The backend may store safe AI usage metadata such as user id, session id, action,
+            provider/model, success/error state, latency, estimated or actual token counts,
+            and points spent. This is used for cost control, abuse prevention, and debugging.
+          </p>
+          <p>
+            ChromaDB/vector memory can store story memory so long sessions keep continuity.
+            Admin tools are designed to show metadata and short previews, not full conversation logs.
+          </p>
+        </article>
+
+        <article lang="vi">
+          <h3>Tiếng Việt</h3>
+          <p>
+            AI Story Adventure dùng Firebase Authentication để xác định tài khoản của bạn,
+            gồm email, tên hiển thị, ảnh đại diện, nhà cung cấp đăng nhập và metadata tài khoản nếu có.
+          </p>
+          <p>
+            Khi bạn tạo hoặc lưu truyện, ứng dụng lưu session, hồ sơ thế giới, tóm tắt truyện,
+            sự kiện quan trọng, lựa chọn và tin nhắn cần thiết để tiếp tục câu chuyện.
+            Chỉ truyện đã bấm Save mới hiện trong History.
+          </p>
+          <p>
+            Backend có thể lưu metadata an toàn về việc dùng AI như user id, session id, hành động,
+            provider/model, trạng thái thành công/lỗi, độ trễ, token ước tính hoặc thực tế,
+            và điểm đã tiêu. Dữ liệu này dùng để kiểm soát chi phí, chống lạm dụng và debug.
+          </p>
+          <p>
+            ChromaDB/vector memory có thể lưu ký ức truyện để session dài giữ được mạch truyện.
+            Công cụ admin được thiết kế để xem metadata và preview ngắn, không hiển thị toàn bộ hội thoại.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="trust-section glass-panel">
+      <div class="trust-section-heading">
+        <p class="eyebrow">Terms of Service</p>
+        <h2>Player responsibilities</h2>
+      </div>
+
+      <div class="trust-language-grid">
+        <article>
+          <h3>English</h3>
+          <ul class="trust-list">
+            <li>Do not spam, abuse rate limits, or intentionally waste AI resources.</li>
+            <li>Do not attempt to jailbreak, bypass safety rules, or attack the backend.</li>
+            <li>Do not use the app for illegal, harmful, harassing, or exploitative content.</li>
+            <li>Accounts may be banned or limited for abuse, and the site may enter maintenance mode.</li>
+            <li>Points, rate limits, and manual save rules may be used to control cost and reliability.</li>
+          </ul>
+        </article>
+
+        <article lang="vi">
+          <h3>Tiếng Việt</h3>
+          <ul class="trust-list">
+            <li>Không spam, lạm dụng giới hạn, hoặc cố tình làm tốn tài nguyên AI.</li>
+            <li>Không cố jailbreak, vượt luật an toàn, hoặc tấn công backend.</li>
+            <li>Không dùng app cho nội dung vi phạm pháp luật, gây hại, quấy rối hoặc bóc lột.</li>
+            <li>Tài khoản có thể bị ban/giới hạn nếu lạm dụng, và web có thể bật chế độ bảo trì.</li>
+            <li>Hệ thống điểm, rate limit và manual save có thể được dùng để kiểm soát chi phí và độ ổn định.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="trust-section glass-panel">
+      <div class="trust-section-heading">
+        <p class="eyebrow">AI Content Notice</p>
+        <h2>Generated stories need human judgment</h2>
+      </div>
+
+      <div class="trust-language-grid">
+        <article>
+          <h3>English</h3>
+          <p>
+            Story text, choices, world details, and character events may be generated by AI.
+            AI output can be inaccurate, inconsistent, unexpected, or inappropriate.
+          </p>
+          <p>
+            The app is for entertainment and creative writing. AI output is not professional,
+            medical, legal, financial, or safety advice.
+          </p>
+        </article>
+
+        <article lang="vi">
+          <h3>Tiếng Việt</h3>
+          <p>
+            Nội dung truyện, lựa chọn, chi tiết thế giới và sự kiện nhân vật có thể do AI tạo.
+            Kết quả AI có thể sai, thiếu nhất quán, bất ngờ hoặc không phù hợp.
+          </p>
+          <p>
+            Ứng dụng phục vụ giải trí và sáng tác. Nội dung AI không phải lời khuyên chuyên môn,
+            y tế, pháp lý, tài chính hoặc an toàn.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="trust-section trust-contact glass-panel">
+      <div class="trust-section-heading">
+        <p class="eyebrow">Contact & Data Deletion</p>
+        <h2>Support and deletion requests</h2>
+      </div>
+
+      <div class="trust-language-grid">
+        <article>
+          <h3>English</h3>
+          <p>
+            To request support, report abuse, or ask for account/story data deletion,
+            email us from the account address when possible.
+          </p>
+          <a class="trust-email-link" href="mailto:caoban170106@gmail.com?subject=AI%20Story%20Adventure%20Support%20Request">
+            caoban170106@gmail.com
+          </a>
+        </article>
+
+        <article lang="vi">
+          <h3>Tiếng Việt</h3>
+          <p>
+            Để yêu cầu hỗ trợ, báo cáo lạm dụng hoặc yêu cầu xóa tài khoản/dữ liệu truyện,
+            hãy gửi email bằng địa chỉ tài khoản nếu có thể.
+          </p>
+          <a class="trust-email-link" href="mailto:caoban170106@gmail.com?subject=AI%20Story%20Adventure%20Data%20Deletion">
+            caoban170106@gmail.com
+          </a>
+        </article>
+      </div>
+
+      <p class="trust-disclaimer">
+        This baseline notice is provided for product transparency and is not a substitute for professional legal advice.
+        Thông báo cơ bản này nhằm minh bạch sản phẩm và không thay thế tư vấn pháp lý chuyên nghiệp.
+      </p>
+    </section>
+  </div>
+</section>
+    <section id="continuePage" class="page continue-page saves-page">
+  <div class="portal-page-shell saves-shell">
+
+    <div class="saves-header saves-archive-header">
+      <div class="saves-header-copy">
+        <p class="eyebrow">History</p>
+        <h1>Your story history</h1>
+        <p class="subtitle">
+          Continue an unfinished adventure or return to a novel already in progress.
+        </p>
+      </div>
+
+      <div id="savesStats" class="saves-stats glass-panel" aria-live="polite">
+        <article>
+          <span>Total</span>
+          <strong id="savesTotalCount">0</strong>
+        </article>
+        <article>
+          <span>Adventure</span>
+          <strong id="savesAdventureCount">0</strong>
+        </article>
+        <article>
+          <span>Novel</span>
+          <strong id="savesNovelCount">0</strong>
+        </article>
+        <article>
+          <span>Latest</span>
+          <strong id="savesLatestDate">-</strong>
+        </article>
+      </div>
+    </div>
+
+    <div class="saves-toolbar glass-panel">
+      <div class="saves-search">
+        <span>⌕</span>
+        <span class="saves-search-label">Search</span>
+        <input
+          id="saveSearchInput"
+          type="text"
+          placeholder="Search history..."
+          autocomplete="off"
+        />
+      </div>
+
+      <select id="saveModeFilter" class="saves-filter">
+        <option value="all">All Modes</option>
+        <option value="novel">Novel</option>
+        <option value="adventure">Adventure</option>
+      </select>
+
+      <select id="saveSortSelect" class="saves-filter">
+        <option value="newest">Newest</option>
+        <option value="oldest">Oldest</option>
+        <option value="title">Title A-Z</option>
+        <option value="mode">Mode</option>
+      </select>
+
+      <button id="clearSavesSearchBtn" type="button" class="ghost small-btn saves-tool-btn">
+        Clear
+      </button>
+
+      <button id="refreshSavesBtn" type="button" class="primary-btn small-btn saves-tool-btn">
+        Refresh
+      </button>
+    </div>
+
+    <div class="saves-archive-layout">
+      <div id="sessionList" class="saves-grid"></div>
+
+      <aside
+        id="savePreviewPanel"
+        class="save-preview-panel glass-panel"
+        aria-live="polite"
+      >
+        <div class="save-preview-empty">
+          <p class="eyebrow">Archive Preview</p>
+          <h2>Select a history item</h2>
+          <p>
+            Preview a saved story from History to review its world profile, recent scenes,
+            and available choices before continuing.
+          </p>
+        </div>
+      </aside>
+    </div>
+
+  </div>
+</section>
+
+    <!-- ════════════════════════════════ PAGE: FOUNDATION ══ -->
+<section id="foundationPage" class="page foundation-page">
+  <div class="foundation-shell glass-panel">
+
+    <div class="foundation-topbar">
+      <button
+        id="backToSetupBtn"
+        type="button"
+        class="ghost foundation-back-btn"
+      >
+        Back 
+      </button>
+    </div>
+
+    <div class="foundation-hero">
+      <div class="foundation-hero-left">
+        <p class="eyebrow">World Profile</p>
+        <h1>Your World Has Been Forged</h1>
+        <p class="foundation-subtitle">
+          The world, your role, and the first threads of destiny are now in place.
+        </p>
+
+        <div class="foundation-badges">
+          <span class="foundation-badge" id="foundationModeBadge">Adventure Mode</span>
+          <span class="foundation-badge" id="foundationPlayerBadge">Unknown Hero</span>
+          <span class="foundation-badge" id="foundationToneBadge">AI Generated</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="foundation-layout">
+      <section class="foundation-main glass-panel">
+        <div class="foundation-section-header">
+          <p class="eyebrow">World Lore</p>
+          <h2>Setting & Character Brief</h2>
+        </div>
+
+        <div id="foundationText" class="foundation-text rich-foundation-text"></div>
+      </section>
+
+      <aside class="foundation-sidebar">
+        <div class="foundation-side-card glass-panel">
+          <p class="eyebrow">Survival Profile</p>
+          <h3 id="foundationCharacterName">Unknown</h3>
+          <ul class="foundation-meta-list">
+            <li><span>Gender</span><strong id="foundationCharacterGender">—</strong></li>
+            <li><span>Personality</span><strong id="foundationCharacterPersonality">—</strong></li>
+            <li><span>Style</span><strong id="foundationCharacterStyle">—</strong></li>
+          </ul>
+        </div>
+
+        <div class="foundation-side-card adventure-foundation-card glass-panel">
+          <p class="eyebrow">Survival Briefing</p>
+          <ul class="foundation-meta-list">
+            <li><span>Danger</span><strong id="foundationSurvivalDanger">0/5</strong></li>
+            <li><span>Supplies</span><strong id="foundationSurvivalSupplies">0/5</strong></li>
+            <li><span>Wounds</span><strong id="foundationSurvivalWounds">0/5</strong></li>
+            <li><span>Time</span><strong id="foundationSurvivalTime">0/5</strong></li>
+            <li><span>Origin</span><strong id="foundationAdventureOrigin">—</strong></li>
+            <li><span>Goal</span><strong id="foundationAdventureGoal">—</strong></li>
+            <li><span>Risk</span><strong id="foundationAdventureRisk">—</strong></li>
+            <li><span>API style seed</span><strong id="foundationAdventureSeed">—</strong></li>
+          </ul>
+        </div>
+
+        <div class="foundation-side-card glass-panel">
+          <p class="eyebrow">What happens next</p>
+          <p class="foundation-side-copy">
+            The story will now begin from the opening situation generated by the AI.
+            Your choices will shape the path forward, but you can always write your own action.
+          </p>
+        </div>
+
+        <div class="foundation-side-card foundation-cta-card glass-panel">
+          <button
+            id="beginStoryBtn"
+            type="button"
+            class="primary-btn foundation-start-btn"
+          >
+            Begin the Adventure
+          </button>
+        </div>
+      </aside>
+    </div>
+
+  </div>
+</section>
+
+    <!-- ════════════════════════════════ PAGE: GAME ══ -->
+    <section id="gamePage" class="page game-page">
+  <div class="game-reader-shell">
+
+    <header class="game-reader-topbar glass-panel">
+      <div>
+        <p class="eyebrow">Current Story</p>
+        <strong id="sessionLabel">Not Started Yet</strong>
+      </div>
+
+      <div class="game-reader-tools">
+        <button id="readingModeBtn" type="button" class="ghost small-tool-btn" aria-label="Toggle text size" title="Toggle Text Size">
+          aA
+        </button>
+        <button id="backToHomeFromGame" type="button" class="ghost small-tool-btn">
+          Home
+        </button>
+
+        <button id="openSavesFromGame" type="button" class="ghost small-tool-btn">
+          History
+        </button>
+      </div>
+    </header>
+
+    <section class="reader-toolbar glass-panel" aria-label="Reading tools">
+      <button id="readerFocusToggle" type="button" class="ghost reader-tool-btn" aria-pressed="false">
+        Focus
+      </button>
+
+      <div class="reader-tool-group" aria-label="Font size">
+        <span>Font</span>
+        <button id="readerFontDown" type="button" class="ghost reader-icon-btn" aria-label="Decrease font size">A-</button>
+        <button id="readerFontUp" type="button" class="ghost reader-icon-btn" aria-label="Increase font size">A+</button>
+      </div>
+
+      <div class="reader-tool-group" aria-label="Line spacing">
+        <span>Lines</span>
+        <button id="readerLineDown" type="button" class="ghost reader-icon-btn" aria-label="Decrease line spacing">-</button>
+        <button id="readerLineUp" type="button" class="ghost reader-icon-btn" aria-label="Increase line spacing">+</button>
+      </div>
+
+      <button id="scrollLatestBtn" type="button" class="primary-btn reader-tool-btn">
+        Latest
+      </button>
+    </section>
+
+    <main id="storyLog" class="story-log novel-reader"></main>
+
+    <section id="adventureQuestHud" class="adventure-quest-hud glass-panel" aria-label="Survival run context">
+      <div class="quest-hud-title">
+        <p class="eyebrow">Survival Run</p>
+        <h3 id="questHudHero">Unknown Hero</h3>
+      </div>
+
+      <div class="quest-hud-grid">
+        <div>
+          <span>Danger</span>
+          <strong id="questHudStyle">3/5</strong>
+        </div>
+
+        <div>
+          <span>Supplies</span>
+          <strong id="questHudOrigin">3/5</strong>
+        </div>
+
+        <div>
+          <span>Wounds</span>
+          <strong id="questHudWounds">0/5</strong>
+        </div>
+
+        <div>
+          <span>Time</span>
+          <strong id="questHudTime">3/5</strong>
+        </div>
+
+        <div>
+          <span>Objective</span>
+          <strong id="questHudGoal">Not defined</strong>
+        </div>
+
+        <div>
+          <span>Threat</span>
+          <strong id="questHudRisk">Not defined</strong>
+        </div>
+
+        <div>
+          <span>Loadout</span>
+          <strong id="questHudLoadout">Light supplies</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="game-choice-panel glass-panel">
+      <div class="choice-panel-heading">
+        <p class="eyebrow">Next Direction</p>
+        <h3>Choose where the story goes next</h3>
+      </div>
+
+      <div id="choicesBox" class="choices-box"></div>
+    </section>
+
+    <section class="game-input-panel glass-panel">
+      <div class="game-input-row">
+        <textarea
+          id="customAction"
+          rows="2"
+          placeholder="Write your own direction for the next scene..."
+          autocomplete="off"
+        ></textarea>
+
+        <label class="turn-words-control">
+          <span>Words</span>
+          <input
+            id="turnTargetWords"
+            type="number"
+            min="100"
+            max="2000"
+            step="100"
+            value="600"
+          />
+        </label>
+      </div>
+
+      <p id="composerStatus" class="composer-status" aria-live="polite"></p>
+
+      <button id="submitBtn" type="button" class="primary-btn send-action-btn">
+        <span>▷</span>
+        Send
+      </button>
+    </section>
+
+  </div>
+</section>
+
+    <!-- ════════════════════════════════ PAGE: ADMIN ══ -->
+  </main>
+
+<div
+  id="loadingOverlay"
+  class="ai-loading-overlay hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-live="assertive"
+  aria-labelledby="loadingTitle"
+>
+  <div class="ai-loading-box">
+    <div class="ai-loading-header">
+      <div class="ai-loading-portal" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+        <i></i>
+      </div>
+
+      <div class="ai-loading-heading">
+        <p id="loadingEyebrow" class="eyebrow ai-loading-eyebrow">AI Flow</p>
+        <h3 id="loadingTitle">Opening the AI realm</h3>
+      </div>
+    </div>
+
+    <p id="worldLoadingText" class="ai-loading-copy">
+      The AI is weaving together lands, memories, and the fate that awaits you...
+    </p>
+
+    <div class="ai-loading-meta" aria-label="Loading status">
+      <span id="loadingRetryText">Attempt 1</span>
+      <span id="loadingElapsedText">00:00</span>
+    </div>
+
+    <p id="loadingHint" class="ai-loading-hint">
+      Waiting for the AI realm to open.
+    </p>
+
+    <div class="ai-loading-actions">
+      <button
+        id="retryNowLoadingBtn"
+        type="button"
+        class="ghost ai-loading-retry-now hidden"
+      >
+        Retry Firebase
+      </button>
+      <button id="cancelLoadingBtn" type="button" class="ghost ai-loading-cancel">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="authLoadingOverlay" class="auth-loading-overlay hidden">
+  <div class="auth-loading-box">
+
+    <div class="auth-loading-visual">
+      <img
+        src="./assets/pixel-loader.gif"
+        alt="loading"
+        class="pixel-loading-gif"
+      />
+    </div>
+
+<h3 id="authLoadingText">
+  Connecting to the world of AI Story Adventure...
+</h3>
+
+
+
+  </div>
+</div>
+
+<div id="createModeModal" class="create-modal hidden">
+  <div class="create-modal-backdrop"></div>
+
+  <div class="create-modal-panel glass-panel">
+    <button id="closeCreateModalBtn" class="create-modal-close" type="button">
+      ×
+    </button>
+
+    <p class="eyebrow">Create a New Story</p>
+
+    <h2>
+      Choose your<br />
+      experience.
+    </h2>
+
+    <p class="create-modal-subtitle">
+      Start a fast interactive adventure, or write a long-form AI novel with choices.
+    </p>
+
+    <div class="create-mode-grid">
+      <button id="createAdventureBtn" class="create-mode-card" type="button">
+        <span class="create-mode-icon">⚔</span>
+
+        <strong>Adventure Mode</strong>
+
+        <p>
+          Fast-paced interactive story where you act, explore, survive,
+          and make immediate choices.
+        </p>
+
+        <small>Classic AI Story Adventure</small>
+      </button>
+
+      <button id="createNovelBtn" class="create-mode-card featured" type="button">
+        <span class="create-mode-icon">✦</span>
+
+        <strong>Novel Mode</strong>
+
+        <p>
+          Build a world, answer story questions, and co-write a cinematic
+          interactive novel with the AI.
+        </p>
+
+        <small>Long-form AI Novel</small>
+      </button>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script src="config.js?v=config-1"></script>
+<script type="module" src="app.js?v=player-app-5"></script>
+</body>
+</html>

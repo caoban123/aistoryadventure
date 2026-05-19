@@ -1,0 +1,24 @@
+# Web framework
+fastapi==0.111.1
+uvicorn[standard]==0.30.1
+
+# Settings
+pydantic==2.7.1
+pydantic-settings==2.3.0
+python-dotenv==1.1.1
+
+# AI providers
+openai==1.101.0
+google-genai==1.32.0
+
+# Storage / memory
+firebase-admin==6.5.0
+chromadb==0.5.5
+
+# Testing
+pytest==8.2.0
+pytest-asyncio==0.23.7
+PyYAML==6.0.2
+
+# firebase
+firebase-admin
