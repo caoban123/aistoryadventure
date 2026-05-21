@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=player-app-5" />
   <meta property="og:title" content="AI Story Adventure">
 
   <meta
@@ -16,13 +17,12 @@
 
   <meta
     property="og:image"
-    content="https://aistoryadventure.xyz/preview.png"
+    content="https://aistoryadventure.xyz/preview.jpg"
   >
 
   <meta property="og:type" content="website">
 
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="stylesheet" href="style.css?v=player-app-5" />
 </head>
 <body data-page="loginPage">
 
@@ -1222,198 +1222,574 @@
     </section>
   </div>
 </section>
-<section id="aboutPage" class="page about-page">
+<section id="aboutPage" class="page about-page lang-selected-en">
   <div class="about-v2-shell">
 
+    <!-- Language Selector Pill -->
+    <div class="about-lang-switch-container">
+      <div class="about-lang-switch">
+        <button id="aboutLangEnBtn" type="button" class="lang-switch-btn active" data-lang="en">
+          EN <span>✦</span>
+        </button>
+        <button id="aboutLangViBtn" type="button" class="lang-switch-btn" data-lang="vi">
+          VI <span>◈</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 1. HERO SECTION -->
     <section class="about-v2-hero glass-panel about-reveal">
       <div class="about-v2-hero-bg"></div>
       <div class="about-v2-orbit about-v2-orbit-one"></div>
       <div class="about-v2-orbit about-v2-orbit-two"></div>
 
       <div class="about-v2-hero-content">
-        <p class="eyebrow">About AI Story Adventure</p>
+        <p class="eyebrow">
+          <span class="lang-en">About AI Story Adventure</span>
+          <span class="lang-vi">Về AI Story Adventure</span>
+        </p>
 
         <h1>
-          Stories that remember<br />
-          every choice you make.
+          <span class="lang-en">Stories that remember<br />every choice you make.</span>
+          <span class="lang-vi">Mỗi câu chuyện là một thực tại,<br />khắc ghi từng lựa chọn của bạn.</span>
         </h1>
 
         <p>
-          AI Story Adventure is an interactive storytelling platform where players
-          create worlds, shape characters, and continue living stories powered by AI.
+          <span class="lang-en">AI Story Adventure is an interactive storytelling platform where players create worlds, shape characters, and continue living stories powered by AI.</span>
+          <span class="lang-vi">AI Story Adventure là một nền tảng sáng tác và nhập vai tương tác độc đáo, nơi bạn kiến tạo thế giới, định hình nhân vật và dấn thân vào những hành trình vô tận được vận hành bởi AI.</span>
         </p>
 
         <div class="about-v2-actions">
           <button id="aboutCreateBtn" type="button" class="primary-btn big-btn">
-            Create a Story
+            <span class="lang-en">Create a Story</span>
+            <span class="lang-vi">Khởi tạo thế giới</span>
           </button>
-
           <button id="aboutHomeBtn" type="button" class="ghost big-btn">
-            Explore Worlds
+            <span class="lang-en">Explore Worlds</span>
+            <span class="lang-vi">Khám phá vũ trụ</span>
           </button>
-
         </div>
       </div>
     </section>
 
+    <!-- 2. THE IDEA -->
     <section class="about-v2-section about-reveal">
       <div class="about-v2-split">
         <div>
-          <p class="eyebrow">The Idea</p>
-          <h2>A living story engine.</h2>
+          <p class="eyebrow">
+            <span class="lang-en">The Idea</span>
+            <span class="lang-vi">Triết lý thiết kế</span>
+          </p>
+          <h2>
+            <span class="lang-en">A living story engine.</span>
+            <span class="lang-vi">Động cơ của một thế giới sống.</span>
+          </h2>
         </div>
 
         <p>
-          This project is built around one idea: stories should not be fixed.
-          The world should react, remember, and evolve based on what the player does.
-          Instead of hard-coded scenes, AI generates worlds, characters, conflicts,
-          narrative turns, and meaningful choices dynamically.
+          <span class="lang-en">This project is built around one idea: stories should not be fixed. The world should react, remember, and evolve based on what the player does. Instead of hard-coded scenes, AI generates worlds, characters, conflicts, narrative turns, and meaningful choices dynamically.</span>
+          <span class="lang-vi">Dự án này được xây dựng dựa trên một triết lý duy nhất: cốt truyện không nên là một lối mòn cố định. Thế giới phải phản ứng, ghi nhớ và tiến hóa theo từng bước chân của bạn. Thay vì những phân cảnh được lập trình sẵn, AI sẽ tự động dệt nên thế giới, xung đột, những bước ngoặt bất ngờ cùng các lựa chọn mang tính sinh tử một cách tức thời.</span>
         </p>
       </div>
     </section>
 
-    <section class="about-v2-modes about-reveal">
-      <article class="about-v2-mode-card adventure">
-        <span class="about-mode-kicker">Mode One</span>
-        <h3>Adventure Mode</h3>
-        <p>
-          A fast-paced AI text adventure where players act directly inside the world.
-          Every turn is driven by action, exploration, risk, and immediate choices.
+    <!-- 3. MODES WITH INTERACTIVE TERMINAL -->
+    <section class="about-v2-modes-container about-reveal">
+      <div class="about-v2-modes-header">
+        <p class="eyebrow">
+          <span class="lang-en">Gameplay Modes</span>
+          <span class="lang-vi">Chế độ chơi</span>
         </p>
+        <h2>
+          <span class="lang-en">Choose your style of writing.</span>
+          <span class="lang-vi">Lựa chọn phong cách trải nghiệm.</span>
+        </h2>
+      </div>
 
-        <ul>
-          <li>Dynamic world generation</li>
-          <li>Choice-based gameplay</li>
-          <li>Action-focused turns</li>
-          <li>Save and continue anytime</li>
-        </ul>
-      </article>
+      <div class="about-modes-interactive-layout">
+        <div class="about-modes-selector-panel">
+          <button type="button" class="about-mode-tab-btn active" data-mode="adventure">
+            <span class="tab-badge">01</span>
+            <div class="tab-btn-content">
+              <h3>
+                <span class="lang-en">Adventure Mode</span>
+                <span class="lang-vi">Chế độ Sinh tồn</span>
+              </h3>
+              <p>
+                <span class="lang-en">Fast-paced, action-focused choices and immediate survival pressure.</span>
+                <span class="lang-vi">Lối chơi tốc độ cao, tập trung hành động và áp lực sinh tồn tức thì.</span>
+              </p>
+            </div>
+          </button>
 
-      <article class="about-v2-mode-card novel">
-        <span class="about-mode-kicker">Mode Two</span>
-        <h3>Novel Mode</h3>
-        <p>
-          A long-form interactive novel experience where players co-write cinematic prose
-          with AI. The system builds a story bible, then writes scenes while still offering choices.
-        </p>
+          <button type="button" class="about-mode-tab-btn" data-mode="novel">
+            <span class="tab-badge">02</span>
+            <div class="tab-btn-content">
+              <h3>
+                <span class="lang-en">Novel Mode</span>
+                <span class="lang-vi">Chế độ Tiểu thuyết</span>
+              </h3>
+              <p>
+                <span class="lang-en">Long-form prose co-writing with deep character dossiers & story bible.</span>
+                <span class="lang-vi">Đồng sáng tác chương dài sâu sắc với hồ sơ nhân vật & cốt truyện chi tiết.</span>
+              </p>
+            </div>
+          </button>
+        </div>
 
-        <ul>
-          <li>World seed or AI-generated world</li>
-          <li>Question wizard setup</li>
-          <li>Long-form prose generation</li>
-          <li>Narrative direction choices</li>
-        </ul>
-      </article>
+        <div class="about-modes-terminal-preview glass-panel">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="terminal-title">
+              <span class="lang-en">Live Terminal Simulator</span>
+              <span class="lang-vi">Trình giả lập Terminal</span>
+            </div>
+          </div>
+          <div id="aboutTerminalPreview" class="terminal-body font-mono">
+            <!-- Simulated console text will be inserted by JS -->
+          </div>
+        </div>
+      </div>
     </section>
 
+    <!-- 4. HOW IT WORKS TIMELINE -->
     <section class="about-v2-how about-reveal">
       <div class="section-heading">
-        <p class="eyebrow">How It Works</p>
-        <h2>From idea to living story.</h2>
-      </div>
-
-      <div class="about-v2-steps">
-        <article>
-          <span>01</span>
-          <h3>Choose a World</h3>
-          <p>Start from creator-made worlds or create your own custom setting.</p>
-        </article>
-
-        <article>
-          <span>02</span>
-          <h3>Answer Questions</h3>
-          <p>The setup wizard shapes your protagonist, tone, role, and story direction.</p>
-        </article>
-
-        <article>
-          <span>03</span>
-          <h3>AI Builds the Profile</h3>
-          <p>The backend creates a world profile and story foundation for future turns.</p>
-        </article>
-
-        <article>
-          <span>04</span>
-          <h3>Play and Continue</h3>
-          <p>Choose actions, write custom directions, and return later from your History.</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="about-v2-memory glass-panel about-reveal">
-      <div>
-        <p class="eyebrow">Memory Architecture</p>
-        <h2>The story does not forget.</h2>
-        <p>
-          The app combines raw messages, summaries, important facts, and vector memory
-          retrieval so the AI can keep continuity across long sessions.
+        <p class="eyebrow">
+          <span class="lang-en">How It Works</span>
+          <span class="lang-vi">Cách vận hành</span>
         </p>
+        <h2>
+          <span class="lang-en">From idea to living story.</span>
+          <span class="lang-vi">Từ ý tưởng thành thế giới sống.</span>
+        </h2>
       </div>
 
-      <div class="about-v2-memory-grid">
-        <article>
-          <span>✦</span>
-          <strong>Story Summary</strong>
-          <p>Compresses long sessions into stable narrative memory.</p>
-        </article>
+      <div class="about-v2-steps-timeline">
+        <div class="timeline-line"></div>
+        <div class="about-v2-steps">
+          <article>
+            <div class="step-badge">01</div>
+            <h3>
+              <span class="lang-en">Choose a World</span>
+              <span class="lang-vi">Chọn thế giới</span>
+            </h3>
+            <p>
+              <span class="lang-en">Start from creator-made worlds or create your own custom setting.</span>
+              <span class="lang-vi">Bắt đầu từ các thế giới có sẵn hoặc tự tạo bối cảnh của riêng bạn.</span>
+            </p>
+          </article>
 
-        <article>
-          <span>◈</span>
-          <strong>Important Facts</strong>
-          <p>Keeps rules, promises, relationships, items, and major events.</p>
-        </article>
+          <article>
+            <div class="step-badge">02</div>
+            <h3>
+              <span class="lang-en">Answer Questions</span>
+              <span class="lang-vi">Định hình hướng đi</span>
+            </h3>
+            <p>
+              <span class="lang-en">The setup wizard shapes your protagonist, tone, role, and story direction.</span>
+              <span class="lang-vi">Bộ câu hỏi thông minh giúp xác định diện mạo nhân vật, tông giọng, và hướng đi cốt truyện.</span>
+            </p>
+          </article>
 
-        <article>
-          <span>▰</span>
-          <strong>Vector Memories</strong>
-          <p>Finds relevant past moments for the current scene.</p>
-        </article>
+          <article>
+            <div class="step-badge">03</div>
+            <h3>
+              <span class="lang-en">AI Builds the Profile</span>
+              <span class="lang-vi">AI thiết lập nền tảng</span>
+            </h3>
+            <p>
+              <span class="lang-en">The backend creates a world profile and story foundation for future turns.</span>
+              <span class="lang-vi">Hệ thống tạo lập hồ sơ thế giới chi tiết và chương mở đầu làm bệ phóng cho hành trình.</span>
+            </p>
+          </article>
 
-        <article>
-          <span>⌁</span>
-          <strong>Persistent History</strong>
-          <p>Stores each user’s sessions for continuing later.</p>
-        </article>
+          <article>
+            <div class="step-badge">04</div>
+            <h3>
+              <span class="lang-en">Play and Continue</span>
+              <span class="lang-vi">Trải nghiệm & Lưu trữ</span>
+            </h3>
+            <p>
+              <span class="lang-en">Choose actions, write custom directions, and return later from your History.</span>
+              <span class="lang-vi">Tự do hành động, định hướng cốt truyện theo ý muốn và quay lại bất kỳ lúc nào từ lịch sử.</span>
+            </p>
+          </article>
+        </div>
       </div>
     </section>
 
-    <section class="about-v2-tech about-reveal">
+    <!-- 5. INTERACTIVE STORY CONCEPT GENERATOR (PLAYGROUND) -->
+    <section class="about-v2-playground-section glass-panel about-reveal">
+      <div class="playground-layout">
+        <div class="playground-copy">
+          <p class="eyebrow">
+            <span class="lang-en">Interactive Sandbox</span>
+            <span class="lang-vi">Sân chơi ý tưởng</span>
+          </p>
+          <h2>
+            <span class="lang-en">Forge a Story Seed Instantly</span>
+            <span class="lang-vi">Thử kiến tạo hạt giống truyện</span>
+          </h2>
+          <p class="lede">
+            <span class="lang-en">Select a genre and conflict below, then let the local cosmic grid forge a unique story idea to preview the engine.</span>
+            <span class="lang-vi">Hãy phối trộn thể loại và xung đột dưới đây, sau đó để mạng lưới vũ trụ nội bộ dệt nên một ý tưởng độc bản.</span>
+          </p>
+
+          <div class="playground-controls">
+            <label>
+              <span class="label-text">
+                <span class="lang-en">Genre</span>
+                <span class="lang-vi">Thể loại</span>
+              </span>
+              <select id="aboutPlaygroundGenre">
+                <option value="cosmic-horror" selected>Cosmic Horror | Kinh dị vũ trụ</option>
+                <option value="cyber-fantasy">Cyber-Fantasy | Kỳ ảo công nghệ</option>
+                <option value="steampunk">Steampunk Mystery | Kỳ bí hơi nước</option>
+                <option value="apocalypse">Post-Apocalypse | Hậu tận thế</option>
+              </select>
+            </label>
+
+            <label>
+              <span class="label-text">
+                <span class="lang-en">Conflict</span>
+                <span class="lang-vi">Xung đột</span>
+              </span>
+              <select id="aboutPlaygroundConflict">
+                <option value="memory-loss" selected>Memory Loss | Đánh mất ký ức</option>
+                <option value="artifact">Forbidden Artifact | Cổ vật cấm kỵ</option>
+                <option value="dying-sun">Dying Sun | Mặt trời lụi tàn</option>
+                <option value="ai-rebellion">AI Rebellion | Robot nổi loạn</option>
+              </select>
+            </label>
+
+            <button id="aboutPlaygroundForgeBtn" type="button" class="primary-btn roll-btn">
+              <span class="lang-en">Forge Concept ✦</span>
+              <span class="lang-vi">Kiến tạo ý tưởng ✦</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="playground-output-terminal glass-panel">
+          <div class="terminal-header">
+            <div class="terminal-dots"><span></span><span></span><span></span></div>
+            <div class="terminal-title">
+              <span class="lang-en">Output Monitor</span>
+              <span class="lang-vi">Màn hình Kết quả</span>
+            </div>
+          </div>
+          <div id="aboutPlaygroundOutput" class="terminal-body font-mono">
+            <span class="terminal-placeholder">
+              <span class="lang-en">&gt; Choose parameters and click "Forge Concept" to generate...</span>
+              <span class="lang-vi">&gt; Chọn các thông số và bấm "Kiến tạo ý tưởng" để bắt đầu...</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. MEMORY ARCHITECTURE WITH DIAGNOSTICS -->
+    <section class="about-v2-memory-section glass-panel about-reveal">
+      <div class="memory-flex-layout">
+        <div class="memory-copy">
+          <p class="eyebrow">
+            <span class="lang-en">Memory Architecture</span>
+            <span class="lang-vi">Cấu trúc bộ nhớ</span>
+          </p>
+          <h2>
+            <span class="lang-en">The story does not forget.</span>
+            <span class="lang-vi">Hành trình không bao giờ quên.</span>
+          </h2>
+          <p>
+            <span class="lang-en">The app combines raw messages, summaries, important facts, and vector memory retrieval so the AI can keep continuity across long sessions. Hover over each component to view active diagnostic structure.</span>
+            <span class="lang-vi">Ứng dụng kết hợp nhật ký hội thoại, tóm tắt diễn biến, sự kiện quan trọng và truy xuất bộ nhớ vector (vector database) để đảm bảo tính nhất quán trên hành trình dài. Di chuột qua mỗi thành phần để xem mô phỏng bộ nhớ.</span>
+          </p>
+
+          <div class="about-v2-memory-grid">
+            <div class="about-memory-card active" data-memory="summary">
+              <span class="memory-card-icon">✦</span>
+              <strong>
+                <span class="lang-en">Story Summary</span>
+                <span class="lang-vi">Tóm tắt cốt truyện</span>
+              </strong>
+              <p>
+                <span class="lang-en">Compresses long sessions into stable narrative memory.</span>
+                <span class="lang-vi">Nén toàn bộ các lượt chơi dài thành bộ nhớ cốt truyện ổn định.</span>
+              </p>
+            </div>
+
+            <div class="about-memory-card" data-memory="facts">
+              <span class="memory-card-icon">◈</span>
+              <strong>
+                <span class="lang-en">Important Facts</span>
+                <span class="lang-vi">Sự thật cốt lõi</span>
+              </strong>
+              <p>
+                <span class="lang-en">Keeps rules, promises, relationships, items, and major events.</span>
+                <span class="lang-vi">Lưu lại vật phẩm sở hữu, quan hệ và các sự kiện lớn.</span>
+              </p>
+            </div>
+
+            <div class="about-memory-card" data-memory="vector">
+              <span class="memory-card-icon">▰</span>
+              <strong>
+                <span class="lang-en">Vector Memories</span>
+                <span class="lang-vi">Bộ nhớ Vector</span>
+              </strong>
+              <p>
+                <span class="lang-en">Finds relevant past moments for the current scene.</span>
+                <span class="lang-vi">Truy xuất tức thời các mảnh ký ức liên quan từ quá khứ.</span>
+              </p>
+            </div>
+
+            <div class="about-memory-card" data-memory="history">
+              <span class="memory-card-icon">⌁</span>
+              <strong>
+                <span class="lang-en">Persistent History</span>
+                <span class="lang-vi">Lịch sử vĩnh cửu</span>
+              </strong>
+              <p>
+                <span class="lang-en">Stores each user’s sessions for continuing later.</span>
+                <span class="lang-vi">Lưu trữ các phiên chơi an toàn trên Firestore để tiếp tục sau.</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="memory-diagnostics-panel glass-panel">
+          <div class="terminal-header">
+            <div class="terminal-dots"><span></span><span></span><span></span></div>
+            <div class="terminal-title">
+              <span class="lang-en">Memory Inspector Console</span>
+              <span class="lang-vi">Bảng chẩn đoán bộ nhớ</span>
+            </div>
+          </div>
+          <div id="aboutMemoryDiagnostics" class="terminal-body font-mono">
+            <!-- Dynamic JSON/diagnostic content loaded here -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. AI MODEL STACK & COMPARISON MATRIX -->
+    <section class="about-v2-tech-section about-reveal">
+      <div class="tech-layout">
+        <div class="tech-copy">
+          <p class="eyebrow">
+            <span class="lang-en">Project Stack</span>
+            <span class="lang-vi">Công nghệ lõi</span>
+          </p>
+          <h2>
+            <span class="lang-en">Built as a full-stack AI story project.</span>
+            <span class="lang-vi">Nền tảng trí tuệ nhân tạo toàn diện.</span>
+          </h2>
+          
+          <div class="about-v2-tech-grid">
+            <article>
+              <h3>Frontend</h3>
+              <p>
+                <span class="lang-en">Game portal UI, story reader, setup wizards, History, and responsive interaction flow.</span>
+                <span class="lang-vi">Giao diện cổng game, trình đọc tiểu thuyết, trình thiết lập, và luồng tương tác di động.</span>
+              </p>
+            </article>
+
+            <article>
+              <h3>Backend</h3>
+              <p>
+                <span class="lang-en">FastAPI routes for sessions, turns, novel setup, memory, and AI provider abstraction.</span>
+                <span class="lang-vi">Hệ thống FastAPI điều hướng phiên chơi, tóm tắt ký ức và trừu tượng hóa nhà cung cấp AI.</span>
+              </p>
+            </article>
+
+            <article>
+              <h3>AI Providers</h3>
+              <p>
+                <span class="lang-en">Gemini, OpenAI, Groq, Ollama, and mock providers through a shared interface.</span>
+                <span class="lang-vi">Tích hợp Gemini, OpenAI, Groq, Ollama qua bộ khung giao tiếp đồng nhất.</span>
+              </p>
+            </article>
+
+            <article>
+              <h3>Persistence</h3>
+              <p>
+                <span class="lang-en">Firebase Auth, Firestore sessions, summaries, facts, and save/load behavior.</span>
+                <span class="lang-vi">Xác thực Firebase Auth, lưu trữ Firestore đảm bảo an toàn dữ liệu người chơi.</span>
+              </p>
+            </article>
+          </div>
+        </div>
+
+        <div class="ai-comparison-panel glass-panel">
+          <h3>
+            <span class="lang-en">AI Provider Comparison Matrix</span>
+            <span class="lang-vi">Ma trận So sánh Nhà cung cấp AI</span>
+          </h3>
+          <p class="matrix-lede">
+            <span class="lang-en">Relative metrics for AI execution within our story engine:</span>
+            <span class="lang-vi">Các chỉ số tương đối khi vận hành trên động cơ truyện:</span>
+          </p>
+          
+          <div class="matrix-bars">
+            <div class="matrix-bar-item">
+              <div class="bar-label">
+                <strong>Gemini (Flash/Pro)</strong>
+                <span>95%</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" style="width: 95%; background: var(--accent);"></div>
+              </div>
+              <small class="bar-desc">
+                <span class="lang-en">Best for long-context story memory and reasoning.</span>
+                <span class="lang-vi">Tốc độ & khả năng xử lý ngữ cảnh cốt truyện dài tốt nhất.</span>
+              </small>
+            </div>
+
+            <div class="matrix-bar-item">
+              <div class="bar-label">
+                <strong>OpenAI (GPT-4o)</strong>
+                <span>92%</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" style="width: 92%; background: #10a37f;"></div>
+              </div>
+              <small class="bar-desc">
+                <span class="lang-en">Extremely rich cinematic prose quality.</span>
+                <span class="lang-vi">Chất lượng văn phong điện ảnh cực kỳ bay bổng và phong phú.</span>
+              </small>
+            </div>
+
+            <div class="matrix-bar-item">
+              <div class="bar-label">
+                <strong>Groq (Llama-3-70b)</strong>
+                <span>88%</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" style="width: 88%; background: #f6851b;"></div>
+              </div>
+              <small class="bar-desc">
+                <span class="lang-en">Blazing fast generation speeds for immediate responses.</span>
+                <span class="lang-vi">Tốc độ phản hồi nhanh như chớp cho trải nghiệm không gián đoạn.</span>
+              </small>
+            </div>
+
+            <div class="matrix-bar-item">
+              <div class="bar-label">
+                <strong>Ollama (Local Models)</strong>
+                <span>75%</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" style="width: 75%; background: var(--muted);"></div>
+              </div>
+              <small class="bar-desc">
+                <span class="lang-en">100% private execution, dependent on local hardware.</span>
+                <span class="lang-vi">Chạy ngoại tuyến riêng tư, phụ thuộc hiệu năng phần cứng cục bộ.</span>
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. FAQ ACCORDION -->
+    <section class="about-v2-faq-section about-reveal">
       <div class="section-heading">
-        <p class="eyebrow">Project Stack</p>
-        <h2>Built as a full-stack AI story project.</h2>
+        <p class="eyebrow">
+          <span class="lang-en">Common Questions</span>
+          <span class="lang-vi">Giải đáp Thắc mắc</span>
+        </p>
+        <h2>
+          <span class="lang-en">Frequently Asked Questions</span>
+          <span class="lang-vi">Những câu hỏi thường gặp</span>
+        </h2>
       </div>
 
-      <div class="about-v2-tech-grid">
-        <article>
-          <h3>Frontend</h3>
-          <p>Game portal UI, story reader, setup wizards, History, and responsive interaction flow.</p>
-        </article>
+      <div class="faq-accordion-container">
+        <div class="faq-item">
+          <button type="button" class="faq-header">
+            <h3>
+              <span class="lang-en">How are my story sessions saved?</span>
+              <span class="lang-vi">Các phiên truyện của tôi được lưu lại như thế nào?</span>
+            </h3>
+            <span class="faq-arrow">▼</span>
+          </button>
+          <div class="faq-body">
+            <p>
+              <span class="lang-en">Stories are stored temporarily in your local browser session. If you are logged in via Firebase, clicking "Save" from the side actions or foundation page writes the session permanently to our Cloud Firestore database, allowing you to load it from the "History" tab on any device.</span>
+              <span class="lang-vi">Các phiên truyện ban đầu được lưu trữ tạm thời trong bộ nhớ trình duyệt. Nếu bạn đăng nhập bằng tài khoản Firebase, bấm "Save" sẽ ghi dữ liệu vĩnh viễn lên cơ sở dữ liệu Cloud Firestore, giúp bạn tải lại từ tab "History" trên bất kỳ thiết bị nào.</span>
+            </p>
+          </div>
+        </div>
 
-        <article>
-          <h3>Backend</h3>
-          <p>FastAPI routes for sessions, turns, novel setup, memory, and AI provider abstraction.</p>
-        </article>
+        <div class="faq-item">
+          <button type="button" class="faq-header">
+            <h3>
+              <span class="lang-en">How does the vector memory database work?</span>
+              <span class="lang-vi">Cơ sở dữ liệu bộ nhớ vector hoạt động ra sao?</span>
+            </h3>
+            <span class="faq-arrow">▼</span>
+          </button>
+          <div class="faq-body">
+            <p>
+              <span class="lang-en">As you play, the backend converts previous story scenes into mathematical coordinates (vector embeddings). Before generating the next scene, the system searches ChromaDB for past moments that match your current action context, injecting relevant memories back to the AI prompt to prevent memory loss.</span>
+              <span class="lang-vi">Khi bạn chơi, backend chuyển đổi các phân cảnh trước thành tọa độ toán học (embeddings). Trước khi tạo cảnh mới, hệ thống tìm kiếm trong ChromaDB những khoảnh khắc quá khứ khớp nhất với bối cảnh hành động hiện tại để đưa ngược vào prompt của AI, tránh tình trạng AI bị "quên".</span>
+            </p>
+          </div>
+        </div>
 
-        <article>
-          <h3>AI Providers</h3>
-          <p>Gemini, OpenAI, Groq, Ollama, and mock providers through a shared interface.</p>
-        </article>
+        <div class="faq-item">
+          <button type="button" class="faq-header">
+            <h3>
+              <span class="lang-en">Can I run this project without an internet connection?</span>
+              <span class="lang-vi">Tôi có thể chạy dự án này mà không cần kết nối mạng không?</span>
+            </h3>
+            <span class="faq-arrow">▼</span>
+          </button>
+          <div class="faq-body">
+            <p>
+              <span class="lang-en">Yes, by setting your environment variables to use Ollama (`TEXT_PROVIDER=ollama`) with local models (such as llama3 or qwen2.5) and turning on local mock stores (`USE_LOCAL_STORE_IF_FIREBASE_MISSING=true`), you can enjoy the text adventure locally on your machine without querying external APIs.</span>
+              <span class="lang-vi">Được. Bằng cách thiết lập cấu hình môi trường để sử dụng Ollama (`TEXT_PROVIDER=ollama`) cùng các mô hình chạy cục bộ (như llama3 hoặc qwen2.5) và bật kho lưu trữ cục bộ (`USE_LOCAL_STORE_IF_FIREBASE_MISSING=true`), bạn có thể chơi game hoàn toàn offline.</span>
+            </p>
+          </div>
+        </div>
 
-        <article>
-          <h3>Persistence</h3>
-          <p>Firebase Auth, Firestore sessions, summaries, facts, and save/load behavior.</p>
-        </article>
+        <div class="faq-item">
+          <button type="button" class="faq-header">
+            <h3>
+              <span class="lang-en">How can I request my account and data to be deleted?</span>
+              <span class="lang-vi">Làm thế nào để tôi yêu cầu xóa tài khoản và dữ liệu?</span>
+            </h3>
+            <span class="faq-arrow">▼</span>
+          </button>
+          <div class="faq-body">
+            <p>
+              <span class="lang-en">We support total data privacy. You can request full deletion of your Firebase credentials and Firestore story histories by emailing us at caoban170106@gmail.com. Admin dashboard tools also support purging inactive sessions and expired records.</span>
+              <span class="lang-vi">Chúng tôi cam kết bảo vệ quyền riêng tư của bạn. Bạn có thể yêu cầu xóa toàn bộ thông tin tài khoản Firebase và lịch sử chơi game lưu trên Firestore bằng cách gửi email về địa chỉ caoban170106@gmail.com. Công cụ của Admin cũng hỗ trợ xóa định kỳ các phiên hết hạn.</span>
+            </p>
+          </div>
+        </div>
       </div>
     </section>
 
+    <!-- 9. FINAL CTA -->
     <section class="about-v2-final glass-panel about-reveal">
-      <p class="eyebrow">Begin</p>
-      <h2>Ready to enter a world that remembers you?</h2>
+      <p class="eyebrow">
+        <span class="lang-en">Begin</span>
+        <span class="lang-vi">Khởi nguyên</span>
+      </p>
+      <h2>
+        <span class="lang-en">Ready to enter a world that remembers you?</span>
+        <span class="lang-vi">Sẵn sàng bước vào thế giới khắc ghi bạn?</span>
+      </h2>
       <p>
-        Create an adventure, write a novel, or continue a story already waiting in your History.
+        <span class="lang-en">Create an adventure, write a novel, or continue a story already waiting in your History.</span>
+        <span class="lang-vi">Khởi động một chế độ phiêu lưu, đồng tác giả một tiểu thuyết, hoặc tiếp tục hành trình đã lưu trong Lịch sử của bạn.</span>
       </p>
 
       <button id="aboutFinalCreateBtn" type="button" class="primary-btn big-btn">
-        Start Creating
+        <span class="lang-en">Start Creating</span>
+        <span class="lang-vi">Bắt đầu Kiến tạo</span>
       </button>
     </section>
 

@@ -1206,7 +1206,7 @@ function initAboutMotion(gsap, ScrollTrigger, smallScreen) {
   const orbits = gsap.utils.toArray(".about-v2-orbit");
   const revealBlocks = gsap.utils.toArray(".about-reveal");
   const storyCards = gsap.utils.toArray(
-    ".about-v2-mode-card, .about-v2-steps article, .about-v2-tech-grid article, .about-v2-memory-grid article"
+    ".about-mode-tab-btn, .about-v2-steps article, .ai-comparison-panel, .about-memory-card, .faq-item"
   );
 
   revealBlocks.forEach((block) => block.classList.remove("visible"));
@@ -1278,7 +1278,7 @@ function initAboutMotion(gsap, ScrollTrigger, smallScreen) {
         stagger: 0.05,
         ease: "power3.out",
         scrollTrigger: {
-          trigger: ".about-v2-modes",
+          trigger: ".about-v2-modes-container",
           start: "top 82%",
           once: true,
         },
@@ -6577,3 +6577,348 @@ function initLoginAnimations() {
 
 // Call init when script loads
 initLoginAnimations();
+
+/* =========================================================================
+   ABOUT PAGE UPGRADE: DYNAMIC INTERACTIVE LOGIC
+   ========================================================================= */
+
+function initAboutInteractiveFeatures() {
+  // 1. Language Toggle Logic
+  function updateAboutLanguage(lang) {
+    const aboutPage = document.getElementById("aboutPage");
+    if (!aboutPage) return;
+    
+    if (lang === "vi") {
+      aboutPage.classList.remove("lang-selected-en");
+      aboutPage.classList.add("lang-selected-vi");
+      document.getElementById("aboutLangViBtn")?.classList.add("active");
+      document.getElementById("aboutLangEnBtn")?.classList.remove("active");
+    } else {
+      aboutPage.classList.remove("lang-selected-vi");
+      aboutPage.classList.add("lang-selected-en");
+      document.getElementById("aboutLangEnBtn")?.classList.add("active");
+      document.getElementById("aboutLangViBtn")?.classList.remove("active");
+    }
+    localStorage.setItem("about-lang", lang);
+    
+    // Re-trigger terminal typing preview with new language
+    const activeTab = document.querySelector(".about-mode-tab-btn.active");
+    if (activeTab) {
+      triggerTerminalPreview(activeTab.getAttribute("data-mode"));
+    }
+  }
+
+  document.getElementById("aboutLangEnBtn")?.addEventListener("click", () => updateAboutLanguage("en"));
+  document.getElementById("aboutLangViBtn")?.addEventListener("click", () => updateAboutLanguage("vi"));
+
+  // 2. Interactive Terminal Mock Data & Logic
+  const terminalData = {
+    en: {
+      adventure: [
+        { text: "Initializing Cosmic Engine...", type: "system" },
+        { text: "World Seed: 0x8F94D2 - 'Aethelgard Void'", type: "system" },
+        { text: "Loading Character: Vaelen (Stardust Rogue)...", type: "system" },
+        { text: "> You stand before the shattered Obsidian Spire. The air is cold, smelling of ozone and dead magic.", type: "story" },
+        { text: "[1] Venture into the Spire's glowing tear", type: "choice" },
+        { text: "[2] Scan the perimeter for cosmic residual signs", type: "choice" },
+        { text: "[3] Retreat to the safety of your shuttle", type: "choice" }
+      ],
+      novel: [
+        { text: "Building Story Bible...", type: "system" },
+        { text: "Registering Lore: The Iron Pact of 2084", type: "system" },
+        { text: "Configuring Tone: Cyber-noir, melancholic, rich prose", type: "system" },
+        { text: "> The neon rain fell like liquid silver, painting the narrow alleys of District 9 in fractured reflections. Detective Kael adjusted his collar, the hum of his cybernetic arm a faint companion in the dark. 'She was here,' he muttered to the database. 'I can still feel the heat signature.'", type: "story" },
+        { text: "> Direction: Detail Kael's next move or describe the approaching footsteps?", type: "system" }
+      ]
+    },
+    vi: {
+      adventure: [
+        { text: "Đang khởi tạo Động cơ Vũ trụ...", type: "system" },
+        { text: "Hạt giống thế giới: 0x8F94D2 - 'Kẻ Không Hồn'", type: "system" },
+        { text: "Tải nhân vật: Vaelen (Kẻ Trộm Ánh Sao)...", type: "system" },
+        { text: "> Bạn đang đứng trước Tháp Hắc Diện Thạch vỡ vụn. Không khí lạnh buốt, nồng nặc mùi ozone và ma thuật đã tàn.", type: "story" },
+        { text: "[1] Tiến vào vết nứt phát sáng của Tháp", type: "choice" },
+        { text: "[2] Quét xung quanh tìm tàn tích năng lượng", type: "choice" },
+        { text: "[3] Rút lui về phi thuyền an toàn", type: "choice" }
+      ],
+      novel: [
+        { text: "Đang thiết lập Story Bible...", type: "system" },
+        { text: "Đăng ký Truyền thuyết: Khế ước Sắt năm 2084", type: "system" },
+        { text: "Định cấu hình Văn phong: U tối, điện ảnh, giàu cảm xúc", type: "system" },
+        { text: "> Cơn mưa neon rơi như bạc lỏng, nhuộm những con hẻm nhỏ của Quận 9 trong những hình ảnh phản chiếu vỡ vụn. Thám tử Kael chỉnh lại cổ áo, tiếng cánh tay cơ khí kêu rì rì nhỏ trong bóng tối. 'Cô ấy đã ở đây,' anh lẩm bẩm với cơ sở dữ liệu. 'Tôi vẫn cảm nhận được nhiệt lượng.'", type: "story" },
+        { text: "> Định hướng tiếp theo: Mô tả chi tiết hành động của Kael hay mô tả tiếng bước chân đang đến gần?", type: "system" }
+      ]
+    }
+  };
+
+  let terminalTimeout = null;
+  function triggerTerminalPreview(mode) {
+    const terminalBody = document.getElementById("aboutTerminalPreview");
+    if (!terminalBody) return;
+    
+    if (terminalTimeout) {
+      clearTimeout(terminalTimeout);
+    }
+    terminalBody.innerHTML = "";
+    
+    const lang = localStorage.getItem("about-lang") || "en";
+    const lines = terminalData[lang][mode] || [];
+    let lineIndex = 0;
+    
+    function typeNextLine() {
+      if (lineIndex >= lines.length) {
+        const cursor = document.createElement("span");
+        cursor.className = "cursor-blink";
+        terminalBody.appendChild(cursor);
+        return;
+      }
+      
+      const lineInfo = lines[lineIndex];
+      const lineEl = document.createElement("span");
+      lineEl.className = "term-line";
+      
+      if (lineInfo.type === "system") {
+        lineEl.className += " term-system";
+        lineEl.style.color = "rgba(255, 255, 255, 0.4)";
+      } else if (lineInfo.type === "story") {
+        lineEl.className += " term-story";
+        lineEl.style.color = "var(--text)";
+        lineEl.style.fontWeight = "600";
+      } else if (lineInfo.type === "choice") {
+        lineEl.className += " term-choice";
+      }
+      
+      terminalBody.appendChild(lineEl);
+      
+      let charIndex = 0;
+      const text = lineInfo.text;
+      
+      function typeChar() {
+        if (charIndex >= text.length) {
+          lineIndex++;
+          terminalTimeout = setTimeout(typeNextLine, lineInfo.type === "choice" ? 120 : 350);
+          return;
+        }
+        lineEl.textContent += text[charIndex];
+        charIndex++;
+        terminalTimeout = setTimeout(typeChar, 8);
+      }
+      
+      typeChar();
+    }
+    
+    typeNextLine();
+  }
+
+  document.querySelectorAll(".about-mode-tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".about-mode-tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const mode = btn.getAttribute("data-mode");
+      triggerTerminalPreview(mode);
+    });
+  });
+
+  // 3. Memory Architecture Diagnostics Switcher
+  const memoryDiagData = {
+    summary: {
+      component: "StorySummary",
+      status: "COMPRESSED",
+      tokens: 420,
+      summary: "Player (Vaelen) entered the Spire, acquired a glowing shard, and successfully bypassed the sentinel security grid."
+    },
+    facts: {
+      component: "ImportantFacts",
+      entities: ["Vaelen", "Sentinel Grid", "Obsidian Spire"],
+      inventory: ["Obsidian Shard", "Decoy Flare"],
+      relations: {
+        "Sentinels": "Hostile",
+        "Collector": "Neutral"
+      }
+    },
+    vector: {
+      component: "VectorMemories",
+      db_instance: "ChromaDB",
+      collection: "session_mem_194b",
+      last_query: "shattered tower rogue sentinel",
+      nearest_matches: [
+        { id: "msg_003", distance: 0.22, content: "Kael mentions Spire defenses are weak from the east side" },
+        { id: "msg_012", distance: 0.35, content: "Obsidian spire sentinel shoots plasma flares" }
+      ]
+    },
+    history: {
+      component: "PersistentHistory",
+      database: "Cloud Firestore",
+      session_id: "9a2f-14bc-7c3d",
+      user_id: "firebase_auth_user_uuid",
+      total_turns: 45,
+      last_save_time: "2026-05-22T05:37:32Z"
+    }
+  };
+
+  function formatDiagnosticJSON(obj) {
+    const rawJson = JSON.stringify(obj, null, 2);
+    return rawJson.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) {
+      let cls = 'diagnostics-val';
+      if (/^"/.test(match)) {
+        if (/:$/.test(match)) {
+          cls = 'diagnostics-key';
+        } else {
+          cls = 'diagnostics-str';
+        }
+      }
+      return '<span class="' + cls + '">' + match + '</span>';
+    });
+  }
+
+  function updateDiagnostics(type) {
+    const codeBox = document.getElementById("aboutDiagnosticsCode");
+    const metadataTitle = document.getElementById("aboutDiagnosticsTitle");
+    if (!codeBox) return;
+    
+    const data = memoryDiagData[type];
+    if (!data) return;
+    
+    if (metadataTitle) {
+      metadataTitle.textContent = `DIAGNOSTIC_METADATA_STREAM: ${type.toUpperCase()}_BLOCK`;
+    }
+    
+    codeBox.innerHTML = formatDiagnosticJSON(data);
+  }
+
+  document.querySelectorAll(".about-memory-card").forEach(card => {
+    card.addEventListener("click", () => {
+      document.querySelectorAll(".about-memory-card").forEach(c => c.classList.remove("active"));
+      card.classList.add("active");
+      const type = card.getAttribute("data-type");
+      updateDiagnostics(type);
+    });
+  });
+
+  // 4. Interactive Story Concept Playground (Forge)
+  const playgroundResponses = {
+    en: {
+      "cosmic-horror": {
+        "memory-loss": "World Seed: 'Xylos-9'. You awake inside an abandoned starship docking bay with no memory of who you are. The spaceship log lists you as deceased. Outside the glass, the stars are slowly blinking out one by one in a perfect spiral pattern. A faint heartbeat is echoing from the ship's ventilation system.",
+        "faction-war": "World Seed: 'Azathoth-Grip'. The Solar Navy is engaged in an endless battle with the Cult of the Deep Void. You intercept a tactical transmission containing coordinates to a slumbering god. Both factions will hunt you down if they discover you possess this key.",
+        "artifact": "World Seed: 'Gargantua-Eye'. You discover a black obsidian orb orbiting a dying pulsar. Every time you touch it, you relive the final, terrified moments of an alien civilization that perished a billion years ago. It warns of something massive coming.",
+        "betrayal": "World Seed: 'Void-Covenant'. Your crewmates have signed a secret pact with an ancient cosmic entity to sacrifice you at the edge of the event horizon. You find the ritual markings on the ship's engine core just hours before arrival."
+      },
+      "cyber-fantasy": {
+        "memory-loss": "World Seed: 'Neo-Avalon'. You are a street-level wizard in a neon-drenched metropolis with wiped memory chips. Your spell-matrix deck contains a single, forbidden soul-binding ritual. The corporate police are scanning your cybernetics for this signature.",
+        "faction-war": "World Seed: 'Megacity-Spire'. The Megacorp Elites and the Underground Elven Syndicate are fighting for control of the digital Lifeline. You hold the decryption cipher that can either freeze all cybernetics in the city or unlock magic for the poor.",
+        "artifact": "World Seed: 'Excalibur-Net'. While hacking a high-security server, you compile a legendary digital blade that physically crystallizes on your workbench. The weapon whispers ancient runes in your head, warning of executioners sent to reclaim it.",
+        "betrayal": "World Seed: 'Chroma-Betrayal'. Your partner, a rogue AI, sold your location to the corporate syndicate. You escape into the dark web just as physical drones breach your safehouse, leaving you with only a burner deck."
+      },
+      "grimdark-steampunk": {
+        "memory-loss": "World Seed: 'Iron-Aether'. You wake up covered in soot inside a runaway steam train with mechanical limbs you don't remember installing. A ticking pocketwatch in your pocket reads: 'Do not let the furnace go cold.'",
+        "faction-war": "World Seed: 'Rust-Valleys'. The Sovereign Gear-Guilds and the rebel Coal-Scavengers are tearing the city apart. You are a mercenary who discovered a blueprints chest for a perpetual energy engine that both sides would burn the skies to own.",
+        "artifact": "World Seed: 'Brass-Astrolabe'. You steal an ancient astronomical device from a clockwork vault. It doesn't track stars; instead, it predicts the exact second people around you will die. The first prediction is yours, set for midnight.",
+        "betrayal": "World Seed: 'Steam-Covenant'. The airship captain who raised you has traded your life to the Guilds in exchange for a cache of pure aether fuel. You hear the gears of the brig locking while flying over the toxic mist."
+      },
+      "dream-surrealism": {
+        "memory-loss": "World Seed: 'Solitude-Sea'. You walk on a beach where the sand is made of forgotten names, including your own. A lighthouse in the distance casts a shadow that speaks in your childhood voice, offering pieces of your past.",
+        "faction-war": "World Seed: 'Clockwork-Dream'. The Lords of Daylight and the Sovereigns of the Moon are battling over a giant hourglass. You are a dreamwalker who can shift the sands, altering the memories of everyone in the realm.",
+        "artifact": "World Seed: 'Mirror-Tear'. You find a mirror that doesn't reflect your face, but rather the person you could have been if you had made different choices. Reaching through the glass allows you to swap items with your alternate self.",
+        "betrayal": "World Seed: 'Glass-Tower'. The shadow you cast has detached itself and begun plotting with the dream-keepers to lock you in a loop of perpetual night. You must catch your shadow before sunrise."
+      }
+    },
+    vi: {
+      "cosmic-horror": {
+        "memory-loss": "Hạt giống thế giới: 'Xylos-9'. Bạn thức dậy trong khoang cập cảng của một tàu vũ trụ bị bỏ hoang, không ký ức. Nhật ký tàu ghi nhận bạn đã tử vong. Ngoài ô kính, các ngôi sao đang tắt dần từng ngôi một theo hình xoắn ốc hoàn hảo. Một nhịp tim yếu ớt đang vọng ra từ hệ thống thông gió.",
+        "faction-war": "Hạt giống thế giới: 'Azathoth-Grip'. Hải quân Thái dương đang giao tranh với Giáo phái Hư vô. Bạn bắt được tín hiệu chứa tọa độ của một cổ thần đang ngủ say. Cả hai phe sẽ truy sát bạn nếu biết bạn nắm giữ chìa khóa này.",
+        "artifact": "Hạt giống thế giới: 'Gargantua-Eye'. Bạn phát hiện một quả cầu đá hắc thạch bay quanh một pulsar đang lụi tàn. Mỗi khi chạm vào, bạn trải nghiệm những khoảnh khắc cuối cùng của một nền văn minh ngoài hành tinh đã diệt vong tỷ năm trước.",
+        "betrayal": "Hạt giống thế giới: 'Void-Covenant'. Thủy thủ đoàn của bạn đã ký một khế ước bí mật với một thực thể cổ đại để hiến tế bạn tại rìa chân trời sự kiện. Bạn tìm thấy các ký hiệu nghi lễ trên lõi động cơ chỉ vài giờ trước khi đến nơi."
+      },
+      "cyber-fantasy": {
+        "memory-loss": "Hạt giống thế giới: 'Neo-Avalon'. Bạn là một thuật sĩ đường phố tại một siêu đô thị ngập tràn ánh đèn neon với các chip ký ức bị xóa sạch. Thiết bị phép thuật của bạn chứa một nghi lễ cấm. Cảnh sát tập đoàn đang quét thiết bị của bạn.",
+        "faction-war": "Hạt giống thế giới: 'Megacity-Spire'. Giới tinh hoa tập đoàn và Nghiệp đoàn yêu tinh đang chiến đấu giành quyền kiểm soát Lifeline kỹ thuật số. Bạn giữ mật mã giải mã có thể đóng băng tất cả thiết bị cơ khí trong thành phố.",
+        "artifact": "Hạt giống thế giới: 'Excalibur-Net'. Trong khi hack máy chủ bảo mật cao, bạn biên dịch được một lưỡi kiếm kỹ thuật số huyền thoại kết tinh vật lý trên bàn làm việc. Vũ khí thì thầm cổ tự, cảnh báo sát thủ đang tới.",
+        "betrayal": "Hạt giống thế giới: 'Chroma-Betrayal'. Người cộng sự AI của bạn đã bán vị trí của bạn cho tập đoàn. Bạn trốn vào thế giới web tối ngay khi drone của tập đoàn phá vỡ căn nhà an toàn."
+      },
+      "grimdark-steampunk": {
+        "memory-loss": "Hạt giống thế giới: 'Iron-Aether'. Bạn thức dậy đầy muội than bên trong một đoàn tàu hơi nước đang lao đi mất kiểm soát với các chi cơ khí bạn không nhớ đã lắp đặt. Đồng hồ bỏ túi chạy tích tắc ghi: 'Đừng để lò nguội.'",
+        "faction-war": "Hạt giống thế giới: 'Rust-Valleys'. Hiệp hội Bánh răng và Lực lượng Nhặt rác đang xé nát thành phố. Bạn phát hiện rương bản vẽ động cơ năng lượng vĩnh cửu mà cả hai bên sẵn sàng thiêu rui bầu trời để sở hữu.",
+        "artifact": "Hạt giống thế giới: 'Brass-Astrolabe'. Bạn đánh cắp một thiết bị thiên văn cổ từ hầm clockwork. Nó không theo dõi sao; nó dự đoán chính xác giây phút những người xung quanh bạn sẽ chết. Dự đoán đầu tiên dành cho bạn, vào nửa đêm.",
+        "betrayal": "Hạt giống thế giới: 'Steam-Covenant'. Thuyền trưởng khinh khí cầu đã đổi mạng bạn lấy một thùng nhiên liệu aether nguyên chất. Bạn nghe tiếng bánh răng khóa buồng giam khi đang bay trên màn sương độc."
+      },
+      "dream-surrealism": {
+        "memory-loss": "Hạt giống thế giới: 'Solitude-Sea'. Bạn đi trên bãi biển nơi cát được tạo nên từ những cái tên bị lãng quên, bao gồm cả tên bạn. Một ngọn hải đăng ở phía xa phát ra giọng nói thời thơ ấu của bạn, trao lại từng mảnh ký ức.",
+        "faction-war": "Hạt giống thế giới: 'Clockwork-Dream'. Chúa tể Ánh sáng và Vương chủ Ánh trăng đang tranh giành một chiếc đồng hồ cát khổng lồ. Bạn có thể dịch chuyển dòng cát, thay đổi ký ức của mọi người trong cõi mộng.",
+        "artifact": "Hạt giống thế giới: 'Mirror-Tear'. Bạn tìm thấy chiếc gương phản chiếu con người khác của bạn nếu đưa ra lựa chọn khác. Chạm qua gương cho phép bạn trao đổi đồ vật với bản thể song song đó.",
+        "betrayal": "Hạt giống thế giới: 'Glass-Tower'. Cái bóng của bạn đã tách ra và bắt đầu âm mưu với những người giữ mộng để nhốt bạn vào vòng lặp đêm vĩnh cửu. Bạn phải bắt bóng trước khi bình minh lên."
+      }
+    }
+  };
+
+  const forgeBtn = document.getElementById("aboutPlaygroundForgeBtn");
+  const playgroundOutput = document.getElementById("aboutPlaygroundOutput");
+  if (forgeBtn && playgroundOutput) {
+    forgeBtn.addEventListener("click", () => {
+      const genre = document.getElementById("aboutPlaygroundGenre").value;
+      const conflict = document.getElementById("aboutPlaygroundConflict").value;
+      const lang = localStorage.getItem("about-lang") || "en";
+      
+      const loadingMsg = lang === "vi" ? "[Đang tạo Hạt giống Thế giới...]" : "[Forging world pathways...]";
+      playgroundOutput.innerHTML = `<span class="terminal-placeholder">${loadingMsg}</span>`;
+      
+      let dots = 0;
+      const interval = setInterval(() => {
+        dots = (dots + 1) % 4;
+        playgroundOutput.innerHTML = `<span class="terminal-placeholder">${loadingMsg + ".".repeat(dots)}</span>`;
+      }, 300);
+      
+      setTimeout(() => {
+        clearInterval(interval);
+        const result = playgroundResponses[lang][genre][conflict] || "Seed not found.";
+        playgroundOutput.innerHTML = "";
+        
+        let charIdx = 0;
+        function typeResult() {
+          if (charIdx >= result.length) return;
+          playgroundOutput.textContent += result[charIdx];
+          charIdx++;
+          setTimeout(typeResult, 12);
+        }
+        typeResult();
+      }, 1200);
+    });
+  }
+
+  // 5. FAQ Accordion Logic
+  document.querySelectorAll(".faq-header").forEach(header => {
+    header.addEventListener("click", () => {
+      const item = header.closest(".faq-item");
+      const body = item.querySelector(".faq-body");
+      const isActive = item.classList.contains("active");
+      
+      document.querySelectorAll(".faq-item").forEach(otherItem => {
+        if (otherItem !== item) {
+          otherItem.classList.remove("active");
+          otherItem.querySelector(".faq-body").style.maxHeight = "0";
+        }
+      });
+      
+      if (isActive) {
+        item.classList.remove("active");
+        body.style.maxHeight = "0";
+      } else {
+        item.classList.add("active");
+        body.style.maxHeight = body.scrollHeight + "px";
+      }
+    });
+  });
+
+  // Initial runs
+  const savedLang = localStorage.getItem("about-lang") || "en";
+  updateAboutLanguage(savedLang);
+  
+  const firstCard = document.querySelector(".about-memory-card");
+  if (firstCard) {
+    updateDiagnostics(firstCard.getAttribute("data-type"));
+  }
+}
+
+// Call init when script loads
+initLoginAnimations();
+initAboutInteractiveFeatures();
