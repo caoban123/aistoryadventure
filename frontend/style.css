@@ -10084,11 +10084,11 @@ select:focus-visible {
    ABOUT PAGE UPGRADE: BILINGUAL & INTERACTIVE CUSTOM STYLES
    ========================================================================= */
 
-#aboutPage.lang-selected-en .lang-vi {
+.lang-selected-en .lang-vi {
   display: none !important;
 }
 
-#aboutPage.lang-selected-vi .lang-en {
+.lang-selected-vi .lang-en {
   display: none !important;
 }
 
