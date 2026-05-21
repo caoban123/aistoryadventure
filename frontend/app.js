@@ -6772,7 +6772,7 @@ function initAboutInteractiveFeatures() {
   }
 
   function updateDiagnostics(type) {
-    const codeBox = document.getElementById("aboutDiagnosticsCode");
+    const codeBox = document.getElementById("aboutMemoryDiagnostics");
     const metadataTitle = document.getElementById("aboutDiagnosticsTitle");
     if (!codeBox) return;
     
@@ -6790,7 +6790,7 @@ function initAboutInteractiveFeatures() {
     card.addEventListener("click", () => {
       document.querySelectorAll(".about-memory-card").forEach(c => c.classList.remove("active"));
       card.classList.add("active");
-      const type = card.getAttribute("data-type");
+      const type = card.getAttribute("data-memory");
       updateDiagnostics(type);
     });
   });
@@ -6915,7 +6915,7 @@ function initAboutInteractiveFeatures() {
   
   const firstCard = document.querySelector(".about-memory-card");
   if (firstCard) {
-    updateDiagnostics(firstCard.getAttribute("data-type"));
+    updateDiagnostics(firstCard.getAttribute("data-memory"));
   }
 }
 
