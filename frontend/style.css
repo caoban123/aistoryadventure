@@ -10680,6 +10680,10 @@ select:focus-visible {
   align-items: start;
 }
 
+.about-v2-tech-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .ai-comparison-panel {
   padding: 34px !important;
   border-radius: 28px;
@@ -10867,6 +10871,10 @@ select:focus-visible {
   }
   
   .about-v2-memory-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .about-v2-tech-grid {
     grid-template-columns: 1fr;
   }
   
