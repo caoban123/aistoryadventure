@@ -8,6 +8,9 @@ import {
   updateProfile,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInAnonymously,
+  sendPasswordResetEmail,
+  sendEmailVerification,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -30,7 +33,6 @@ const API_BASE = (runtimeConfig.API_BASE || "http://127.0.0.1:8000").replace(/\/
 const ACCOUNT_STATUS_TIMEOUT_MS = 10000;
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
-
 const loginPage      = document.getElementById("loginPage");
 const landingPage    = document.getElementById("landingPage");
 const setupPage      = document.getElementById("setupPage");
@@ -38,12 +40,13 @@ const gamePage       = document.getElementById("gamePage");
 const foundationPage = document.getElementById("foundationPage");
 const continuePage   = document.getElementById("continuePage");
 const registerPage = document.getElementById("registerPage");
+const forgotPasswordPage = document.getElementById("forgotPasswordPage");
+const verifyEmailPage = document.getElementById("verifyEmailPage");
 const novelWorldPage = document.getElementById("novelWorldPage");
 const novelQuestionPage = document.getElementById("novelQuestionPage");
 const novelCharacterPage = document.getElementById("novelCharacterPage");
 const profilePage = document.getElementById("profilePage");
 const trustPage = document.getElementById("trustPage");
-
 const loginGoogleBtn          = document.getElementById("loginGoogleBtn");
 const guestBtn                = document.getElementById("guestBtn");
 const logoutBtn               = document.getElementById("logoutBtn");
@@ -897,6 +900,8 @@ initPortalScene();
 const ALL_PAGES = [
   loginPage,
   registerPage,
+  forgotPasswordPage,
+  verifyEmailPage,
   landingPage,
   presetDetailPage,
   discoverPage,
@@ -3353,8 +3358,25 @@ loginGoogleBtn?.addEventListener("click", async () => {
 });
 
 // Login: Guest
-guestBtn?.addEventListener("click", () => {
-  alert("Guest mode đang tạm tắt vì backend hiện yêu cầu Firebase login.");
+guestBtn?.addEventListener("click", async () => {
+  hideAccountStatusPanel();
+  clearAuthError(loginError);
+  guestBtn.disabled = true;
+  showAuthLoading();
+  try {
+    isGuest = true;
+    await Promise.all([
+      signInAnonymously(auth),
+      sleep(1200),
+    ]);
+  } catch (err) {
+    console.error(err);
+    isGuest = false;
+    showAuthError(loginError, "Could not start Guest mode. Please check your internet connection.");
+  } finally {
+    guestBtn.disabled = false;
+    hideAuthLoading();
+  }
 });
 
 async function performLogout() {
@@ -4746,10 +4768,29 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   if (user) {
+    if (user.isAnonymous) {
+      isGuest = true;
+    } else {
+      isGuest = false;
+      // Check email verification for Email/Password provider
+      const isEmailProvider = user.providerData.some(p => p.providerId === 'password');
+      if (isEmailProvider && !user.emailVerified) {
+        updateUserUI(user);
+        showPage(verifyEmailPage);
+        setActiveNav(null);
+        hideAiLoading();
+        return;
+      }
+    }
+
     updateUserUI(user);
 
     try {
-      if (loginPage.classList.contains("active")) {
+      const isAuthPageActive = loginPage.classList.contains("active") || 
+                               registerPage.classList.contains("active") || 
+                               verifyEmailPage.classList.contains("active");
+
+      if (isAuthPageActive) {
         showAccountStatusPanel({
           tone: "info",
           eyebrow: "Checking",
@@ -4769,7 +4810,7 @@ onAuthStateChanged(auth, async (user) => {
         return;
       }
 
-      if (loginPage.classList.contains("active")) {
+      if (isAuthPageActive) {
         showPage(landingPage);
       }
     } catch (err) {
@@ -4802,29 +4843,24 @@ loginEmailBtn?.addEventListener("click", async () => {
   const password = loginPassword.value.trim();
 
   if (!email || !password) {
-  showAuthError(
-    loginError,
-    "Vui lòng nhập email và mật khẩu."
-  );
-  return;
-}
+    showAuthError(loginError, "Vui lòng nhập email và mật khẩu.");
+    return;
+  }
 
   try {
     loginEmailBtn.disabled = true;
     loginEmailBtn.textContent = "Đang đăng nhập...";
     showAuthLoading();
     await Promise.all([
-  signInWithEmailAndPassword(auth, email, password),
-  sleep(2200),
-]);
-
+      signInWithEmailAndPassword(auth, email, password),
+      sleep(2200),
+    ]);
   } catch (err) {
     console.error(err);
     showAuthError(loginError, getFriendlyAuthError(err));
-
   } finally {
     loginEmailBtn.disabled = false;
-    loginEmailBtn.textContent = "Đăng nhập";
+    loginEmailBtn.textContent = "Login";
     hideAuthLoading();
   }
 });
@@ -4834,83 +4870,200 @@ registerSubmitBtn?.addEventListener("click", async () => {
   const email = registerEmail.value.trim();
   const password = registerPassword.value.trim();
   const confirmPassword = registerPasswordConfirm.value.trim();
-  if (password !== confirmPassword) {
-  showAuthError(
-    registerError,
-    "Mật khẩu nhập lại không khớp."
-  );
-  return;
-}
 
   if (!email || !password) {
-  showAuthError(
-    registerError,
-    "Vui lòng nhập email và mật khẩu."
-  );
-  return;
-}
+    showAuthError(registerError, "Vui lòng nhập email và mật khẩu.");
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    showAuthError(registerError, "Mật khẩu nhập lại không khớp.");
+    return;
+  }
 
   if (password.length < 6) {
-  showAuthError(
-    registerError,
-    "Mật khẩu phải ít nhất 6 ký tự."
-  );
-  return;
-}
+    showAuthError(registerError, "Mật khẩu phải ít nhất 6 ký tự.");
+    return;
+  }
 
   try {
     registerSubmitBtn.disabled = true;
     registerSubmitBtn.textContent = "Đang tạo tài khoản...";
-    await Promise.all([
-  createUserWithEmailAndPassword(
-    auth,
-    email,
-    password
-  ),
-  sleep(2200),
-]);
+    showAuthLoading();
+
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // Send verification email
+    await sendEmailVerification(user);
 
     showAuthError(
-  registerError,
-  "Đăng ký thành công. Đang đăng nhập..."
-);
+      registerError,
+      "Đăng ký thành công! Đang chuyển đến trang xác thực email..."
+    );
 
-registerError.style.background =
-  "rgba(80,255,120,0.12)";
+    // Green success styles
+    registerError.style.background = "rgba(80,255,120,0.12)";
+    registerError.style.border = "1px solid rgba(80,255,120,0.25)";
+    registerError.style.color = "#b8ffca";
 
-registerError.style.border =
-  "1px solid rgba(80,255,120,0.25)";
-
-registerError.style.color = "#b8ffca";
-    showPage(landingPage);
-
+    await sleep(2200);
+    showPage(verifyEmailPage);
   } catch (err) {
     console.error(err);
+    registerError.style.background = "";
+    registerError.style.border = "";
+    registerError.style.color = "";
     showAuthError(registerError, getFriendlyAuthError(err));
-
   } finally {
     registerSubmitBtn.disabled = false;
-    registerSubmitBtn.textContent = "Đăng ký";
+    registerSubmitBtn.textContent = "Register";
     hideAuthLoading();
   }
 });
 
 goToRegisterBtn?.addEventListener("click", () => {
-  loginPassword.value = "";
+  resetAuthPages();
   showPage(registerPage);
 });
 
 goToLoginBtn?.addEventListener("click", () => {
-  registerPassword.value = "";
+  resetAuthPages();
   showPage(loginPage);
+});
+
+// Forgot password buttons
+const forgotPasswordBtn = document.getElementById("forgotPasswordBtn");
+const backToLoginFromForgotBtn = document.getElementById("backToLoginFromForgotBtn");
+const forgotSubmitBtn = document.getElementById("forgotSubmitBtn");
+
+forgotPasswordBtn?.addEventListener("click", () => {
+  resetAuthPages();
+  showPage(forgotPasswordPage);
+});
+
+backToLoginFromForgotBtn?.addEventListener("click", () => {
+  resetAuthPages();
+  showPage(loginPage);
+});
+
+forgotSubmitBtn?.addEventListener("click", async () => {
+  const forgotError = document.getElementById("forgotError");
+  const email = document.getElementById("forgotEmail")?.value.trim();
+  clearAuthError(forgotError);
+
+  if (!email) {
+    showAuthError(forgotError, "Vui lòng nhập địa chỉ email.");
+    return;
+  }
+
+  try {
+    forgotSubmitBtn.disabled = true;
+    forgotSubmitBtn.textContent = "Đang gửi...";
+    showAuthLoading();
+
+    await sendPasswordResetEmail(auth, email);
+
+    forgotError.style.background = "rgba(80,255,120,0.12)";
+    forgotError.style.border = "1px solid rgba(80,255,120,0.25)";
+    forgotError.style.color = "#b8ffca";
+    showAuthError(forgotError, "Liên kết khôi phục mật khẩu đã được gửi đến email của bạn.");
+
+    await sleep(3000);
+    resetAuthPages();
+    showPage(loginPage);
+  } catch (err) {
+    console.error(err);
+    forgotError.style.background = "";
+    forgotError.style.border = "";
+    forgotError.style.color = "";
+    let errMsg = "Có lỗi xảy ra. Hãy thử lại.";
+    if (err?.code?.includes("user-not-found")) {
+      errMsg = "Không tìm thấy người dùng với email này.";
+    } else if (err?.code?.includes("invalid-email")) {
+      errMsg = "Email không hợp lệ.";
+    }
+    showAuthError(forgotError, errMsg);
+  } finally {
+    forgotSubmitBtn.disabled = false;
+    forgotSubmitBtn.textContent = "Gửi liên kết khôi phục";
+    hideAuthLoading();
+  }
+});
+
+// Verify email buttons
+const resendVerifyEmailBtn = document.getElementById("resendVerifyEmailBtn");
+const verifyEmailLogoutBtn = document.getElementById("verifyEmailLogoutBtn");
+
+resendVerifyEmailBtn?.addEventListener("click", async () => {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const verifyEmailError = document.getElementById("verifyEmailError");
+  try {
+    resendVerifyEmailBtn.disabled = true;
+    resendVerifyEmailBtn.textContent = "Đang gửi...";
+
+    await sendEmailVerification(user);
+
+    verifyEmailError.style.background = "rgba(80,255,120,0.12)";
+    verifyEmailError.style.border = "1px solid rgba(80,255,120,0.25)";
+    verifyEmailError.style.color = "#b8ffca";
+    showAuthError(verifyEmailError, "Đã gửi lại email xác thực thành công!");
+
+    // Cooldown 60s
+    let cooldown = 60;
+    const cooldownInterval = setInterval(() => {
+      cooldown--;
+      if (cooldown <= 0) {
+        clearInterval(cooldownInterval);
+        resendVerifyEmailBtn.disabled = false;
+        resendVerifyEmailBtn.textContent = "Gửi lại Email xác thực";
+        clearAuthError(verifyEmailError);
+      } else {
+        resendVerifyEmailBtn.textContent = `Gửi lại sau (${cooldown}s)`;
+      }
+    }, 1000);
+  } catch (err) {
+    console.error(err);
+    verifyEmailError.style.background = "";
+    verifyEmailError.style.border = "";
+    verifyEmailError.style.color = "";
+    showAuthError(verifyEmailError, "Không thể gửi email xác thực. Thử lại sau.");
+    resendVerifyEmailBtn.disabled = false;
+    resendVerifyEmailBtn.textContent = "Gửi lại Email xác thực";
+  }
+});
+
+verifyEmailLogoutBtn?.addEventListener("click", async () => {
+  try {
+    showAuthLoading();
+    await signOut(auth);
+    isGuest = false;
+    resetAuthPages();
+    showPage(loginPage);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    hideAuthLoading();
+  }
 });
 
 function togglePassword(input, button) {
   const isPassword = input.type === "password";
-
   input.type = isPassword ? "text" : "password";
 
-  button.textContent = isPassword ? "🙈" : "👁";
+  const eye = button.querySelector(".eye-icon");
+  const eyeOff = button.querySelector(".eye-off-icon");
+  if (eye && eyeOff) {
+    if (isPassword) {
+      eye.classList.remove("hidden");
+      eyeOff.classList.add("hidden");
+    } else {
+      eye.classList.add("hidden");
+      eyeOff.classList.remove("hidden");
+    }
+  }
 }
 
 toggleLoginPassword?.addEventListener("click", () => {
@@ -4999,7 +5152,6 @@ function resetAuthPages() {
   // LOGIN
   if (loginEmail) loginEmail.value = "";
   if (loginPassword) loginPassword.value = "";
-
   clearAuthError(loginError);
 
   // REGISTER
@@ -5008,28 +5160,34 @@ function resetAuthPages() {
   if (registerPasswordConfirm) {
     registerPasswordConfirm.value = "";
   }
-
   clearAuthError(registerError);
 
-  // reset password visibility
+  // FORGOT PASSWORD
+  const forgotEmail = document.getElementById("forgotEmail");
+  const forgotError = document.getElementById("forgotError");
+  if (forgotEmail) forgotEmail.value = "";
+  if (forgotError) clearAuthError(forgotError);
+
+  // VERIFY EMAIL
+  const verifyEmailError = document.getElementById("verifyEmailError");
+  if (verifyEmailError) clearAuthError(verifyEmailError);
+
+  // reset password visibility types
   if (loginPassword) loginPassword.type = "password";
   if (registerPassword) registerPassword.type = "password";
-
   if (registerPasswordConfirm) {
     registerPasswordConfirm.type = "password";
   }
 
-  if (toggleLoginPassword) {
-    toggleLoginPassword.textContent = "👁";
-  }
-
-  if (toggleRegisterPassword) {
-    toggleRegisterPassword.textContent = "👁";
-  }
-
-  if (toggleRegisterPasswordConfirm) {
-    toggleRegisterPasswordConfirm.textContent = "👁";
-  }
+  // reset password visibility icons
+  document.querySelectorAll(".password-toggle").forEach(button => {
+    const eye = button.querySelector(".eye-icon");
+    const eyeOff = button.querySelector(".eye-off-icon");
+    if (eye && eyeOff) {
+      eye.classList.remove("hidden");
+      eyeOff.classList.add("hidden");
+    }
+  });
 }
 
 const authLoadingText =

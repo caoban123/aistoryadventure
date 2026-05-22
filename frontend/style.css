@@ -524,50 +524,79 @@ body[data-page="registerPage"] #particleCanvas {
 .brand-lore {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  z-index: 1;
 }
 
 .lore-line {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  color: var(--muted);
-  font-size: 0.9rem;
-  font-family: var(--font-mono);
-  letter-spacing: 0.01em;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-md);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
-.lore-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 8px var(--accent);
+.lore-line:hover {
+  background: rgba(224, 173, 82, 0.03);
+  border-color: rgba(224, 173, 82, 0.15);
+  transform: translateX(8px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), inset 0 0 12px rgba(224, 173, 82, 0.02);
+}
+
+.lore-icon {
+  font-size: 1.1rem;
+  color: var(--accent);
+  text-shadow: 0 0 10px rgba(224, 173, 82, 0.6);
   flex-shrink: 0;
-  animation: dotPulse 2.5s ease-in-out infinite;
+  margin-top: 2px;
+  animation: loreIconGlow 3s ease-in-out infinite alternate;
 }
 
-.lore-line:nth-child(2) .lore-dot {
+.lore-line:nth-child(2) .lore-icon {
   animation-delay: 0.8s;
+  color: var(--accent2);
+  text-shadow: 0 0 10px rgba(155, 108, 255, 0.6);
 }
 
-.lore-line:nth-child(3) .lore-dot {
+.lore-line:nth-child(3) .lore-icon {
   animation-delay: 1.6s;
+  color: var(--accent3);
+  text-shadow: 0 0 10px rgba(255, 140, 105, 0.6);
 }
 
-@keyframes dotPulse {
+.lore-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 
-  0%,
-  100% {
-    opacity: 0.6;
-    transform: scale(1);
-  }
+.lore-content strong {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--text);
+  text-transform: uppercase;
+}
 
-  50% {
-    opacity: 1;
-    transform: scale(1.4);
-    box-shadow: 0 0 14px var(--accent);
-  }
+.lore-content span {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+@keyframes loreIconGlow {
+  0% { transform: scale(0.9); opacity: 0.7; filter: brightness(0.8); }
+  100% { transform: scale(1.15); opacity: 1; filter: brightness(1.2); }
 }
 
 .login-layout {
@@ -2249,7 +2278,91 @@ button:disabled {
 .password-toggle:hover,
 .password-toggle:active {
   transform: translateY(-50%) !important;
-  color: var(--text);
+}
+
+.password-toggle svg {
+  width: 20px;
+  height: 20px;
+  stroke: var(--muted);
+  transition: stroke 0.2s ease, transform 0.2s ease;
+}
+
+.password-toggle:hover svg {
+  stroke: var(--accent);
+  transform: scale(1.1);
+}
+
+.forgot-password-link-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -6px;
+  margin-bottom: 2px;
+}
+
+.small-link-btn {
+  font-size: 0.84rem;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  transition: color 0.2s ease;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.small-link-btn:hover {
+  color: var(--accent);
+}
+
+.guest-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 24px;
+  border-radius: var(--radius-md);
+  background: rgba(224, 173, 82, 0.08);
+  color: var(--accent-bright);
+  border: 1px solid var(--border-accent);
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: all 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.guest-btn:hover:not(:disabled) {
+  background: rgba(224, 173, 82, 0.16);
+  border-color: var(--accent-bright);
+  box-shadow: 0 0 20px rgba(224, 173, 82, 0.25);
+  transform: translateY(-2px);
+}
+
+.guest-btn:active {
+  transform: translateY(0);
+}
+
+.guest-btn span {
+  font-size: 1.1rem;
+  color: var(--accent-bright);
+  text-shadow: 0 0 8px var(--accent-bright);
+  animation: guestStarPulse 2s ease-in-out infinite alternate;
+}
+
+.auth-status-text {
+  font-size: 0.95rem;
+  color: var(--muted);
+  line-height: 1.6;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+@keyframes guestStarPulse {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  100% { transform: scale(1.2); opacity: 1; }
 }
 
 .auth-loading-overlay {
