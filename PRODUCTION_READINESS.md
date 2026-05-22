@@ -1,6 +1,6 @@
 # Production Readiness Roadmap
 
-This file is the source of truth for preparing AI Story Adventure for real public users, a custom domain, and VPS deployment.
+This file is the source of truth for preparing AI Story Adventure for real public users, a custom domain, and deployment.
 
 ## Non-Negotiable Rules
 
@@ -32,8 +32,8 @@ Notes:
 - First admin email for this repo: `caoban170106@gmail.com`.
 - Set the first admin claim from the backend environment with:
 
-```powershell
-venv\Scripts\python.exe scripts\set_admin_claim.py --email caoban170106@gmail.com
+```
+python scripts/set_admin_claim.py --email caoban170106@gmail.com
 ```
 
 - After setting the claim, sign out and sign in again so Firebase issues a fresh ID token.
@@ -50,12 +50,12 @@ Start with read-heavy, low-risk endpoints:
 - `GET /admin/errors`: recent backend/provider errors if logging exists.
 - `GET /admin/usage`: estimated AI usage and high-demand/failure counts.
 - Current admin control endpoints also include settings, points, ban/unban, ledger, and audit:
-  - `GET/PATCH /admin/settings`
-  - `POST /admin/users/{uid}/points`
-  - `POST /admin/users/{uid}/ban`
-  - `POST /admin/users/{uid}/unban`
-  - `GET /admin/points/ledger`
-  - `GET /admin/audit`
+  * `GET/PATCH /admin/settings`
+  * `POST /admin/users/{uid}/points`
+  * `POST /admin/users/{uid}/ban`
+  * `POST /admin/users/{uid}/unban`
+  * `GET /admin/points/ledger`
+  * `GET /admin/audit`
 
 Add write actions only after audit logging exists:
 
@@ -77,7 +77,7 @@ Current implementation note:
 
 - Admin is separated from the player frontend as `frontend/admin.html`, with its own `frontend/admin.js` and `frontend/admin.css`.
 - Local admin URL: `http://localhost:5500/admin.html`.
-- Production should map an admin subdomain such as `admin.yourdomain.com` to this admin shell.
+- Production maps an admin subdomain `admin.yourdomain.com` to this admin shell via Cloudflare Tunnel.
 - The player app must not include an embedded `adminPage` or an `Admin Console` avatar dropdown shortcut.
 - Firebase Authorized Domains and backend `CORS_ORIGINS` must include both the player domain and the admin subdomain.
 - Admin v2 tracks safe AI usage metadata, daily rate limits, points, maintenance, ban/unban, sessions previews, and audit logs. It does not expose full conversations or web-editable API keys.
@@ -140,10 +140,11 @@ Log categories:
 Monitoring basics:
 
 - Backend alive check.
-- CPU/RAM/disk on VPS.
+- CPU/RAM/disk on the local machine.
 - Error rate.
 - AI provider failure rate.
 - Storage/ChromaDB availability.
+- Cloudflare Tunnel connector status (visible in Cloudflare dashboard).
 
 Notes:
 
@@ -157,7 +158,7 @@ Goal: avoid losing real users' stories.
 Back up:
 
 - Firebase/Firestore data or any production datastore.
-- `chroma_db` or vector memory storage.
+- `chroma_db/` or vector memory storage (Coolify persistent volume).
 - Catalog data if it becomes editable.
 - Production config templates, excluding secrets.
 
@@ -182,8 +183,8 @@ Required:
 
 - Separate dev/prod `.env` values.
 - Set `APP_ENV=production` for the public backend.
-- Lock CORS to the real domain in production.
-- Store Firebase admin credentials safely.
+- Lock CORS to the real tunnel-exposed domain in production.
+- Store Firebase admin credentials safely, mounted as a Coolify volume (never committed).
 - Rotate any keys that were accidentally committed or shared.
 - Add clear startup checks for required production env vars.
 
@@ -191,43 +192,49 @@ Notes:
 
 - Never commit real `.env` or Firebase admin JSON.
 - Frontend Firebase config can be public, but admin service credentials cannot.
-- The static frontend reads `frontend/config.js` at runtime for `API_BASE`; production should deploy a server-specific `config.js` based on `deploy/frontend/config.production.js.example`.
-- Use `.env.production.example` as a server-only production template and keep real values on the VPS, not in the repository.
-- See `DEPLOYMENT.md` for the local smoke test, Caddy example, and domain/subdomain checklist.
+- The static frontend reads `frontend/config.js` at runtime for `API_BASE`; production deploys a machine-specific `config.js` based on `deploy/frontend/config.production.js.example`.
+- Use `.env.production.example` as a template; keep real values in Coolify environment variables only.
+- See `DEPLOYMENT.md` for the local smoke test, tunnel setup, and domain checklist.
 - Current backend exposes safe readiness metadata through `/status` and admin overview.
-- Public `/status` stays non-blocking and may skip live Firestore app settings; use the admin Readiness panel for the final production-ready decision.
+- Public `/status` stays non-blocking; use the admin Readiness panel for the final production-ready decision.
 - `STRICT_STARTUP_CHECKS=true` can be enabled after the admin Readiness report is clean.
 
-### 8. VPS + Domain Deployment
+### 8. Local Machine + Cloudflare Tunnel + Coolify Deployment
 
-Goal: serve the app safely and reliably.
+Goal: serve the app safely and reliably from a local machine running 24/7.
 
-Recommended stack:
+Deployment stack for this repo:
 
-- Domain DNS points to VPS.
-- Reverse proxy such as Caddy or Nginx handles HTTPS.
-- FastAPI runs behind the proxy with Uvicorn/Gunicorn/systemd or Docker.
-- Static frontend served by reverse proxy or a simple static host path.
-- Backend runs as a managed service with auto restart.
+- Local machine stays on 24/7.
+- **Coolify** manages Docker containers (backend + frontend) with automatic restart on failure.
+- **Cloudflare Tunnel** (`cloudflared`) handles HTTPS and DNS — no open inbound ports, no reverse proxy installation needed.
+- `cloudflared` tunnel config maps each subdomain to the correct Coolify container port.
 
 Required production checks:
 
-- HTTPS works.
-- API base points to production backend.
-- CORS accepts only intended domains.
-- Firebase authorized domains include the production domain.
-- Backend restarts after reboot.
-- Logs are accessible.
+- Cloudflare Tunnel is running and healthy: `cloudflared tunnel info`.
+- All three tunnel routes active: player domain, admin subdomain, API subdomain — all showing **Healthy** in the Cloudflare dashboard.
+- `CORS_ORIGINS` in `.env` matches the tunnel-exposed domains exactly.
+- Firebase Authorized Domains includes both tunnel domains.
+- `API_BASE` in `frontend/config.js` points to the tunnel URL of the backend.
+- Coolify environment variables are set — no secrets committed to the repo.
+- Coolify persistent volumes configured for `data/` and `chroma_db/` so they survive container restarts.
+- Backend container restarts automatically via Coolify on failure.
+- Logs accessible via Coolify dashboard.
 
 Current repo support:
 
-- `deploy/coolify/README.md` contains the recommended Coolify deployment path.
-- `deploy/coolify/backend.Dockerfile` and `deploy/coolify/frontend.Dockerfile` deploy the API and static player/admin frontend with no React/Tailwind/build-system migration.
-- `deploy/coolify/docker-compose.yml` is available for a one-resource Coolify Docker Compose deployment.
-- `deploy/README.md` contains the VPS checklist.
-- `deploy/caddy/Caddyfile.example` serves player/admin static files and proxies API.
-- `deploy/systemd/ai-story-api.service.example` runs the FastAPI backend.
-- `deploy/systemd/ai-story-backup.service.example` and `.timer.example` schedule local runtime backups.
+- `deploy/coolify/README.md` — recommended Coolify deployment path.
+- `deploy/coolify/backend.Dockerfile` — FastAPI API service.
+- `deploy/coolify/frontend.Dockerfile` — static player/admin frontend.
+- `deploy/coolify/docker-compose.yml` — optional one-resource Coolify Docker Compose deployment.
+- `deploy/frontend/config.production.js.example` — runtime `API_BASE` config template for production.
+
+Notes:
+
+- `deploy/caddy/` and `deploy/systemd/` are kept for reference but not used in this deployment.
+- Cloudflare Tunnel replaces Caddy; `cloudflared service install` replaces the custom systemd unit.
+- If the local machine loses power or reboots, `cloudflared` and Coolify both need to be set to auto-start on boot.
 
 ### 9. Public-Facing Legal + Trust Pages
 
@@ -256,8 +263,8 @@ Before beta:
 - Admin dashboard v1 works.
 - Rate limits are active.
 - Backup/restore is documented.
-- HTTPS/domain works.
-- Error and usage logs are visible.
+- HTTPS/domain works via Cloudflare Tunnel.
+- Error and usage logs are visible in Coolify.
 - Real user flows tested: sign in, create, save to History, continue, submit turn, logout.
 
 After beta starts:
@@ -272,6 +279,7 @@ After beta starts:
 
 - Firebase custom claims: https://firebase.google.com/docs/auth/admin/custom-claims
 - FastAPI deployment concepts: https://fastapi.tiangolo.com/deployment/concepts/
-- FastAPI HTTPS/proxy notes: https://fastapi.tiangolo.com/deployment/https/
+- Cloudflare Tunnel docs: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/
+- Coolify docs: https://coolify.io/docs
 - OWASP API Security Top 10: https://owasp.org/API-Security/
 - OWASP Logging Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html
