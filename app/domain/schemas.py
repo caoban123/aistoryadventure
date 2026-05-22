@@ -8,6 +8,7 @@ from app.domain.models import (
     AdminUserState,
     AppSettingsState,
     AuditLogEntry,
+    CommunityWorld,
     Message,
     PointsLedgerEntry,
     SessionState,

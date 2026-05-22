@@ -4175,6 +4175,13 @@ function renderSavedSessions() {
 
         <button
           type="button"
+          class="ghost publish-session-btn"
+        >
+          Publish
+        </button>
+
+        <button
+          type="button"
           class="primary-btn load-session-btn"
         >
           Continue
@@ -4193,6 +4200,12 @@ function renderSavedSessions() {
       .querySelector(".preview-session-btn")
       ?.addEventListener("click", () => {
         previewSession(session.session_id);
+      });
+
+    card
+      .querySelector(".publish-session-btn")
+      ?.addEventListener("click", () => {
+        openPublishModal(session.session_id, session.title);
       });
 
     card
@@ -5560,6 +5573,18 @@ async function loadWorldCatalog({ force = false } = {}) {
       ? data.map(normalizeCatalogWorld).filter((world) => world.id)
       : [];
 
+    if (auth.currentUser) {
+      try {
+        const communityData = await requestJson(`${API_BASE}/game/discover`);
+        if (Array.isArray(communityData)) {
+          const communityWorlds = communityData.map(normalizeCommunityWorld).filter(w => w.id);
+          worlds.push(...communityWorlds);
+        }
+      } catch (err) {
+        console.warn("Could not load community worlds:", err);
+      }
+    }
+
     creatorWorlds.length = 0;
     creatorWorlds.push(...worlds);
     novelWorlds = creatorWorlds.filter(
@@ -5611,9 +5636,15 @@ function renderWorldCard(world) {
   card.className = "world-card";
   card.style.setProperty("--card-bg", world.image);
 
+  const isCommunity = world.isCommunity === true;
+  const badgeClass = isCommunity ? "community-badge" : "official-badge";
+  const badgeLabel = isCommunity ? "Community" : "Official";
+  const authorLabel = isCommunity ? `By: ${escapeHtml(world.authorName)}` : "Backend Catalog";
+
   card.innerHTML = `
     <div class="world-card-content">
       <span class="world-card-mode">${escapeHtml(world.mode)}</span>
+      <span class="world-card-source ${badgeClass}">${badgeLabel}</span>
       <h3>${escapeHtml(world.title)}</h3>
       <p>${escapeHtml(world.description)}</p>
       ${
@@ -5624,16 +5655,37 @@ function renderWorldCard(world) {
               .join("")}</div>`
           : ""
       }
-      <div class="world-card-footer">
-        <span>Backend Catalog</span>
-        <span>Start →</span>
+      <div class="world-card-footer" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+        <span>${authorLabel}</span>
+        ${isCommunity ? `
+          <div style="display:flex; gap:10px;">
+            <button class="like-btn ghost" data-id="${world.id}" type="button">
+              ❤️ <span class="like-count">${world.likes}</span>
+            </button>
+            ${world.sessionId ? `<button class="read-log-btn ghost" data-id="${world.id}" type="button">📖 Read</button>` : ""}
+          </div>
+        ` : '<span>Start →</span>'}
       </div>
     </div>
   `;
 
-  card.addEventListener("click", () => {
+  card.addEventListener("click", (e) => {
+    if (e.target.closest('button')) return;
     openCatalogWorld(world.id, world);
   });
+
+  if (isCommunity) {
+    card.querySelector('.like-btn')?.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await likeCommunityWorld(world.id, card.querySelector('.like-count'));
+    });
+    if (world.sessionId) {
+      card.querySelector('.read-log-btn')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openStoryReaderModal(world);
+      });
+    }
+  }
 
   return card;
 }
@@ -7080,3 +7132,215 @@ function initAboutInteractiveFeatures() {
 // Call init when script loads
 initLoginAnimations();
 initAboutInteractiveFeatures();
+
+
+/* =========================================================================
+   COMMUNITY UGC & PURE NOVEL READER LOGIC
+   ========================================================================= */
+
+function normalizeCommunityWorld(world = {}) {
+  return {
+    id: world.id || "",
+    title: world.title || "Untitled World",
+    mode: world.mode || "Adventure",
+    description: world.description || "",
+    image: "linear-gradient(135deg, #181124, #081a2e)",
+    worldSeed: world.world_seed || "",
+    longDescription: world.long_description || "",
+    tags: Array.isArray(world.tags) ? world.tags : [],
+    isCommunity: true,
+    authorName: world.author_name || "Anonymous",
+    likes: world.likes || 0,
+    likedBy: Array.isArray(world.liked_by) ? world.liked_by : [],
+    sessionId: world.session_id || null,
+  };
+}
+
+async function likeCommunityWorld(worldId, countElement) {
+  try {
+    const res = await requestJson(`${API_BASE}/game/discover/${encodeURIComponent(worldId)}/like`, {
+      method: "POST"
+    });
+    if (res && countElement) {
+      countElement.textContent = res.likes;
+      const item = creatorWorlds.find(w => w.id === worldId);
+      if (item) {
+        item.likes = res.likes;
+      }
+    }
+  } catch (err) {
+    console.error(err);
+    alert(err.message || "Could not like this world.");
+  }
+}
+
+async function openStoryReaderModal(world) {
+  const modal = document.getElementById("storyReaderModal");
+  const authorEl = document.getElementById("storyReaderAuthor");
+  const titleEl = document.getElementById("storyReaderTitle");
+  const descEl = document.getElementById("storyReaderDesc");
+  const contentEl = document.getElementById("storyReaderContent");
+  const cloneBtn = document.getElementById("storyReaderCloneBtn");
+
+  if (!modal) return;
+
+  authorEl.textContent = `Legendary Story Log by ${world.authorName}`;
+  titleEl.textContent = world.title;
+  descEl.textContent = world.description;
+  contentEl.innerHTML = "<p class='muted'>Loading story logs...</p>";
+
+  modal.classList.remove("hidden");
+  modal.classList.add("visible");
+
+  cloneBtn.onclick = () => {
+    modal.classList.remove("visible");
+    modal.classList.add("hidden");
+    selectCreatorWorld(world);
+  };
+
+  try {
+    const res = await requestJson(`${API_BASE}/game/discover/${encodeURIComponent(world.id)}/logs`);
+    if (res && Array.isArray(res.messages)) {
+      contentEl.innerHTML = "";
+      const storyMessages = res.messages.filter(m => m.role === "user" || m.role === "ai");
+      if (storyMessages.length === 0) {
+        contentEl.innerHTML = "<p class='muted'>No messages found in this story log.</p>";
+      } else {
+        storyMessages.forEach(msg => {
+          const p = document.createElement("p");
+          p.className = msg.role === "user" ? "user-message-log" : "ai-message-log";
+          p.innerHTML = msg.role === "user" 
+            ? `<strong>&gt; ${escapeHtml(msg.content)}</strong>` 
+            : escapeHtml(msg.content).replace(/\n/g, "<br/>");
+          contentEl.appendChild(p);
+        });
+      }
+    } else {
+      contentEl.innerHTML = "<p class='muted'>Could not fetch story logs.</p>";
+    }
+  } catch (err) {
+    console.error(err);
+    contentEl.innerHTML = `<p class='error-text'>Error: ${escapeHtml(err.message)}</p>`;
+  }
+}
+
+function openPublishModal(sessionId, sessionTitle) {
+  const modal = document.getElementById("publishWorldModal");
+  const sessIdInput = document.getElementById("publishSessionId");
+  const titleInput = document.getElementById("publishTitle");
+  const descInput = document.getElementById("publishDescription");
+  const tagsInput = document.getElementById("publishTags");
+
+  if (!modal) return;
+
+  sessIdInput.value = sessionId;
+  titleInput.value = sessionTitle || "";
+  descInput.value = "";
+  tagsInput.value = "";
+
+  modal.classList.remove("hidden");
+  modal.classList.add("visible");
+}
+
+// Modal setup events
+document.getElementById("closePublishModalBtn")?.addEventListener("click", () => {
+  const modal = document.getElementById("publishWorldModal");
+  modal.classList.remove("visible");
+  modal.classList.add("hidden");
+});
+document.getElementById("publishModalBackdrop")?.addEventListener("click", () => {
+  const modal = document.getElementById("publishWorldModal");
+  modal.classList.remove("visible");
+  modal.classList.add("hidden");
+});
+
+document.getElementById("publishWorldForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const sessionId = document.getElementById("publishSessionId").value;
+  const title = document.getElementById("publishTitle").value;
+  const description = document.getElementById("publishDescription").value;
+  const tagsText = document.getElementById("publishTags").value;
+  const tags = tagsText.split(",").map(t => t.trim()).filter(Boolean);
+
+  const btn = document.getElementById("submitPublishBtn");
+  const origText = btn.textContent;
+  btn.textContent = "Publishing...";
+  btn.disabled = true;
+
+  try {
+    const res = await requestJson(`${API_BASE}/game/worlds/publish`, {
+      method: "POST",
+      body: JSON.stringify({ session_id: sessionId, title, description, tags })
+    });
+    alert(res.message || "Published successfully! Awaiting admin review.");
+    const modal = document.getElementById("publishWorldModal");
+    modal.classList.remove("visible");
+    modal.classList.add("hidden");
+  } catch (err) {
+    console.error(err);
+    alert(err.message || "Failed to publish.");
+  } finally {
+    btn.textContent = origText;
+    btn.disabled = false;
+  }
+});
+
+document.getElementById("closeStoryReaderModalBtn")?.addEventListener("click", () => {
+  const modal = document.getElementById("storyReaderModal");
+  modal.classList.remove("visible");
+  modal.classList.add("hidden");
+});
+document.getElementById("readerModalBackdrop")?.addEventListener("click", () => {
+  const modal = document.getElementById("storyReaderModal");
+  modal.classList.remove("visible");
+  modal.classList.add("hidden");
+});
+
+// Pure Novel Read Mode Toggle Logic
+const pureReadModeBtn = document.getElementById("pureReadModeBtn");
+pureReadModeBtn?.addEventListener("click", () => {
+  const gamePage = document.getElementById("gamePage");
+  if (!gamePage) return;
+
+  const isActive = gamePage.classList.toggle("pure-read-active");
+  pureReadModeBtn.classList.toggle("active", isActive);
+
+  if (isActive) {
+    pureReadModeBtn.innerHTML = "📖 Play";
+    const composerStatus = document.getElementById("composerStatus");
+    if (composerStatus) composerStatus.textContent = "Pure reading mode activated.";
+  } else {
+    pureReadModeBtn.innerHTML = "📖 Read";
+    const composerStatus = document.getElementById("composerStatus");
+    if (composerStatus) composerStatus.textContent = "Interactive mode activated.";
+  }
+});
+
+// Wire up global search input to act as filter redirect
+globalSearchInput?.addEventListener("input", () => {
+  const query = globalSearchInput.value;
+  
+  if (savesPage && !savesPage.classList.contains("hidden")) {
+    if (saveSearchInput) {
+      saveSearchInput.value = query;
+      renderSavedSessions();
+    }
+  } else {
+    if (discoverPage && discoverPage.classList.contains("hidden")) {
+      showPage(discoverPage);
+      const discoverNavBtn = document.getElementById("mobileDiscoverBtn") || document.getElementById("discoverBtn");
+      if (discoverNavBtn) setActiveNav(discoverNavBtn);
+    }
+    if (discoverSearchInput) {
+      discoverSearchInput.value = query;
+      renderDiscoverWorlds();
+    }
+  }
+});
+
+globalSearchInput?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    closeGlobalSearch();
+  }
+});
+

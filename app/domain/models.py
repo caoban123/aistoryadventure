@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Literal, Any
@@ -127,3 +127,23 @@ class AuditLogEntry(BaseModel):
     session_id: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
     created_at: str = Field(default_factory=utc_now_iso)
+
+
+class CommunityWorld(BaseModel):
+    id: str
+    session_id: str | None = None
+    title: str
+    description: str
+    mode: Literal["adventure", "novel"]
+    tags: list[str] = Field(default_factory=list)
+    world_seed: str = ""
+    long_description: str = ""
+    foundation_text: str = ""
+    author_uid: str
+    author_name: str
+    is_approved: bool = False
+    likes: int = 0
+    liked_by: list[str] = Field(default_factory=list)
+    created_at: str = Field(default_factory=utc_now_iso)
+    updated_at: str = Field(default_factory=utc_now_iso)
+

@@ -80,6 +80,7 @@
         <button class="admin-tab" type="button" data-admin-tab="users">Users</button>
         <button class="admin-tab" type="button" data-admin-tab="sessions">Sessions</button>
         <button class="admin-tab" type="button" data-admin-tab="system">System Config</button>
+        <button class="admin-tab" type="button" data-admin-tab="moderation">Moderation</button>
         <button class="admin-tab" type="button" data-admin-tab="audit">Audit</button>
       </nav>
 
@@ -325,6 +326,19 @@
         <button id="adminSaveSettingsBtn" type="button" class="primary-btn admin-save-wide">
           Save System Settings
         </button>
+      </section>
+
+      <section class="admin-tab-panel" data-admin-panel="moderation">
+        <article class="admin-card glass-panel">
+          <p class="eyebrow">Moderation</p>
+          <h2>Pending Community Submissions</h2>
+          <p class="admin-muted">
+            Review and approve or reject community story publications before they appear in the public Discover section.
+          </p>
+          <div id="adminSubmissionsList" class="admin-submissions-grid" aria-live="polite">
+            <p class="admin-muted">Loading submissions...</p>
+          </div>
+        </article>
       </section>
 
       <section class="admin-tab-panel" data-admin-panel="audit">

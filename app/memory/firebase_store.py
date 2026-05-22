@@ -11,6 +11,7 @@ from app.domain.models import (
     AdminUserState,
     AppSettingsState,
     AuditLogEntry,
+    CommunityWorld,
     Message,
     PointsLedgerEntry,
     SessionState,
@@ -66,6 +67,7 @@ class FirebaseStore:
                 "settings": AppSettingsState().model_dump(),
                 "audit_logs": [],
                 "ai_usage_logs": [],
+                "community_worlds": {},
             }
 
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -74,6 +76,7 @@ class FirebaseStore:
         data.setdefault("settings", AppSettingsState().model_dump())
         data.setdefault("audit_logs", [])
         data.setdefault("ai_usage_logs", [])
+        data.setdefault("community_worlds", {})
         return data
 
     def _write_admin_state(self, data: dict[str, Any]) -> None:
@@ -502,3 +505,58 @@ class FirebaseStore:
 
         if path.exists():
             path.unlink()
+
+    async def create_community_world(self, item: CommunityWorld) -> None:
+        if self.db:
+            self.db.collection("community_worlds").document(item.id).set(item.model_dump())
+            return
+        data = self._read_admin_state()
+        data["community_worlds"][item.id] = item.model_dump()
+        self._write_admin_state(data)
+
+    async def get_community_world(self, item_id: str) -> CommunityWorld | None:
+        if self.db:
+            doc = self.db.collection("community_worlds").document(item_id).get()
+            if not doc.exists:
+                return None
+            return CommunityWorld(**doc.to_dict())
+        data = self._read_admin_state()
+        item = data["community_worlds"].get(item_id)
+        return CommunityWorld(**item) if item else None
+
+    async def update_community_world(self, item: CommunityWorld) -> None:
+        if self.db:
+            self.db.collection("community_worlds").document(item.id).set(item.model_dump(), merge=True)
+            return
+        data = self._read_admin_state()
+        data["community_worlds"][item.id] = item.model_dump()
+        self._write_admin_state(data)
+
+    async def delete_community_world(self, item_id: str) -> None:
+        if self.db:
+            self.db.collection("community_worlds").document(item_id).delete()
+            return
+        data = self._read_admin_state()
+        if item_id in data["community_worlds"]:
+            del data["community_worlds"][item_id]
+            self._write_admin_state(data)
+
+    async def list_community_worlds(self, approved_only: bool = True, limit: int = 100) -> list[CommunityWorld]:
+        if self.db:
+            ref = self.db.collection("community_worlds")
+            if approved_only:
+                docs = ref.where("is_approved", "==", True).limit(limit).stream()
+            else:
+                docs = ref.limit(limit).stream()
+            # Sort in memory to avoid index requirements in Firestore (less strict setup for first launch)
+            worlds = [CommunityWorld(**doc.to_dict()) for doc in docs]
+            worlds.sort(key=lambda w: w.created_at, reverse=True)
+            return worlds[:limit]
+        
+        data = self._read_admin_state()
+        worlds = [CommunityWorld(**item) for item in data["community_worlds"].values()]
+        if approved_only:
+            worlds = [w for w in worlds if w.is_approved]
+        worlds.sort(key=lambda w: w.created_at, reverse=True)
+        return worlds[:limit]
+

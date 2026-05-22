@@ -209,7 +209,7 @@ async function loadDashboard() {
   setStatus("Loading admin data...", "muted");
 
   try {
-    const [overview, users, sessions, audit, usage, usageUsers, errors] = await Promise.all([
+    const [overview, users, sessions, audit, usage, usageUsers, errors, submissions] = await Promise.all([
       requestJson(`${API_BASE}/admin/overview`),
       requestJson(`${API_BASE}/admin/users?limit=100`),
       requestJson(`${API_BASE}/admin/sessions?limit=40`),
@@ -217,6 +217,7 @@ async function loadDashboard() {
       requestJson(`${API_BASE}/admin/usage?limit=80`),
       requestJson(`${API_BASE}/admin/usage/users?limit=100`),
       requestJson(`${API_BASE}/admin/errors?limit=50`),
+      requestJson(`${API_BASE}/admin/submissions`),
     ]);
 
     currentOverview = overview;
@@ -230,6 +231,7 @@ async function loadDashboard() {
     renderSessions(sessions.items || []);
     renderErrors(errors.items || []);
     renderAudit(audit.items || []);
+    renderSubmissions(submissions || []);
     setStatus("Admin data is live.", "ok");
   } catch (err) {
     setStatus(err.message || "Could not load admin data.", "error");
@@ -756,3 +758,67 @@ onAuthStateChanged(auth, async (user) => {
   showOnly(deniedView);
   await checkAdminAccess();
 });
+
+
+/* =========================================================================
+   COMMUNITY MODERATION TABS LOGIC
+   ========================================================================= */
+
+const submissionsList = $("adminSubmissionsList");
+
+function renderSubmissions(items = []) {
+  if (!submissionsList) return;
+  if (!items.length) {
+    submissionsList.innerHTML = `<div class="admin-empty">No pending submissions.</div>`;
+    return;
+  }
+
+  submissionsList.innerHTML = items.map((item) => `
+    <div class="submission-card glass-panel" data-sub-id="${escapeHtml(item.id)}">
+      <div>
+        <h3>${escapeHtml(item.title || "Untitled")}</h3>
+        <p class="admin-muted" style="margin-bottom:10px;">${escapeHtml(item.description || "No description")}</p>
+        <div class="submission-meta">
+          <span>By: <strong>${escapeHtml(item.author_name)}</strong></span> |
+          <span>Mode: <strong>${escapeHtml(item.mode)}</strong></span> |
+          <span>Tags: <strong>${escapeHtml(item.tags?.join(", ") || "None")}</strong></span> |
+          <span>Date: <strong>${formatDate(item.created_at)}</strong></span>
+        </div>
+      </div>
+      <div class="submission-actions" style="margin-top:15px; display:flex; gap:10px;">
+        <button class="primary-btn approve-btn" type="button">Approve</button>
+        <button class="danger-btn reject-btn" type="button">Reject</button>
+      </div>
+    </div>
+  `).join("");
+
+  submissionsList.querySelectorAll(".submission-card").forEach((card) => {
+    const subId = card.dataset.subId;
+    card.querySelector(".approve-btn")?.addEventListener("click", async () => {
+      await moderateSubmission(subId, "approve");
+    });
+    card.querySelector(".reject-btn")?.addEventListener("click", async () => {
+      await moderateSubmission(subId, "reject");
+    });
+  });
+}
+
+async function moderateSubmission(subId, action) {
+  const confirmed = window.confirm(`Are you sure you want to ${action} this submission?`);
+  if (!confirmed) return;
+
+  setBusy(true);
+  setStatus(`${action === "approve" ? "Approving" : "Rejecting"} submission...`, "muted");
+
+  try {
+    await requestJson(`${API_BASE}/admin/submissions/${encodeURIComponent(subId)}/${action}`, {
+      method: "POST"
+    });
+    await loadDashboard();
+  } catch (err) {
+    setStatus(err.message || `Could not ${action} submission.`, "error");
+  } finally {
+    setBusy(false);
+  }
+}
+

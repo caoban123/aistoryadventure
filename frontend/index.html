@@ -2458,6 +2458,9 @@
       </div>
 
       <div class="game-reader-tools">
+        <button id="pureReadModeBtn" type="button" class="ghost small-tool-btn" aria-label="Toggle pure reading mode" title="Pure Reading Mode">
+          📖 Read
+        </button>
         <button id="readingModeBtn" type="button" class="ghost small-tool-btn" aria-label="Toggle text size" title="Toggle Text Size">
           aA
         </button>
@@ -2694,12 +2697,62 @@
         <strong>Novel Mode</strong>
 
         <p>
-          Build a world, answer story questions, and co-write a cinematic
-          interactive novel with the AI.
-        </p>
-
-        <small>Long-form AI Novel</small>
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- PUBLISH WORLD MODAL -->
+<div id="publishWorldModal" class="create-modal hidden">
+  <div class="create-modal-backdrop" id="publishModalBackdrop"></div>
+  <div class="create-modal-panel glass-panel">
+    <button id="closePublishModalBtn" class="create-modal-close" type="button">×</button>
+    <p class="eyebrow">Publish Story to Discover</p>
+    <h2>Share Adventure</h2>
+    <p class="create-modal-subtitle">
+      Publish this adventure log so the community can discover and read your legend.
+    </p>
+    <form id="publishWorldForm" class="publish-form">
+      <input type="hidden" id="publishSessionId" />
+      <div style="margin-bottom: 1.5rem; text-align: left;">
+        <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: var(--accent);">
+          Story Title
+        </label>
+        <input type="text" id="publishTitle" placeholder="e.g. The Frozen Sanctuary" required maxlength="120" style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-accent); border-radius: 4px; color: white;" />
+      </div>
+      <div style="margin-bottom: 1.5rem; text-align: left;">
+        <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: var(--accent);">
+          Description / Introduction
+        </label>
+        <textarea id="publishDescription" placeholder="Provide a brief intro about this adventure..." required maxlength="500" rows="3" style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-accent); border-radius: 4px; color: white; resize: none;"></textarea>
+      </div>
+      <div style="margin-bottom: 1.5rem; text-align: left;">
+        <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: var(--accent);">
+          Tags (comma separated)
+        </label>
+        <input type="text" id="publishTags" placeholder="e.g. Fantasy, Survival, Hardcore" style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-accent); border-radius: 4px; color: white;" />
+      </div>
+      <button type="submit" class="primary-btn" id="submitPublishBtn" style="width: 100%;">Publish Now</button>
+    </form>
+  </div>
+</div>
+
+<!-- STORY READER MODAL (LEGENDARY STORY LOGS) -->
+<div id="storyReaderModal" class="create-modal hidden">
+  <div class="create-modal-backdrop" id="readerModalBackdrop"></div>
+  <div class="create-modal-panel glass-panel story-reader-panel" style="max-width: 800px; width: 90%; max-height: 85vh; display: flex; flex-direction: column;">
+    <button id="closeStoryReaderModalBtn" class="create-modal-close" type="button">×</button>
+    <p class="eyebrow" id="storyReaderAuthor">Legendary Story Log</p>
+    <h2 id="storyReaderTitle" style="margin: 0.5rem 0;">Story Title</h2>
+    <p class="create-modal-subtitle" id="storyReaderDesc" style="margin-bottom: 1rem; color: var(--muted); font-size: 0.9rem;">Story Description</p>
+    <hr class="divider" style="border: 0; border-top: 1px solid var(--border-accent); margin-bottom: 1rem; opacity: 0.3;" />
+    
+    <div id="storyReaderContent" class="story-log novel-reader story-reader-content" style="flex: 1; overflow-y: auto; padding-right: 0.5rem; text-align: left; max-height: 50vh;">
+      <!-- Story paragraphs will go here -->
+    </div>
+    
+    <div class="story-reader-footer" style="margin-top: 1.5rem; text-align: right; display: flex; justify-content: flex-end; gap: 1rem;">
+      <button id="storyReaderCloneBtn" class="primary-btn">Clone & Play This World</button>
     </div>
   </div>
 </div>

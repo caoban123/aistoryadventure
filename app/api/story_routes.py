@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+import uuid
 from time import perf_counter
 
 from fastapi import APIRouter, HTTPException, Depends
+from pydantic import Field
 
 from app.domain.schemas import (
     SessionResponse,
@@ -362,6 +364,73 @@ async def get_world(world_id: str):
 
     return world
 
+@router.get("/discover")
+async def discover_worlds(
+    query: str | None = None,
+    mode: str | None = None,
+    user=Depends(get_current_user),
+):
+    await enforce_player_or_http(user)
+    
+    community_items = await db_store.list_community_worlds(approved_only=True, limit=100)
+    
+    if mode and mode != "all":
+        community_items = [w for w in community_items if w.mode == mode]
+        
+    if query:
+        q = query.strip().lower()
+        community_items = [
+            w for w in community_items
+            if q in w.title.lower() or q in w.description.lower() or any(q in tag.lower() for tag in w.tags)
+        ]
+        
+    return community_items
+
+
+@router.get("/discover/{item_id}/logs")
+async def get_discover_story_logs(
+    item_id: str,
+    user=Depends(get_current_user),
+):
+    await enforce_player_or_http(user)
+    
+    item = await db_store.get_community_world(item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Không tìm thấy thế giới này.")
+        
+    if not item.is_approved:
+        raise HTTPException(status_code=403, detail="Thế giới này chưa được phê duyệt công khai.")
+        
+    if not item.session_id:
+        return {"messages": []}
+        
+    messages = await db_store.get_messages(item.session_id, limit=500)
+    return {"messages": messages}
+
+
+@router.post("/discover/{item_id}/like")
+async def like_discover_world(
+    item_id: str,
+    user=Depends(get_current_user),
+):
+    await enforce_player_or_http(user)
+    
+    item = await db_store.get_community_world(item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Không tìm thấy thế giới này.")
+        
+    uid = user["uid"]
+    if uid in item.liked_by:
+        item.liked_by.remove(uid)
+        item.likes = max(0, item.likes - 1)
+        await db_store.update_community_world(item)
+        return {"liked": False, "likes": item.likes}
+    else:
+        item.liked_by.append(uid)
+        item.likes += 1
+        await db_store.update_community_world(item)
+        return {"liked": True, "likes": item.likes}
+
 
 @router.get("/{session_id}", response_model=SessionResponse)
 async def get_session(
@@ -514,3 +583,51 @@ async def create_novel_foundation(
             error=exc,
         )
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+from pydantic import BaseModel
+from app.domain.models import CommunityWorld
+from app.memory.firebase_store import FirebaseStore
+
+db_store = FirebaseStore()
+
+class WorldPublishRequest(BaseModel):
+    session_id: str
+    title: str = Field(..., min_length=1, max_length=120)
+    description: str = Field(..., min_length=1, max_length=500)
+    tags: list[str] = Field(default_factory=list)
+
+
+@router.post("/worlds/publish")
+async def publish_world(
+    request: WorldPublishRequest,
+    user=Depends(get_current_user),
+):
+    await enforce_player_or_http(user)
+    try:
+        session, messages = await service.get_session(request.session_id, user_id=user["uid"])
+    except Exception:
+        raise HTTPException(status_code=403, detail="Bạn không có quyền xuất bản phiên chơi này hoặc phiên không tồn tại.")
+        
+    author_name = user.get("name") or user.get("email") or "Người lữ hành"
+    
+    item = CommunityWorld(
+        id=str(uuid.uuid4()),
+        session_id=request.session_id,
+        title=request.title.strip(),
+        description=request.description.strip(),
+        mode=session.mode,
+        tags=[tag.strip() for tag in request.tags if tag.strip()],
+        world_seed=session.world_summary or session.foundation_text,
+        long_description=session.story_summary,
+        foundation_text=session.foundation_text,
+        author_uid=user["uid"],
+        author_name=author_name,
+        is_approved=False,
+        likes=0,
+        liked_by=[],
+    )
+    
+    await db_store.create_community_world(item)
+    return {"message": "Xuất bản thành công! Đang chờ Admin phê duyệt.", "id": item.id}
+

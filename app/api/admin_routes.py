@@ -169,3 +169,54 @@ async def admin_audit(
     await admin_service.ensure_user_state(user)
     items = await admin_service.list_audit_logs(limit=limit)
     return AdminAuditResponse(items=items, count=len(items))
+
+
+from app.memory.firebase_store import FirebaseStore
+db_store = FirebaseStore()
+
+@router.get("/submissions")
+async def admin_list_submissions(user=Depends(require_admin_user)):
+    await admin_service.ensure_user_state(user)
+    items = await db_store.list_community_worlds(approved_only=False, limit=100)
+    pending = [item for item in items if not item.is_approved]
+    return pending
+
+
+@router.post("/submissions/{item_id}/approve")
+async def admin_approve_submission(item_id: str, user=Depends(require_admin_user)):
+    await admin_service.ensure_user_state(user)
+    item = await db_store.get_community_world(item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Không tìm thấy bài xuất bản.")
+        
+    item.is_approved = True
+    await db_store.update_community_world(item)
+    
+    await admin_service.audit(
+        actor=user,
+        action="approve_community_world",
+        target_uid=item.author_uid,
+        session_id=item.session_id,
+        metadata={"item_id": item.id, "title": item.title},
+    )
+    return {"message": "Đã phê duyệt thế giới thành công.", "item": item}
+
+
+@router.post("/submissions/{item_id}/reject")
+async def admin_reject_submission(item_id: str, user=Depends(require_admin_user)):
+    await admin_service.ensure_user_state(user)
+    item = await db_store.get_community_world(item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Không tìm thấy bài xuất bản.")
+        
+    await db_store.delete_community_world(item_id)
+    
+    await admin_service.audit(
+        actor=user,
+        action="reject_community_world",
+        target_uid=item.author_uid,
+        session_id=item.session_id,
+        metadata={"item_id": item_id, "title": item.title},
+    )
+    return {"message": "Đã từ chối và xóa bài xuất bản thành công."}
+
