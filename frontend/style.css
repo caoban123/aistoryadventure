@@ -7241,6 +7241,17 @@ body[data-mode="adventure"] .message-content p:last-child {
     linear-gradient(135deg, rgba(12, 9, 18, 0.98), rgba(37, 28, 21, 0.92));
 }
 
+.about-v2-hero-img-bg {
+  position: absolute;
+  inset: 0;
+  background-image: url("public/theme.jpg");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.22;
+  z-index: 0;
+  pointer-events: none;
+}
+
 .about-v2-hero-bg {
   position: absolute;
   inset: 0;
