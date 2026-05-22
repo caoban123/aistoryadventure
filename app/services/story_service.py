@@ -375,11 +375,13 @@ class StoryService:
 
         return {"success": True}
     def _parse_json(self, raw: str) -> dict:
+        from app.ai.output_parser import _try_parse_json
+        data = _try_parse_json(raw)
+        if isinstance(data, dict):
+            return data
         text = raw.strip()
-
         if text.startswith("```"):
             text = text.replace("```json", "").replace("```", "").strip()
-
         return json.loads(text)
     async def start_novel_world(
         self,
