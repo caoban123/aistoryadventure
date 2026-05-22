@@ -2847,7 +2847,7 @@ async function requestJson(url, options = {}) {
     ...(fetchOptions.headers || {}),
   };
 
-  if (!skipAuth && !isGuest) {
+  if (!skipAuth) {
     if (!auth.currentUser) {
       showPage(loginPage);
       throw new Error("Phiên đăng nhập đã hết hạn.");
