@@ -11468,14 +11468,22 @@ select:focus-visible {
   margin: 2rem auto !important;
   padding-bottom: 100px;
 }
+#gamePage.pure-read-active .story-log p {
+  line-height: 2.0 !important;
+  margin-bottom: 1.8rem !important;
+  color: #e2d9c8 !important; /* Premium warm cream text for reading comfort */
+  font-size: 1.15rem !important;
+  transition: color 0.3s ease;
+}
 #gamePage.pure-read-active .game-reader-shell {
   max-width: 900px;
   margin: 0 auto;
 }
 #pureReadModeBtn.active {
-  background: var(--accent) !important;
-  color: black !important;
-  box-shadow: 0 0 10px var(--accent);
+  border-color: rgba(224, 173, 82, 0.6) !important;
+  color: var(--accent-bright) !important;
+  background: rgba(224, 173, 82, 0.16) !important;
+  box-shadow: 0 0 12px rgba(224, 173, 82, 0.25) !important;
 }
 
 /* Admin Moderation Submissions styles */

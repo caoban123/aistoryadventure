@@ -360,8 +360,6 @@ const foundationSurvivalSupplies = document.getElementById("foundationSurvivalSu
 const foundationSurvivalWounds = document.getElementById("foundationSurvivalWounds");
 const foundationSurvivalTime = document.getElementById("foundationSurvivalTime");
 
-const backToHomeFromGame = document.getElementById("backToHomeFromGame");
-const openSavesFromGame = document.getElementById("openSavesFromGame");
 const saveStoryFromGame = document.getElementById("saveStoryFromGame");
 const gameSaveStatus = document.getElementById("gameSaveStatus");
 const backToLandingFromSetup = document.getElementById("backToLandingFromSetup");
@@ -6454,20 +6452,7 @@ function updateFoundationSidebar() {
   updateAdventureQuestHud();
 }
 
-backToHomeFromGame?.addEventListener("click", async () => {
-  await guardUnsavedDraftNavigation(async () => {
-    showPage(landingPage);
-    setActiveNav(homeTabBtn);
-  });
-});
 
-openSavesFromGame?.addEventListener("click", async () => {
-  await guardUnsavedDraftNavigation(async () => {
-    showPage(continuePage);
-    setActiveNav(savesTabBtn);
-    await loadSessions();
-  });
-});
 
 function formatStoryParagraphs(text) {
   const safeText = String(text || "").trim();
@@ -6665,24 +6650,7 @@ function updateAdventurePreview() {
   });
 });
 
-// ── Reading Mode Toggle ───────────────────────────────────────────────────────
-const readingModeBtn = document.getElementById("readingModeBtn");
-const gameReaderShell = document.querySelector(".game-reader-shell");
 
-if (readingModeBtn && gameReaderShell) {
-  let currentReadingMode = 0;
-  const modes = ["", "text-large", "text-xlarge"];
-  
-  readingModeBtn.addEventListener("click", () => {
-    if (modes[currentReadingMode]) {
-      gameReaderShell.classList.remove(modes[currentReadingMode]);
-    }
-    currentReadingMode = (currentReadingMode + 1) % modes.length;
-    if (modes[currentReadingMode]) {
-      gameReaderShell.classList.add(modes[currentReadingMode]);
-    }
-  });
-}
 
 // ── Login Animations (3D Tilt & Spotlight) ────────────────────────────────────
 function initLoginAnimations() {
@@ -7334,11 +7302,11 @@ pureReadModeBtn?.addEventListener("click", () => {
   pureReadModeBtn.classList.toggle("active", isActive);
 
   if (isActive) {
-    pureReadModeBtn.innerHTML = "📖 Play";
+    pureReadModeBtn.innerHTML = "Play";
     const composerStatus = document.getElementById("composerStatus");
     if (composerStatus) composerStatus.textContent = "Pure reading mode activated.";
   } else {
-    pureReadModeBtn.innerHTML = "📖 Read";
+    pureReadModeBtn.innerHTML = "Read";
     const composerStatus = document.getElementById("composerStatus");
     if (composerStatus) composerStatus.textContent = "Interactive mode activated.";
   }
