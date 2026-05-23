@@ -4777,6 +4777,7 @@ onAuthStateChanged(auth, async (user) => {
     updateUserUI(null);
     hideAccountStatusPanel();
     hideAiLoading();
+    loadWorldCatalog({ force: true });
     return;
   }
 
@@ -4826,6 +4827,7 @@ onAuthStateChanged(auth, async (user) => {
       if (isAuthPageActive) {
         showPage(landingPage);
       }
+      loadWorldCatalog({ force: true });
     } catch (err) {
       console.error(err);
       if (checkId !== authStatusCheckId) return;
