@@ -87,55 +87,82 @@ class FirebaseStore:
 
     async def create_session(self, session: SessionState) -> None:
         if self.db:
-            self.db.collection("sessions").document(session.session_id).set(session.model_dump())
+            import asyncio
+            doc_ref = self.db.collection("sessions").document(session.session_id)
+            await asyncio.to_thread(doc_ref.set, session.model_dump())
             return
-        self._write_local(session, [])
+        import asyncio
+        await asyncio.to_thread(self._write_local, session, [])
 
     async def get_session(self, session_id: str) -> SessionState | None:
         if self.db:
-            doc = self.db.collection("sessions").document(session_id).get()
+            import asyncio
+            doc_ref = self.db.collection("sessions").document(session_id)
+            doc = await asyncio.to_thread(doc_ref.get)
             if not doc.exists:
                 return None
             return SessionState(**doc.to_dict())
+        
+        import asyncio
         path = self._session_file(session_id)
         if not path.exists():
             return None
-        data = json.loads(path.read_text(encoding="utf-8"))
-        return SessionState(**data["session"])
+        def _read():
+            data = json.loads(path.read_text(encoding="utf-8"))
+            return SessionState(**data["session"])
+        return await asyncio.to_thread(_read)
 
     async def update_session(self, session: SessionState) -> None:
         if self.db:
-            self.db.collection("sessions").document(session.session_id).set(session.model_dump(), merge=True)
+            import asyncio
+            doc_ref = self.db.collection("sessions").document(session.session_id)
+            await asyncio.to_thread(doc_ref.set, session.model_dump(), merge=True)
             return
         messages = await self.get_messages(session.session_id, limit=9999)
-        self._write_local(session, messages)
+        import asyncio
+        await asyncio.to_thread(self._write_local, session, messages)
 
     async def add_message(self, message: Message) -> None:
         if self.db:
-            self.db.collection("sessions").document(message.session_id).collection("messages").document(message.message_id).set(message.model_dump())
+            import asyncio
+            doc_ref = (
+                self.db.collection("sessions")
+                .document(message.session_id)
+                .collection("messages")
+                .document(message.message_id)
+            )
+            await asyncio.to_thread(doc_ref.set, message.model_dump())
             return
         session = await self.get_session(message.session_id)
         messages = await self.get_messages(message.session_id, limit=9999)
         messages.append(message)
         if session:
-            self._write_local(session, messages)
+            import asyncio
+            await asyncio.to_thread(self._write_local, session, messages)
 
     async def get_messages(self, session_id: str, limit: int = 20) -> list[Message]:
         if self.db:
-            docs = (
-                self.db.collection("sessions")
-                .document(session_id)
-                .collection("messages")
-                .order_by("created_at")
-                .stream()
-            )
-            messages = [Message(**doc.to_dict()) for doc in docs]
+            import asyncio
+            def _fetch():
+                docs = (
+                    self.db.collection("sessions")
+                    .document(session_id)
+                    .collection("messages")
+                    .order_by("created_at")
+                    .stream()
+                )
+                return [Message(**doc.to_dict()) for doc in docs]
+            messages = await asyncio.to_thread(_fetch)
             return messages[-limit:]
+        
         path = self._session_file(session_id)
         if not path.exists():
             return []
-        data = json.loads(path.read_text(encoding="utf-8"))
-        messages = [Message(**m) for m in data.get("messages", [])]
+        import asyncio
+        def _read():
+            data = json.loads(path.read_text(encoding="utf-8"))
+            return [Message(**m) for m in data.get("messages", [])]
+        messages = await asyncio.to_thread(_read)
         return messages[-limit:]
 
     def _write_local(self, session: SessionState, messages: list[Message]) -> None:
@@ -146,48 +173,46 @@ class FirebaseStore:
         self._session_file(session.session_id).write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     async def list_sessions(self, user_id: str, limit: int = 20,) -> list[SessionState]:
         if self.db:
-            docs = (
-                self.db.collection("sessions")
-                .where("user_id", "==", user_id)
-                .order_by("updated_at", direction="DESCENDING")
-                .limit(max(limit * 10, 200))
-                .stream()
-            )
-
-            sessions = [
-                session
-                for session in (SessionState(**doc.to_dict()) for doc in docs)
-                if session.is_saved
-            ]
+            import asyncio
+            def _fetch():
+                docs = (
+                    self.db.collection("sessions")
+                    .where("user_id", "==", user_id)
+                    .order_by("updated_at", direction="DESCENDING")
+                    .limit(max(limit * 10, 200))
+                    .stream()
+                )
+                return [
+                    session
+                    for session in (SessionState(**doc.to_dict()) for doc in docs)
+                    if session.is_saved
+                ]
+            sessions = await asyncio.to_thread(_fetch)
             return sessions[:limit]
 
-        files = sorted(
-            self.local_dir.glob("*.json"),
-            key=lambda p: p.stat().st_mtime,
-            reverse=True,
-        )
-
-        sessions: list[SessionState] = []
-
-        for path in files:
-            try:
-                data = json.loads(path.read_text(encoding="utf-8"))
-                session = SessionState(**data["session"])
-
-                if session.user_id != user_id:
+        import asyncio
+        def _read_local():
+            files = sorted(
+                self.local_dir.glob("*.json"),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True,
+            )
+            cands = []
+            for path in files:
+                try:
+                    data = json.loads(path.read_text(encoding="utf-8"))
+                    session = SessionState(**data["session"])
+                    if session.user_id != user_id:
+                        continue
+                    if not session.is_saved:
+                        continue
+                    cands.append(session)
+                    if len(cands) >= limit:
+                        break
+                except Exception:
                     continue
-
-                if not session.is_saved:
-                    continue
-
-                sessions.append(session)
-
-                if len(sessions) >= limit:
-                    break
-            except Exception:
-                continue
-
-        return sessions
+            return cands
+        return await asyncio.to_thread(_read_local)
 
     async def admin_list_sessions(
         self,
@@ -197,24 +222,31 @@ class FirebaseStore:
         saved: bool | None = None,
     ) -> list[SessionState]:
         if self.db:
-            docs = (
-                self.db.collection("sessions")
-                .order_by("updated_at", direction="DESCENDING")
-                .limit(min(max(limit * 5, 200), 5000))
-                .stream()
-            )
-            candidates = [SessionState(**doc.to_dict()) for doc in docs]
+            import asyncio
+            def _fetch():
+                docs = (
+                    self.db.collection("sessions")
+                    .order_by("updated_at", direction="DESCENDING")
+                    .limit(min(max(limit * 5, 200), 5000))
+                    .stream()
+                )
+                return [SessionState(**doc.to_dict()) for doc in docs]
+            candidates = await asyncio.to_thread(_fetch)
         else:
-            candidates = []
-            for path in self.local_dir.glob("*.json"):
-                if path.name.startswith("_"):
-                    continue
-                try:
-                    data = json.loads(path.read_text(encoding="utf-8"))
-                    candidates.append(SessionState(**data["session"]))
-                except Exception:
-                    continue
-            candidates.sort(key=lambda session: session.updated_at, reverse=True)
+            import asyncio
+            def _read_local():
+                cands = []
+                for path in self.local_dir.glob("*.json"):
+                    if path.name.startswith("_"):
+                        continue
+                    try:
+                        data = json.loads(path.read_text(encoding="utf-8"))
+                        cands.append(SessionState(**data["session"]))
+                    except Exception:
+                        continue
+                cands.sort(key=lambda session: session.updated_at, reverse=True)
+                return cands
+            candidates = await asyncio.to_thread(_read_local)
 
         sessions: list[SessionState] = []
 
@@ -235,65 +267,82 @@ class FirebaseStore:
 
     async def get_admin_user_state(self, uid: str) -> AdminUserState | None:
         if self.db:
-            doc = self.db.collection("admin_user_states").document(uid).get()
+            import asyncio
+            doc_ref = self.db.collection("admin_user_states").document(uid)
+            doc = await asyncio.to_thread(doc_ref.get)
             if not doc.exists:
                 return None
             return AdminUserState(**doc.to_dict())
 
-        data = self._read_admin_state()
+        import asyncio
+        data = await asyncio.to_thread(self._read_admin_state)
         user = data["users"].get(uid)
         return AdminUserState(**user) if user else None
 
     async def upsert_admin_user_state(self, state: AdminUserState) -> None:
         if self.db:
-            self.db.collection("admin_user_states").document(state.uid).set(
-                state.model_dump(),
-                merge=True,
-            )
+            import asyncio
+            doc_ref = self.db.collection("admin_user_states").document(state.uid)
+            await asyncio.to_thread(doc_ref.set, state.model_dump(), merge=True)
             return
 
-        data = self._read_admin_state()
-        data["users"][state.uid] = state.model_dump()
-        self._write_admin_state(data)
+        import asyncio
+        def _write():
+            data = self._read_admin_state()
+            data["users"][state.uid] = state.model_dump()
+            self._write_admin_state(data)
+        await asyncio.to_thread(_write)
 
     async def list_admin_user_states(self, limit: int = 100) -> list[AdminUserState]:
         if self.db:
-            docs = (
-                self.db.collection("admin_user_states")
-                .order_by("last_seen_at", direction="DESCENDING")
-                .limit(limit)
-                .stream()
-            )
-            return [AdminUserState(**doc.to_dict()) for doc in docs]
+            import asyncio
+            def _fetch():
+                docs = (
+                    self.db.collection("admin_user_states")
+                    .order_by("last_seen_at", direction="DESCENDING")
+                    .limit(limit)
+                    .stream()
+                )
+                return [AdminUserState(**doc.to_dict()) for doc in docs]
+            return await asyncio.to_thread(_fetch)
 
-        data = self._read_admin_state()
-        users = [AdminUserState(**item) for item in data["users"].values()]
-        users.sort(key=lambda user: user.last_seen_at, reverse=True)
-        return users[:limit]
+        import asyncio
+        def _read():
+            data = self._read_admin_state()
+            users = [AdminUserState(**item) for item in data["users"].values()]
+            users.sort(key=lambda user: user.last_seen_at, reverse=True)
+            return users[:limit]
+        return await asyncio.to_thread(_read)
 
     async def get_app_settings(self) -> AppSettingsState:
         if self.db:
-            doc = self.db.collection("admin_settings").document("app").get(
-                timeout=self.settings.firestore_timeout_seconds,
-            )
-            if not doc.exists:
-                return AppSettingsState()
-            return AppSettingsState(**doc.to_dict())
+            import asyncio
+            def _fetch():
+                doc = self.db.collection("admin_settings").document("app").get(
+                    timeout=self.settings.firestore_timeout_seconds,
+                )
+                if not doc.exists:
+                    return AppSettingsState()
+                return AppSettingsState(**doc.to_dict())
+            return await asyncio.to_thread(_fetch)
 
-        data = self._read_admin_state()
+        import asyncio
+        data = await asyncio.to_thread(self._read_admin_state)
         return AppSettingsState(**data["settings"])
 
     async def update_app_settings(self, settings: AppSettingsState) -> None:
         if self.db:
-            self.db.collection("admin_settings").document("app").set(
-                settings.model_dump(),
-                merge=True,
-            )
+            import asyncio
+            doc_ref = self.db.collection("admin_settings").document("app")
+            await asyncio.to_thread(doc_ref.set, settings.model_dump(), merge=True)
             return
 
-        data = self._read_admin_state()
-        data["settings"] = settings.model_dump()
-        self._write_admin_state(data)
+        import asyncio
+        def _write():
+            data = self._read_admin_state()
+            data["settings"] = settings.model_dump()
+            self._write_admin_state(data)
+        await asyncio.to_thread(_write)
 
     async def append_points_ledger(self, entry: PointsLedgerEntry) -> None:
         if self.db:
@@ -375,17 +424,24 @@ class FirebaseStore:
         error_only: bool = False,
     ) -> list[AIUsageLogEntry]:
         if self.db:
-            docs = (
-                self.db.collection("admin_ai_usage_logs")
-                .order_by("created_at", direction="DESCENDING")
-                .limit(max(limit * 5, 200))
-                .stream()
-            )
-            entries = [AIUsageLogEntry(**doc.to_dict()) for doc in docs]
+            import asyncio
+            def _fetch():
+                docs = (
+                    self.db.collection("admin_ai_usage_logs")
+                    .order_by("created_at", direction="DESCENDING")
+                    .limit(max(limit * 5, 200))
+                    .stream()
+                )
+                return [AIUsageLogEntry(**doc.to_dict()) for doc in docs]
+            entries = await asyncio.to_thread(_fetch)
         else:
-            data = self._read_admin_state()
-            entries = [AIUsageLogEntry(**item) for item in data["ai_usage_logs"]]
-            entries.sort(key=lambda entry: entry.created_at, reverse=True)
+            import asyncio
+            def _read():
+                data = self._read_admin_state()
+                cands = [AIUsageLogEntry(**item) for item in data["ai_usage_logs"]]
+                cands.sort(key=lambda entry: entry.created_at, reverse=True)
+                return cands
+            entries = await asyncio.to_thread(_read)
 
         if uid:
             entries = [entry for entry in entries if entry.uid == uid]

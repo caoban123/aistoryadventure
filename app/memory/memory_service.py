@@ -26,19 +26,25 @@ class MemoryService:
         if len(content) < 20:
             return
 
-        memories = await self.extract_memory_chunks(content)
+        import asyncio
+        asyncio.create_task(self._bg_extract_and_save(message, content))
 
-        for memory_text in memories:
-            chunk = MemoryChunk(
-                chunk_id=make_chunk_id(message.session_id, memory_text),
-                session_id=message.session_id,
-                text=memory_text,
-                kind="event",
-                importance=memory_importance(memory_text),
-                source_message_id=message.message_id,
-            )
-            await self.vector_store.add_memory(chunk)
-            print("MEMORY SAVED:", memory_text)
+    async def _bg_extract_and_save(self, message: Message, content: str) -> None:
+        try:
+            memories = await self.extract_memory_chunks(content)
+            for memory_text in memories:
+                chunk = MemoryChunk(
+                    chunk_id=make_chunk_id(message.session_id, memory_text),
+                    session_id=message.session_id,
+                    text=memory_text,
+                    kind="event",
+                    importance=memory_importance(memory_text),
+                    source_message_id=message.message_id,
+                )
+                await self.vector_store.add_memory(chunk)
+                print("MEMORY SAVED:", memory_text)
+        except Exception as exc:
+            print(f"Background memory extraction error for session {message.session_id}: {exc}")
 
     async def recent_messages(self, session_id: str) -> list[Message]:
         return await self.store.get_messages(session_id, limit=self.settings.max_recent_messages)

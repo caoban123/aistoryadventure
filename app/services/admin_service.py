@@ -334,18 +334,21 @@ class AdminControlService:
         return settings
 
     async def get_overview(self) -> AdminOverviewResponse:
+        import asyncio
         settings = await self.store.get_app_settings()
-        await self.cleanup_old_usage_logs(settings)
+        asyncio.create_task(self.cleanup_old_usage_logs(settings))
 
-        sessions = await self.store.admin_list_sessions(limit=5000)
-        users = await self.store.list_admin_user_states(limit=5000)
-        usage_today = await self.store.list_ai_usage_logs(
-            since=self._today_start_iso(),
-            limit=5000,
-        )
-        usage_30d = await self.store.list_ai_usage_logs(
-            since=self._days_ago_iso(30),
-            limit=5000,
+        sessions, users, usage_today, usage_30d = await asyncio.gather(
+            self.store.admin_list_sessions(limit=5000),
+            self.store.list_admin_user_states(limit=5000),
+            self.store.list_ai_usage_logs(
+                since=self._today_start_iso(),
+                limit=5000,
+            ),
+            self.store.list_ai_usage_logs(
+                since=self._days_ago_iso(30),
+                limit=5000,
+            ),
         )
 
         user_ids = {session.user_id for session in sessions}

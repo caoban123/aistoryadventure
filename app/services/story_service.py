@@ -228,7 +228,8 @@ class StoryService:
         )
         await self.memory.save_message(ai_message)
 
-        session = await self.memory.refresh_summary(session)
+        import asyncio
+        asyncio.create_task(self.memory.refresh_summary(session))
 
         return StoryResponse(
             session_id=session.session_id,
@@ -290,7 +291,8 @@ class StoryService:
 
         session.updated_at = utc_now_iso()
         await self.store.update_session(session)
-        session = await self.memory.refresh_summary(session)
+        import asyncio
+        asyncio.create_task(self.memory.refresh_summary(session))
 
         return StoryResponse(
             session_id=session.session_id,
@@ -501,7 +503,8 @@ class StoryService:
         )
         await self.memory.save_message(ai_message)
 
-        session = await self.memory.refresh_summary(session)
+        import asyncio
+        asyncio.create_task(self.memory.refresh_summary(session))
 
         return StoryResponse(
             session_id=session.session_id,

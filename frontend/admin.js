@@ -208,16 +208,21 @@ async function loadDashboard() {
   setBusy(true);
   setStatus("Loading admin data...", "muted");
 
+  const safeRequest = (promise, fallback) => promise.catch(err => {
+    console.warn("Non-critical admin endpoint failed:", err);
+    return fallback;
+  });
+
   try {
     const [overview, users, sessions, audit, usage, usageUsers, errors, submissions] = await Promise.all([
       requestJson(`${API_BASE}/admin/overview`),
-      requestJson(`${API_BASE}/admin/users?limit=100`),
-      requestJson(`${API_BASE}/admin/sessions?limit=40`),
-      requestJson(`${API_BASE}/admin/audit?limit=60`),
-      requestJson(`${API_BASE}/admin/usage?limit=80`),
-      requestJson(`${API_BASE}/admin/usage/users?limit=100`),
-      requestJson(`${API_BASE}/admin/errors?limit=50`),
-      requestJson(`${API_BASE}/admin/submissions`),
+      safeRequest(requestJson(`${API_BASE}/admin/users?limit=100`), { items: [] }),
+      safeRequest(requestJson(`${API_BASE}/admin/sessions?limit=40`), { items: [] }),
+      safeRequest(requestJson(`${API_BASE}/admin/audit?limit=60`), { items: [] }),
+      safeRequest(requestJson(`${API_BASE}/admin/usage?limit=80`), { today: {}, last_30d: {}, items: [] }),
+      safeRequest(requestJson(`${API_BASE}/admin/usage/users?limit=100`), { items: [] }),
+      safeRequest(requestJson(`${API_BASE}/admin/errors?limit=50`), { items: [] }),
+      safeRequest(requestJson(`${API_BASE}/admin/submissions`), []),
     ]);
 
     currentOverview = overview;
