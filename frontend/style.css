@@ -11571,64 +11571,384 @@ select:focus-visible {
 
 /* ── Theme Color Overrides (Amoled, Sepia, Forest) ── */
 
-/* Theme: Amoled Black */
-body[data-theme="amoled"] #gamePage,
-body[data-theme="amoled"] .game-reader-shell {
-  background: #000000 !important;
-}
-body[data-theme="amoled"] .glass-panel {
-  background: rgba(0, 0, 0, 0.6) !important;
-  border-color: rgba(255, 255, 255, 0.05) !important;
+/* ── Global Canvas & Glow Hiding for custom themes ── */
+body[data-theme="sepia"] #particleCanvas,
+body[data-theme="amoled"] #particleCanvas,
+body[data-theme="forest"] #particleCanvas {
+  opacity: 0 !important;
 }
 
-/* Theme: Warm Sepia */
-body[data-theme="sepia"] #gamePage,
-body[data-theme="sepia"] .game-reader-shell {
-  background: #f4edd8 !important;
-  color: #433422 !important;
+body[data-theme="sepia"] .ambient,
+body[data-theme="amoled"] .ambient,
+body[data-theme="forest"] .ambient {
+  display: none !important;
 }
+
+/* ── 1. Warm Sepia Theme (Kindle/Paper Book Feel) ── */
+body[data-theme="sepia"] {
+  background: #f7f2e8 !important;
+  color: #3a2f21 !important;
+}
+
+body[data-theme="sepia"] #gamePage,
+body[data-theme="sepia"] .game-reader-shell,
+body[data-theme="sepia"] .app-shell {
+  background: transparent !important;
+  color: #3a2f21 !important;
+}
+
+/* Navbar */
+body[data-theme="sepia"] .portal-navbar {
+  background: rgba(245, 237, 222, 0.96) !important;
+  border-bottom: 1px solid rgba(58, 47, 33, 0.12) !important;
+  box-shadow: 0 4px 20px rgba(58, 47, 33, 0.05) !important;
+}
+body[data-theme="sepia"] .portal-navbar .nav-tab {
+  color: #5c4c37 !important;
+}
+body[data-theme="sepia"] .portal-navbar .nav-tab:hover {
+  background: rgba(58, 47, 33, 0.05) !important;
+  color: #3a2f21 !important;
+}
+body[data-theme="sepia"] .portal-navbar .nav-tab.active {
+  background: rgba(58, 47, 33, 0.08) !important;
+  color: #3a2f21 !important;
+  border-bottom: 2px solid #b8860b !important;
+}
+body[data-theme="sepia"] .portal-navbar .nav-search {
+  background: rgba(58, 47, 33, 0.05) !important;
+  border: 1px solid rgba(58, 47, 33, 0.15) !important;
+}
+body[data-theme="sepia"] .portal-navbar #globalSearchInput {
+  color: #3a2f21 !important;
+}
+body[data-theme="sepia"] .portal-navbar #globalSearchInput::placeholder {
+  color: #8c7b68 !important;
+}
+body[data-theme="sepia"] .portal-navbar .nav-outline-btn {
+  border-color: rgba(58, 47, 33, 0.3) !important;
+  color: #3a2f21 !important;
+}
+body[data-theme="sepia"] .portal-navbar .nav-outline-btn:hover {
+  background: rgba(58, 47, 33, 0.06) !important;
+}
+body[data-theme="sepia"] .portal-navbar .nav-create-btn {
+  background: #b8860b !important;
+  color: #f7f2e8 !important;
+}
+body[data-theme="sepia"] .portal-navbar .nav-create-btn:hover {
+  background: #966f0a !important;
+}
+
+/* Glass Panels */
+body[data-theme="sepia"] .glass-panel {
+  background-color: rgba(245, 238, 224, 0.85) !important;
+  border-color: rgba(58, 47, 33, 0.12) !important;
+  box-shadow: 0 8px 32px rgba(58, 47, 33, 0.06) !important;
+  color: #3a2f21 !important;
+}
+
+/* Main Text & Eyebrows */
 body[data-theme="sepia"] .story-log p {
-  color: #4f3b25 !important;
+  color: #3a2f21 !important;
 }
 body[data-theme="sepia"] #gamePage.pure-read-active .story-log p {
-  color: #4f3b25 !important;
-}
-body[data-theme="sepia"] .glass-panel {
-  background: rgba(240, 230, 206, 0.82) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+  color: #2c2216 !important;
 }
 body[data-theme="sepia"] .eyebrow,
-body[data-theme="sepia"] .reader-tool-group > span {
-  color: #7d654a !important;
+body[data-theme="sepia"] .reader-tool-group > span,
+body[data-theme="sepia"] .choice-panel-heading .eyebrow {
+  color: #8c7b68 !important;
 }
 body[data-theme="sepia"] #sessionLabel {
-  color: #433422 !important;
-}
-body[data-theme="sepia"] .theme-swatch {
-  border-color: rgba(0, 0, 0, 0.2);
+  color: #3a2f21 !important;
 }
 
-/* Theme: Deep Forest */
-body[data-theme="forest"] #gamePage,
-body[data-theme="forest"] .game-reader-shell {
-  background: #09140f !important;
-  color: #d1dfd5 !important;
+/* Inputs & Composer */
+body[data-theme="sepia"] textarea#customAction {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(58, 47, 33, 0.22) !important;
+  color: #3a2f21 !important;
 }
+body[data-theme="sepia"] textarea#customAction::placeholder {
+  color: #8c7b68 !important;
+}
+body[data-theme="sepia"] .turn-words-control {
+  color: #5c4c37 !important;
+}
+body[data-theme="sepia"] .turn-words-control input {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(58, 47, 33, 0.22) !important;
+  color: #3a2f21 !important;
+}
+
+/* Choices & Cards */
+body[data-theme="sepia"] .choice-btn,
+body[data-theme="sepia"] .novel-choice-card {
+  background: rgba(245, 238, 224, 0.95) !important;
+  border: 1.5px solid rgba(58, 47, 33, 0.16) !important;
+  color: #3a2f21 !important;
+}
+body[data-theme="sepia"] .choice-btn:hover,
+body[data-theme="sepia"] .novel-choice-card:hover {
+  background: #ebdcc3 !important;
+  border-color: #b8860b !important;
+  box-shadow: 0 4px 15px rgba(184, 134, 11, 0.15) !important;
+}
+body[data-theme="sepia"] .choice-number {
+  background: rgba(58, 47, 33, 0.1) !important;
+  color: #5c4c37 !important;
+}
+
+/* Controls Toolbar */
+body[data-theme="sepia"] .reader-icon-btn {
+  color: #3a2f21 !important;
+  background: rgba(58, 47, 33, 0.05) !important;
+  border: 1px solid rgba(58, 47, 33, 0.15) !important;
+}
+body[data-theme="sepia"] .reader-icon-btn:hover {
+  background: rgba(58, 47, 33, 0.1) !important;
+}
+body[data-theme="sepia"] .reader-tool-btn {
+  color: #3a2f21 !important;
+  border: 1px solid rgba(58, 47, 33, 0.2) !important;
+}
+body[data-theme="sepia"] .reader-tool-btn:hover {
+  background: rgba(58, 47, 33, 0.06) !important;
+}
+body[data-theme="sepia"] #pureReadModeBtn.active {
+  background: rgba(184, 134, 11, 0.15) !important;
+  border-color: #b8860b !important;
+  color: #b8860b !important;
+}
+body[data-theme="sepia"] .theme-swatch {
+  border-color: rgba(58, 47, 33, 0.25) !important;
+}
+
+/* Submit Button */
+body[data-theme="sepia"] #submitBtn {
+  background: #b8860b !important;
+  color: #f7f2e8 !important;
+  box-shadow: 0 4px 14px rgba(184, 134, 11, 0.3) !important;
+}
+body[data-theme="sepia"] #submitBtn:hover {
+  background: #966f0a !important;
+  transform: translateY(-2px);
+}
+
+/* HUD elements */
+body[data-theme="sepia"] .quest-hud-grid span {
+  color: #8c7b68 !important;
+}
+body[data-theme="sepia"] .quest-hud-grid strong {
+  color: #3a2f21 !important;
+}
+
+
+/* ── 2. AMOLED Black Theme (OLED Friendly Night Mode) ── */
+body[data-theme="amoled"] {
+  background: #000000 !important;
+  color: #e2e8f0 !important;
+}
+
+body[data-theme="amoled"] #gamePage,
+body[data-theme="amoled"] .game-reader-shell,
+body[data-theme="amoled"] .app-shell {
+  background: transparent !important;
+  color: #e2e8f0 !important;
+}
+
+/* Navbar */
+body[data-theme="amoled"] .portal-navbar {
+  background: rgba(0, 0, 0, 0.92) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: none !important;
+}
+body[data-theme="amoled"] .portal-navbar .nav-tab {
+  color: #94a3b8 !important;
+}
+body[data-theme="amoled"] .portal-navbar .nav-tab:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #f8fafc !important;
+}
+body[data-theme="amoled"] .portal-navbar .nav-tab.active {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #f8fafc !important;
+  border-bottom: 2px solid var(--accent) !important;
+}
+body[data-theme="amoled"] .portal-navbar .nav-search {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+body[data-theme="amoled"] .portal-navbar #globalSearchInput {
+  color: #e2e8f0 !important;
+}
+body[data-theme="amoled"] .portal-navbar .nav-outline-btn {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #e2e8f0 !important;
+}
+
+/* Glass Panels */
+body[data-theme="amoled"] .glass-panel {
+  background: rgba(10, 10, 10, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.8) !important;
+  color: #e2e8f0 !important;
+}
+
+/* Main Text & Eyebrows */
+body[data-theme="amoled"] .story-log p {
+  color: #e2e8f0 !important;
+}
+body[data-theme="amoled"] .eyebrow,
+body[data-theme="amoled"] .reader-tool-group > span {
+  color: #64748b !important;
+}
+body[data-theme="amoled"] #sessionLabel {
+  color: #e2e8f0 !important;
+}
+
+/* Inputs & Composer */
+body[data-theme="amoled"] textarea#customAction {
+  background: #000000 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #e2e8f0 !important;
+}
+body[data-theme="amoled"] .turn-words-control input {
+  background: #000000 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #e2e8f0 !important;
+}
+
+/* Choices & Cards */
+body[data-theme="amoled"] .choice-btn,
+body[data-theme="amoled"] .novel-choice-card {
+  background: rgba(15, 15, 15, 0.95) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.1) !important;
+  color: #e2e8f0 !important;
+}
+body[data-theme="amoled"] .choice-btn:hover,
+body[data-theme="amoled"] .novel-choice-card:hover {
+  background: #111111 !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 4px 15px rgba(224, 173, 82, 0.15) !important;
+}
+
+/* Controls Toolbar */
+body[data-theme="amoled"] .reader-icon-btn {
+  color: #e2e8f0 !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+body[data-theme="amoled"] #pureReadModeBtn.active {
+  background: rgba(224, 173, 82, 0.15) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent-bright) !important;
+}
+
+
+/* ── 3. Deep Forest Theme (Mystic Emerald Green) ── */
+body[data-theme="forest"] {
+  background: #08120e !important;
+  color: #c4d6cb !important;
+}
+
+body[data-theme="forest"] #gamePage,
+body[data-theme="forest"] .game-reader-shell,
+body[data-theme="forest"] .app-shell {
+  background: transparent !important;
+  color: #c4d6cb !important;
+}
+
+/* Navbar */
+body[data-theme="forest"] .portal-navbar {
+  background: rgba(8, 18, 14, 0.95) !important;
+  border-bottom: 1px solid rgba(142, 191, 158, 0.15) !important;
+  box-shadow: 0 4px 20px rgba(9, 16, 13, 0.2) !important;
+}
+body[data-theme="forest"] .portal-navbar .nav-tab {
+  color: #7b9684 !important;
+}
+body[data-theme="forest"] .portal-navbar .nav-tab:hover {
+  background: rgba(142, 191, 158, 0.06) !important;
+  color: #d2e5d8 !important;
+}
+body[data-theme="forest"] .portal-navbar .nav-tab.active {
+  background: rgba(142, 191, 158, 0.1) !important;
+  color: #8ebf9e !important;
+  border-bottom: 2px solid #8ebf9e !important;
+}
+body[data-theme="forest"] .portal-navbar .nav-search {
+  background: rgba(9, 16, 13, 0.4) !important;
+  border: 1px solid rgba(142, 191, 158, 0.15) !important;
+}
+body[data-theme="forest"] .portal-navbar #globalSearchInput {
+  color: #d2e5d8 !important;
+}
+body[data-theme="forest"] .portal-navbar .nav-outline-btn {
+  border-color: rgba(142, 191, 158, 0.3) !important;
+  color: #d2e5d8 !important;
+}
+
+/* Glass Panels */
+body[data-theme="forest"] .glass-panel {
+  background: rgba(10, 22, 17, 0.85) !important;
+  border-color: rgba(142, 191, 158, 0.12) !important;
+  box-shadow: 0 8px 32px rgba(5, 10, 8, 0.25) !important;
+  color: #c4d6cb !important;
+}
+
+/* Main Text & Eyebrows */
 body[data-theme="forest"] .story-log p {
   color: #c4d6cb !important;
 }
-body[data-theme="forest"] #gamePage.pure-read-active .story-log p {
-  color: #c4d6cb !important;
-}
-body[data-theme="forest"] .glass-panel {
-  background: rgba(9, 24, 18, 0.78) !important;
-  border-color: rgba(255, 255, 255, 0.06) !important;
-}
 body[data-theme="forest"] .eyebrow,
 body[data-theme="forest"] .reader-tool-group > span {
-  color: #7b9684 !important;
+  color: #6b8875 !important;
 }
 body[data-theme="forest"] #sessionLabel {
-  color: #d1dfd5 !important;
+  color: #c4d6cb !important;
+}
+
+/* Inputs & Composer */
+body[data-theme="forest"] textarea#customAction {
+  background: #050d0a !important;
+  border: 1px solid rgba(142, 191, 158, 0.2) !important;
+  color: #c4d6cb !important;
+}
+body[data-theme="forest"] .turn-words-control input {
+  background: #050d0a !important;
+  border: 1px solid rgba(142, 191, 158, 0.2) !important;
+  color: #c4d6cb !important;
+}
+
+/* Choices & Cards */
+body[data-theme="forest"] .choice-btn,
+body[data-theme="forest"] .novel-choice-card {
+  background: rgba(12, 26, 20, 0.95) !important;
+  border: 1.5px solid rgba(142, 191, 158, 0.15) !important;
+  color: #c4d6cb !important;
+}
+body[data-theme="forest"] .choice-btn:hover,
+body[data-theme="forest"] .novel-choice-card:hover {
+  background: #122d21 !important;
+  border-color: #8ebf9e !important;
+  box-shadow: 0 4px 15px rgba(142, 191, 158, 0.15) !important;
+}
+
+/* Controls Toolbar */
+body[data-theme="forest"] .reader-icon-btn {
+  color: #c4d6cb !important;
+  background: rgba(142, 191, 158, 0.05) !important;
+}
+body[data-theme="forest"] #pureReadModeBtn.active {
+  background: rgba(142, 191, 158, 0.15) !important;
+  border-color: #8ebf9e !important;
+  color: #8ebf9e !important;
+}
+
+/* Submit Button */
+body[data-theme="forest"] #submitBtn {
+  background: #8ebf9e !important;
+  color: #08120e !important;
+  box-shadow: 0 4px 14px rgba(142, 191, 158, 0.3) !important;
 }
