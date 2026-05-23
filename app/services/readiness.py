@@ -213,33 +213,56 @@ def _add_storage_checks(
         )
 
 
+def _check_qdrant_connection(host: str, port: int) -> tuple[str, str]:
+    import socket
+    try:
+        with socket.create_connection((host, port), timeout=1.5):
+            return "ok", f"Successfully connected to Qdrant at {host}:{port}."
+    except Exception as exc:
+        return "error", f"Could not connect to Qdrant at {host}:{port}: {exc}"
+
+
 def _add_path_checks(
     checks: list[ReadinessCheckItem],
     settings: Settings,
     storage_mode: str,
     production: bool,
 ) -> None:
-    chroma_status, chroma_message = _path_status(Path(settings.chroma_persist_dir))
-    checks.append(
-        ReadinessCheckItem(
-            check_id="paths.chroma",
-            label="ChromaDB",
-            status=chroma_status,
-            message=chroma_message,
-            hint="Use a persistent server directory and include it in backups.",
+    if settings.vector_db.lower().strip() == "qdrant":
+        qdrant_status, qdrant_message = _check_qdrant_connection(
+            settings.qdrant_host, settings.qdrant_port
         )
-    )
-
-    if production and not Path(settings.chroma_persist_dir).is_absolute():
         checks.append(
             ReadinessCheckItem(
-                check_id="paths.chroma_absolute",
-                label="ChromaDB path",
-                status="warning",
-                message="ChromaDB path is relative.",
-                hint="Use an absolute persistent path on the VPS, such as /var/lib/ai-story/chroma_db.",
+                check_id="paths.qdrant",
+                label="Qdrant DB",
+                status=qdrant_status,
+                message=qdrant_message,
+                hint="Verify that the Qdrant container/service is running and accessible.",
             )
         )
+    else:
+        chroma_status, chroma_message = _path_status(Path(settings.chroma_persist_dir))
+        checks.append(
+            ReadinessCheckItem(
+                check_id="paths.chroma",
+                label="ChromaDB",
+                status=chroma_status,
+                message=chroma_message,
+                hint="Use a persistent server directory and include it in backups.",
+            )
+        )
+
+        if production and not Path(settings.chroma_persist_dir).is_absolute():
+            checks.append(
+                ReadinessCheckItem(
+                    check_id="paths.chroma_absolute",
+                    label="ChromaDB path",
+                    status="warning",
+                    message="ChromaDB path is relative.",
+                    hint="Use an absolute persistent path on the VPS, such as /var/lib/ai-story/chroma_db.",
+                )
+            )
 
     if storage_mode != "firebase":
         data_status, data_message = _path_status(Path(settings.local_data_dir))

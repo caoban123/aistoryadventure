@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     local_data_dir: str = "data"
 
     chroma_persist_dir: str = "chroma_db"
+    vector_db: str = "chroma"
+    qdrant_host: str = "localhost"
+    qdrant_port: int = 6333
+    qdrant_api_key: str | None = None
     embedding_provider: str = "simple"  # simple first; upgrade later to openai
     max_recent_messages: int = 8
     max_relevant_memories: int = 6

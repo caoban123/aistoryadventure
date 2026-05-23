@@ -76,7 +76,12 @@ class GeminiProvider(TextProvider):
         self.model = settings.text_model
 
     async def generate_text(self, prompt: str) -> str:
-        response = self.client.models.generate_content(model=self.model, contents=prompt)
+        import asyncio
+        response = await asyncio.to_thread(
+            self.client.models.generate_content,
+            model=self.model,
+            contents=prompt,
+        )
         usage = getattr(response, "usage_metadata", None)
         if usage:
             self.set_usage(
@@ -96,6 +101,7 @@ class OllamaProvider(TextProvider):
 
     async def generate_text(self, prompt: str) -> str:
         self.clear_usage()
+        import asyncio
         payload = json.dumps({"model": self.model, "prompt": prompt, "stream": False}).encode("utf-8")
         request = urllib.request.Request(
             f"{self.base_url}/api/generate",
@@ -103,8 +109,10 @@ class OllamaProvider(TextProvider):
             headers={"Content-Type": "application/json"},
             method="POST",
         )
-        with urllib.request.urlopen(request, timeout=180) as response:
-            data = json.loads(response.read().decode("utf-8"))
+        def _make_request():
+            with urllib.request.urlopen(request, timeout=180) as response:
+                return json.loads(response.read().decode("utf-8"))
+        data = await asyncio.to_thread(_make_request)
         return data.get("response", "")
 class GroqProvider(TextProvider):
     def __init__(self) -> None:
