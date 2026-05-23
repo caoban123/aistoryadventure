@@ -11569,6 +11569,42 @@ select:focus-visible {
 #themeSepia { background: #f5ecda; }
 #themeForest { background: #0a140f; }
 
+.navbar-theme-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 6px 12px;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+body[data-theme="sepia"] .navbar-theme-selector {
+  background: rgba(58, 47, 33, 0.05) !important;
+  border-color: rgba(58, 47, 33, 0.15) !important;
+}
+body[data-theme="forest"] .navbar-theme-selector {
+  background: rgba(142, 191, 158, 0.05) !important;
+  border-color: rgba(142, 191, 158, 0.15) !important;
+}
+body[data-theme="amoled"] .navbar-theme-selector {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+@media (max-width: 640px) {
+  .navbar-theme-selector {
+    padding: 4px 8px;
+    gap: 6px;
+    margin-right: 6px;
+  }
+  .navbar-theme-selector .theme-swatch {
+    width: 14px;
+    height: 14px;
+  }
+}
+
 /* ── Theme Color Overrides (Amoled, Sepia, Forest) ── */
 
 /* ── Global Canvas & Glow Hiding for custom themes ── */

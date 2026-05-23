@@ -7418,11 +7418,24 @@ readerThemes.forEach(theme => {
     btn.classList.add("active");
     if (theme === "cosmic") {
       document.body.removeAttribute("data-theme");
+      localStorage.setItem("user-theme", "cosmic");
     } else {
       document.body.setAttribute("data-theme", theme);
+      localStorage.setItem("user-theme", theme);
     }
   });
 });
+
+// Restore saved theme on startup
+const savedTheme = localStorage.getItem("user-theme") || "cosmic";
+if (savedTheme !== "cosmic" && readerThemes.includes(savedTheme)) {
+  document.body.setAttribute("data-theme", savedTheme);
+}
+document.querySelectorAll(".theme-swatch").forEach(s => s.classList.remove("active"));
+const activeThemeBtn = document.getElementById(`theme${savedTheme.charAt(0).toUpperCase() + savedTheme.slice(1)}`);
+if (activeThemeBtn) {
+  activeThemeBtn.classList.add("active");
+}
 
 // ── Keyboard Shortcuts (Focus, Read, Choices, Submit) ─────────────────────────
 window.addEventListener("keydown", (e) => {
