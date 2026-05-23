@@ -220,6 +220,7 @@ const discoverTotalCount = document.getElementById("discoverTotalCount");
 const discoverAdventureCount = document.getElementById("discoverAdventureCount");
 const discoverNovelCount = document.getElementById("discoverNovelCount");
 
+const communityWorlds = [];
 const creatorWorlds = [
   {
     id: "sunless-realm",
@@ -5484,14 +5485,14 @@ function setDiscoverStatus(message = "", type = "muted") {
 }
 
 function updateDiscoverStats() {
-  const adventureCount = creatorWorlds.filter(
+  const adventureCount = communityWorlds.filter(
     (world) => String(world.mode).toLowerCase() === "adventure"
   ).length;
-  const novelCount = creatorWorlds.filter(
+  const novelCount = communityWorlds.filter(
     (world) => String(world.mode).toLowerCase() === "novel"
   ).length;
 
-  if (discoverTotalCount) discoverTotalCount.textContent = String(creatorWorlds.length);
+  if (discoverTotalCount) discoverTotalCount.textContent = String(communityWorlds.length);
   if (discoverAdventureCount) discoverAdventureCount.textContent = String(adventureCount);
   if (discoverNovelCount) discoverNovelCount.textContent = String(novelCount);
 }
@@ -5500,7 +5501,7 @@ function getFilteredCatalogWorlds() {
   const query = discoverSearchInput?.value.trim().toLowerCase() || "";
   const mode = discoverModeFilter?.value || "all";
 
-  return creatorWorlds.filter((world) => {
+  return communityWorlds.filter((world) => {
     const normalizedMode = String(world.mode || "").toLowerCase();
     const haystack = [
       world.title,
@@ -5575,12 +5576,13 @@ async function loadWorldCatalog({ force = false } = {}) {
       ? data.map(normalizeCatalogWorld).filter((world) => world.id)
       : [];
 
+    communityWorlds.length = 0;
     if (auth.currentUser) {
       try {
         const communityData = await requestJson(`${API_BASE}/game/discover`);
         if (Array.isArray(communityData)) {
-          const communityWorlds = communityData.map(normalizeCommunityWorld).filter(w => w.id);
-          worlds.push(...communityWorlds);
+          const loadedCommunity = communityData.map(normalizeCommunityWorld).filter(w => w.id);
+          communityWorlds.push(...loadedCommunity);
         }
       } catch (err) {
         console.warn("Could not load community worlds:", err);
@@ -5639,6 +5641,7 @@ function renderWorldCard(world) {
   card.style.setProperty("--card-bg", world.image);
 
   const isCommunity = world.isCommunity === true;
+  const isAuthor = isCommunity && auth.currentUser && world.authorUid === auth.currentUser.uid;
   const badgeClass = isCommunity ? "community-badge" : "official-badge";
   const badgeLabel = isCommunity ? "Community" : "Official";
   const authorLabel = isCommunity ? `By: ${escapeHtml(world.authorName)}` : "Backend Catalog";
@@ -5660,11 +5663,12 @@ function renderWorldCard(world) {
       <div class="world-card-footer" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
         <span>${authorLabel}</span>
         ${isCommunity ? `
-          <div style="display:flex; gap:10px;">
+          <div style="display:flex; gap:10px; align-items:center;">
             <button class="like-btn ghost" data-id="${world.id}" type="button">
               ❤️ <span class="like-count">${world.likes}</span>
             </button>
             ${world.sessionId ? `<button class="read-log-btn ghost" data-id="${world.id}" type="button">📖 Read</button>` : ""}
+            ${isAuthor ? `<button class="delete-pub-btn ghost" data-id="${world.id}" type="button" style="color: #ff4d4d; border-color: rgba(255, 77, 77, 0.3);">🗑️</button>` : ""}
           </div>
         ` : '<span>Start →</span>'}
       </div>
@@ -5687,6 +5691,12 @@ function renderWorldCard(world) {
         openStoryReaderModal(world);
       });
     }
+    card.querySelector('.delete-pub-btn')?.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (confirm("Bạn có chắc chắn muốn xóa bài xuất bản này? Hành động này không thể hoàn tác.")) {
+        await deleteCommunityWorld(world.id);
+      }
+    });
   }
 
   return card;
@@ -7152,6 +7162,7 @@ function normalizeCommunityWorld(world = {}) {
     tags: Array.isArray(world.tags) ? world.tags : [],
     isCommunity: true,
     authorName: world.author_name || "Anonymous",
+    authorUid: world.author_uid || "",
     likes: world.likes || 0,
     likedBy: Array.isArray(world.liked_by) ? world.liked_by : [],
     sessionId: world.session_id || null,
@@ -7165,7 +7176,7 @@ async function likeCommunityWorld(worldId, countElement) {
     });
     if (res && countElement) {
       countElement.textContent = res.likes;
-      const item = creatorWorlds.find(w => w.id === worldId);
+      const item = communityWorlds.find(w => w.id === worldId);
       if (item) {
         item.likes = res.likes;
       }
@@ -7173,6 +7184,21 @@ async function likeCommunityWorld(worldId, countElement) {
   } catch (err) {
     console.error(err);
     alert(err.message || "Could not like this world.");
+  }
+}
+
+async function deleteCommunityWorld(worldId) {
+  try {
+    setDiscoverStatus("Deleting publication...", "muted");
+    await requestJson(`${API_BASE}/game/worlds/publish/${encodeURIComponent(worldId)}`, {
+      method: "DELETE"
+    });
+    setDiscoverStatus("Đã xóa thế giới thành công.", "success");
+    await loadWorldCatalog({ force: true });
+  } catch (err) {
+    console.error(err);
+    alert(err.message || "Không thể xóa bài viết này.");
+    setDiscoverStatus(err.message || "Error deleting publication.", "error");
   }
 }
 

@@ -360,6 +360,18 @@ async def get_world(world_id: str):
     world = get_world_catalog_item(world_id)
 
     if not world:
+        comm_world = await db_store.get_community_world(world_id)
+        if comm_world and comm_world.is_approved:
+            return WorldCatalogItem(
+                id=comm_world.id,
+                title=comm_world.title,
+                mode=comm_world.mode.capitalize(),
+                description=comm_world.description,
+                image="linear-gradient(135deg, #181124, #081a2e)",
+                world_seed=comm_world.world_seed,
+                long_description=comm_world.long_description,
+                tags=comm_world.tags,
+            )
         raise HTTPException(status_code=404, detail="World not found")
 
     return world
@@ -630,4 +642,22 @@ async def publish_world(
     
     await db_store.create_community_world(item)
     return {"message": "Xuất bản thành công! Đang chờ Admin phê duyệt.", "id": item.id}
+
+
+@router.delete("/worlds/publish/{item_id}")
+async def delete_published_world(
+    item_id: str,
+    user=Depends(get_current_user),
+):
+    await enforce_player_or_http(user)
+    item = await db_store.get_community_world(item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Không tìm thấy thế giới này.")
+        
+    if item.author_uid != user["uid"]:
+        raise HTTPException(status_code=403, detail="Bạn không có quyền xóa thế giới này.")
+        
+    await db_store.delete_community_world(item_id)
+    return {"message": "Đã xóa thế giới đã xuất bản thành công."}
+
 
