@@ -2500,6 +2500,67 @@ function typeMessage(el, text, speed = 13) {
   });
 }
 
+function wrapWordsInSpan(element) {
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+  const textNodes = [];
+  let node;
+  while (node = walker.nextNode()) {
+    textNodes.push(node);
+  }
+  
+  const spanNodes = [];
+  textNodes.forEach(textNode => {
+    const text = textNode.nodeValue;
+    const words = text.split(/(\s+)/);
+    const fragment = document.createDocumentFragment();
+    words.forEach(word => {
+      if (word.trim() === '') {
+        fragment.appendChild(document.createTextNode(word));
+      } else {
+        const span = document.createElement('span');
+        span.className = 'streaming-word';
+        span.textContent = word;
+        span.style.opacity = '0';
+        span.style.transition = 'opacity 0.22s ease';
+        fragment.appendChild(span);
+        spanNodes.push(span);
+      }
+    });
+    textNode.parentNode.replaceChild(fragment, textNode);
+  });
+  return spanNodes;
+}
+
+async function startStreamingReveal(element) {
+  const words = wrapWordsInSpan(element);
+  let skipAnimation = false;
+  
+  const skipHandler = () => {
+    skipAnimation = true;
+  };
+  
+  document.addEventListener('click', skipHandler);
+  document.addEventListener('keydown', skipHandler);
+  
+  for (let i = 0; i < words.length; i++) {
+    if (skipAnimation) {
+      for (let j = i; j < words.length; j++) {
+        words[j].style.opacity = '1';
+      }
+      break;
+    }
+    words[i].style.opacity = '1';
+    if (i % 3 === 0) {
+      scrollStoryToLatest("auto");
+    }
+    await new Promise(resolve => setTimeout(resolve, 28));
+  }
+  
+  document.removeEventListener('click', skipHandler);
+  document.removeEventListener('keydown', skipHandler);
+  scrollStoryToLatest("smooth");
+}
+
 async function addMessage(role, content, animate = false) {
   if (!storyLog) return null;
 
@@ -2548,14 +2609,19 @@ async function addMessage(role, content, animate = false) {
   storyLog.appendChild(item);
   pulsePortal(role === "ai" ? 0.95 : 0.5);
 
-  if (animate) {
-    item.classList.add("message-enter");
-  }
-
   item.scrollIntoView({
     behavior: "smooth",
     block: "end",
   });
+
+  if (animate && role === "ai") {
+    item.classList.add("message-enter");
+    const proseContainer = item.querySelector(".novel-prose") || item.querySelector(".message-content");
+    if (proseContainer) {
+      await startStreamingReveal(proseContainer);
+    }
+  }
+
   updateScrollFade();
   return item;
 }
@@ -2973,6 +3039,9 @@ function renderChoicesFromArray(choices = []) {
     btn.className = isNovel
       ? "novel-choice-card"
       : "choice-btn adventure-choice-card";
+
+    // Staggered reveal animation
+    btn.style.animationDelay = `${index * 80}ms`;
 
     btn.innerHTML = `
       <span class="choice-number">${index + 1}</span>
@@ -7337,6 +7406,64 @@ globalSearchInput?.addEventListener("input", () => {
 globalSearchInput?.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
     closeGlobalSearch();
+  }
+});
+
+// ── Theme Selector Logic ──────────────────────────────────────────────────────
+const readerThemes = ["cosmic", "amoled", "sepia", "forest"];
+readerThemes.forEach(theme => {
+  const btn = document.getElementById(`theme${theme.charAt(0).toUpperCase() + theme.slice(1)}`);
+  btn?.addEventListener("click", () => {
+    document.querySelectorAll(".theme-swatch").forEach(s => s.classList.remove("active"));
+    btn.classList.add("active");
+    if (theme === "cosmic") {
+      document.body.removeAttribute("data-theme");
+    } else {
+      document.body.setAttribute("data-theme", theme);
+    }
+  });
+});
+
+// ── Keyboard Shortcuts (Focus, Read, Choices, Submit) ─────────────────────────
+window.addEventListener("keydown", (e) => {
+  const activeEl = document.activeElement;
+  if (activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA" || activeEl.isContentEditable)) {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      const sendBtn = document.getElementById("storyComposerSendBtn");
+      if (sendBtn && !sendBtn.disabled) {
+        e.preventDefault();
+        sendBtn.click();
+      }
+    }
+    return;
+  }
+
+  // Choose options 1, 2, 3, 4
+  if (["1", "2", "3", "4"].includes(e.key)) {
+    const choices = document.querySelectorAll(".choices-box button");
+    const index = parseInt(e.key) - 1;
+    if (choices && choices[index]) {
+      e.preventDefault();
+      choices[index].click();
+    }
+  }
+
+  // Toggle Focus Mode (F key)
+  if (e.key.toLowerCase() === "f") {
+    const focusBtn = document.getElementById("readerFocusToggle");
+    if (focusBtn) {
+      e.preventDefault();
+      focusBtn.click();
+    }
+  }
+
+  // Toggle Read Mode (R key)
+  if (e.key.toLowerCase() === "r") {
+    const readBtn = document.getElementById("pureReadModeBtn");
+    if (readBtn) {
+      e.preventDefault();
+      readBtn.click();
+    }
   }
 });
 

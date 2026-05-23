@@ -11518,3 +11518,117 @@ select:focus-visible {
 .submission-actions button {
   flex: 1;
 }
+
+/* ── Sibling Hover Dimming & Glow for Choices ── */
+.choices-box:hover .choice-btn:not(:hover),
+.choices-box:hover .novel-choice-card:not(:hover) {
+  opacity: 0.45 !important;
+  transform: scale(0.98) !important;
+}
+
+.choice-btn, .novel-choice-card {
+  transition: opacity 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), 
+              transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), 
+              border-color 0.3s ease, 
+              box-shadow 0.3s ease !important;
+}
+
+.choice-btn:hover, .novel-choice-card:hover {
+  opacity: 1 !important;
+  transform: scale(1.02) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 15px rgba(224, 173, 82, 0.35) !important;
+}
+
+/* ── Theme Swatches in reader-toolbar ── */
+.theme-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  padding: 0;
+  min-height: auto !important;
+  min-width: auto !important;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.theme-swatch:hover {
+  transform: scale(1.25);
+  border-color: var(--accent);
+}
+
+.theme-swatch.active {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 8px var(--accent) !important;
+  transform: scale(1.15);
+}
+
+#themeCosmic { background: #130f26; }
+#themeAmoled { background: #000000; }
+#themeSepia { background: #f5ecda; }
+#themeForest { background: #0a140f; }
+
+/* ── Theme Color Overrides (Amoled, Sepia, Forest) ── */
+
+/* Theme: Amoled Black */
+body[data-theme="amoled"] #gamePage,
+body[data-theme="amoled"] .game-reader-shell {
+  background: #000000 !important;
+}
+body[data-theme="amoled"] .glass-panel {
+  background: rgba(0, 0, 0, 0.6) !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Theme: Warm Sepia */
+body[data-theme="sepia"] #gamePage,
+body[data-theme="sepia"] .game-reader-shell {
+  background: #f4edd8 !important;
+  color: #433422 !important;
+}
+body[data-theme="sepia"] .story-log p {
+  color: #4f3b25 !important;
+}
+body[data-theme="sepia"] #gamePage.pure-read-active .story-log p {
+  color: #4f3b25 !important;
+}
+body[data-theme="sepia"] .glass-panel {
+  background: rgba(240, 230, 206, 0.82) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+}
+body[data-theme="sepia"] .eyebrow,
+body[data-theme="sepia"] .reader-tool-group > span {
+  color: #7d654a !important;
+}
+body[data-theme="sepia"] #sessionLabel {
+  color: #433422 !important;
+}
+body[data-theme="sepia"] .theme-swatch {
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Theme: Deep Forest */
+body[data-theme="forest"] #gamePage,
+body[data-theme="forest"] .game-reader-shell {
+  background: #09140f !important;
+  color: #d1dfd5 !important;
+}
+body[data-theme="forest"] .story-log p {
+  color: #c4d6cb !important;
+}
+body[data-theme="forest"] #gamePage.pure-read-active .story-log p {
+  color: #c4d6cb !important;
+}
+body[data-theme="forest"] .glass-panel {
+  background: rgba(9, 24, 18, 0.78) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+body[data-theme="forest"] .eyebrow,
+body[data-theme="forest"] .reader-tool-group > span {
+  color: #7b9684 !important;
+}
+body[data-theme="forest"] #sessionLabel {
+  color: #d1dfd5 !important;
+}
