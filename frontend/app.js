@@ -507,7 +507,9 @@ let pendingPortalPageId = document.body.dataset.page || "landingPage";
 let pendingPortalMode = currentSessionMode;
 let pendingPortalPulse = 0;
 
-function getPortalProfile(pageId = pendingPortalPageId) {
+function getPortalProfile(pageId = pendingPortalPageId, mode = pendingPortalMode) {
+  const isAdventure = (mode === "adventure");
+
   if (pageId === "foundationPage") {
     return {
       opacity: 0.92,
@@ -517,7 +519,7 @@ function getPortalProfile(pageId = pendingPortalPageId) {
       speed: 0.34,
       z: 4.8,
       y: -0.04,
-      hueShift: 0.16,
+      hueShift: isAdventure ? 0.9 : 0.16,
     };
   }
 
@@ -530,7 +532,7 @@ function getPortalProfile(pageId = pendingPortalPageId) {
       speed: 0.24,
       z: 5.8,
       y: 0.1,
-      hueShift: 0.02,
+      hueShift: isAdventure ? 0.75 : 0.02,
     };
   }
 
@@ -542,7 +544,7 @@ function getPortalProfile(pageId = pendingPortalPageId) {
     speed: 0.12,
     z: 6.6,
     y: 0.18,
-    hueShift: 0,
+    hueShift: isAdventure ? 0.6 : 0,
   };
 }
 
@@ -607,8 +609,8 @@ async function initPortalScene() {
       mode: pendingPortalMode,
       pulse: 0,
       scroll: 0,
-      profile: getPortalProfile(pendingPortalPageId),
-      current: getPortalProfile(pendingPortalPageId),
+      profile: getPortalProfile(pendingPortalPageId, pendingPortalMode),
+      current: getPortalProfile(pendingPortalPageId, pendingPortalMode),
       rafId: 0,
       running: true,
     };
@@ -743,7 +745,7 @@ async function initPortalScene() {
     const applyProfile = (pageId, mode) => {
       state.pageId = pageId || "default";
       state.mode = mode || "adventure";
-      state.profile = getPortalProfile(state.pageId);
+      state.profile = getPortalProfile(state.pageId, state.mode);
     };
 
     const onPointerMove = (event) => {
@@ -2652,7 +2654,7 @@ function updateScrollFade() {
   storyLog.classList.toggle("is-near-bottom", isNearBottom);
 
   if (scrollLatestBtn) {
-    scrollLatestBtn.disabled = !hasScrollableContent || isNearBottom;
+    scrollLatestBtn.classList.toggle("visible", hasScrollableContent && !isNearBottom);
   }
 }
 storyLog?.addEventListener("scroll", updateScrollFade);

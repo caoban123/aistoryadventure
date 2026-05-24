@@ -46,14 +46,48 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  transition: background 0.3s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+/* Theme-specific scrollbar overrides */
+body[data-theme="sepia"] ::-webkit-scrollbar-thumb {
+  background: rgba(58, 47, 33, 0.12);
+}
+body[data-theme="sepia"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(58, 47, 33, 0.28);
+}
+body[data-theme="forest"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.06);
+}
+body[data-theme="forest"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
 body {
   min-height: 100vh;
   color: var(--text);
   font-family: var(--font-body);
-  background: var(--bg);
   overflow-x: hidden;
   line-height: 1.65;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+  background-color: #080612 !important;
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E"),
+    radial-gradient(circle at 50% 35%, #150f2f 0%, #080612 70%, #030207 100%) !important;
 }
 
 /* ═══════════════════════════════════════════════════════ CANVAS ══ */
@@ -150,6 +184,21 @@ body[data-page="registerPage"] #particleCanvas {
 .ambient-pulse .ambient-two {
   opacity: 0.95;
   transition: opacity 0.4s ease;
+}
+
+/* Mode-specific ambient lighting overrides */
+body[data-mode="adventure"] .ambient-one {
+  background: radial-gradient(circle, rgba(224, 173, 82, 0.35), transparent 65%) !important;
+}
+body[data-mode="adventure"] .ambient-two {
+  background: radial-gradient(circle, rgba(255, 140, 105, 0.24), transparent 65%) !important;
+}
+
+body[data-mode="novel"] .ambient-one {
+  background: radial-gradient(circle, rgba(155, 108, 255, 0.32), transparent 65%) !important;
+}
+body[data-mode="novel"] .ambient-two {
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.26), transparent 65%) !important;
 }
 
 /* ═══════════════════════════════════════════════════════ SHELL ══ */
@@ -1164,29 +1213,50 @@ button:disabled {
 }
 
 .primary-btn {
+  position: relative;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   gap: 10px;
-
   text-align: center;
-
   color: #160e00;
   background: linear-gradient(135deg,
       #fce08a 0%,
       var(--accent) 55%,
       #c98c30 100%);
-
   box-shadow:
     0 10px 30px rgba(224, 173, 82, 0.24);
-
   font-family: "Be Vietnam Pro", sans-serif;
   letter-spacing: 0.05em;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.primary-btn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 100%
+  );
+  transform: skewX(-25deg);
+  pointer-events: none;
 }
 
 .primary-btn:hover:not(:disabled) {
   box-shadow: 0 16px 44px rgba(224, 173, 82, 0.38);
+  transform: translateY(-2px);
+}
+
+.primary-btn:hover:not(:disabled)::after {
+  left: 150%;
+  transition: left 0.6s ease-in-out;
 }
 
 .big-btn {
@@ -4240,33 +4310,43 @@ body[data-page="novelCharacterPage"] #particleCanvas {
 
 .world-card {
   position: relative;
-
   min-height: 310px;
   padding: 22px;
-
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-
   overflow: hidden;
   border-radius: 20px;
   border: 1px solid var(--border);
-
   background:
     linear-gradient(180deg,
       rgba(0, 0, 0, 0.02),
       rgba(0, 0, 0, 0.72)),
     var(--card-bg, linear-gradient(135deg, #17131f, #2b2217));
-
   background-size: cover;
   background-position: center;
-
   cursor: pointer;
-
   transition:
     transform 0.22s ease,
     border-color 0.22s ease,
     box-shadow 0.22s ease;
+}
+
+.world-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 100%
+  );
+  transform: skewX(-25deg);
+  pointer-events: none;
 }
 
 .world-card:hover {
@@ -4274,6 +4354,11 @@ body[data-page="novelCharacterPage"] #particleCanvas {
   border-color: rgba(224, 173, 82, 0.42);
   box-shadow:
     0 22px 50px rgba(0, 0, 0, 0.34);
+}
+
+.world-card:hover::after {
+  left: 150%;
+  transition: left 0.8s ease-in-out;
 }
 
 .world-card::before {
@@ -6111,6 +6196,18 @@ body[data-page="continuePage"] #particleCanvas {
 
 .adventure-step.active {
   display: grid;
+  animation: setupStepIn 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes setupStepIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .adventure-step h2 {
@@ -6630,6 +6727,22 @@ body[data-mode="novel"] .adventure-foundation-card {
   cursor: not-allowed;
 }
 
+#scrollLatestBtn {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), 
+              transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+              border-color 0.2s ease,
+              box-shadow 0.2s ease !important;
+}
+
+#scrollLatestBtn.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
 .story-log {
   --reader-font-size: 1rem;
   --reader-line-height: 1.8;
@@ -6730,6 +6843,11 @@ body[data-mode="novel"] .story-log {
   font-size: 0.78rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
+}
+
+.novel-prose,
+.message-content {
+  max-width: 72ch;
 }
 
 .novel-prose {
@@ -6843,17 +6961,59 @@ body[data-mode="novel"] .adventure-quest-hud,
 .quest-hud-grid div {
   min-width: 0;
   padding: 14px;
-
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
 
-  background: rgba(255, 255, 255, 0.04);
+.quest-hud-grid div:hover {
+  background: rgba(224, 173, 82, 0.04);
+  border-color: rgba(224, 173, 82, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.quest-hud-grid div:nth-child(5) {
+  grid-column: span 2;
+}
+
+.quest-hud-grid div:nth-child(6) {
+  grid-column: span 2;
+}
+
+.quest-hud-grid div:nth-child(7) {
+  grid-column: span 4;
+}
+
+.quest-hud-grid .hud-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.quest-hud-grid .hud-icon {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.8;
+  flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), stroke 0.2s ease;
+}
+
+.quest-hud-grid div:hover .hud-icon {
+  transform: scale(1.2) rotate(4deg);
+  stroke: var(--accent-bright);
 }
 
 .quest-hud-grid span {
-  display: block;
-  margin-bottom: 8px;
-
+  display: inline-block;
   color: var(--accent);
   font-family: var(--font-mono);
   font-size: 0.68rem;
@@ -7013,24 +7173,27 @@ body[data-mode="adventure"] .adventure-choice-card:hover {
   min-height: 54px;
   max-height: 180px;
   padding: 14px 18px;
-
   border-radius: 16px;
   border: 1px solid rgba(224, 173, 82, 0.32);
   outline: none;
-
   color: var(--text);
-  background: rgba(0, 0, 0, 0.22);
-
+  background: rgba(0, 0, 0, 0.28);
   font-family: var(--font-body);
   font-size: 1rem;
   line-height: 1.55;
   resize: none;
   overflow-y: auto;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.03);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 #customAction:focus {
-  border-color: rgba(224, 173, 82, 0.65);
-  box-shadow: 0 0 0 3px rgba(224, 173, 82, 0.08);
+  border-color: var(--accent) !important;
+  box-shadow:
+    inset 0 2px 8px rgba(0, 0, 0, 0.5),
+    0 0 16px rgba(224, 173, 82, 0.15),
+    0 0 0 1px var(--accent) !important;
+  background: rgba(0, 0, 0, 0.38) !important;
 }
 
 #customAction:disabled {
@@ -11622,7 +11785,10 @@ body[data-theme="forest"] .ambient {
 
 /* ── 1. Warm Sepia Theme (Kindle/Paper Book Feel) ── */
 body[data-theme="sepia"] {
-  background: #f7f2e8 !important;
+  background-color: #f6efe2 !important;
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.075'/%3E%3C/svg%3E"),
+    radial-gradient(circle at 50% 50%, rgba(254, 252, 248, 0.75) 0%, rgba(245, 234, 214, 0.88) 60%, rgba(230, 214, 184, 0.94) 100%) !important;
   color: #3a2f21 !important;
 }
 
@@ -11678,9 +11844,11 @@ body[data-theme="sepia"] .portal-navbar .nav-create-btn:hover {
 
 /* Glass Panels */
 body[data-theme="sepia"] .glass-panel {
-  background-color: rgba(245, 238, 224, 0.85) !important;
-  border-color: rgba(58, 47, 33, 0.12) !important;
-  box-shadow: 0 8px 32px rgba(58, 47, 33, 0.06) !important;
+  background-color: rgba(248, 243, 231, 0.9) !important;
+  border-color: rgba(92, 76, 55, 0.15) !important;
+  box-shadow: 
+    0 8px 32px rgba(58, 47, 33, 0.08), 
+    inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
   color: #3a2f21 !important;
 }
 
@@ -11783,7 +11951,10 @@ body[data-theme="sepia"] .quest-hud-grid strong {
 
 /* ── 2. AMOLED Black Theme (OLED Friendly Night Mode) ── */
 body[data-theme="amoled"] {
-  background: #000000 !important;
+  background-color: #000000 !important;
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.015'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, #050505 0%, #000000 100%) !important;
   color: #e2e8f0 !important;
 }
 
@@ -11826,9 +11997,12 @@ body[data-theme="amoled"] .portal-navbar .nav-outline-btn {
 
 /* Glass Panels */
 body[data-theme="amoled"] .glass-panel {
-  background: rgba(10, 10, 10, 0.85) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.8) !important;
+  background: rgba(8, 8, 8, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.95), 
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.01) !important;
   color: #e2e8f0 !important;
 }
 
@@ -11884,7 +12058,12 @@ body[data-theme="amoled"] #pureReadModeBtn.active {
 
 /* ── 3. Deep Forest Theme (Mystic Emerald Green) ── */
 body[data-theme="forest"] {
-  background: #08120e !important;
+  background-color: #06100c !important;
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E"),
+    radial-gradient(circle at 15% 15%, rgba(212, 175, 55, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 85% 75%, rgba(212, 175, 55, 0.06) 0%, transparent 40%),
+    radial-gradient(circle at 50% 25%, #0e2d1f 0%, #06100c 70%, #020604 100%) !important;
   color: #c4d6cb !important;
 }
 
