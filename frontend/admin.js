@@ -55,6 +55,8 @@ const usageToday = $("adminUsageToday");
 const usageErrorsToday = $("adminUsageErrorsToday");
 const estimatedTokensToday = $("adminEstimatedTokensToday");
 const pointsSpentToday = $("adminPointsSpentToday");
+const costToday = $("adminCostToday");
+const costThirty = $("adminCostThirty");
 const rateLimitState = $("adminRateLimitState");
 
 const systemFacts = $("adminSystemFacts");
@@ -133,7 +135,7 @@ function setBusy(isBusy) {
 
 async function requestJson(url, options = {}) {
   const user = auth.currentUser;
-  if (!user) throw new Error("Admin login is required.");
+  if (!user) throw new Error("Yêu cầu đăng nhập tài khoản quản trị.");
 
   const token = await user.getIdToken(true);
   const headers = {
@@ -146,7 +148,7 @@ async function requestJson(url, options = {}) {
   try {
     response = await fetch(url, { ...options, headers });
   } catch (err) {
-    throw new Error(err?.message || "Network request failed.");
+    throw new Error(err?.message || "Không thể gửi yêu cầu mạng.");
   }
 
   const contentType = response.headers.get("content-type") || "";
@@ -170,7 +172,7 @@ function getApiErrorMessage(data, status) {
     if (typeof data.message === "string") return data.message;
   }
   if (typeof data === "string" && data.trim()) return data;
-  return `Request failed (${status})`;
+  return `Yêu cầu thất bại (Mã lỗi: ${status})`;
 }
 
 async function checkAdminAccess() {
@@ -179,19 +181,19 @@ async function checkAdminAccess() {
     isAdmin = data?.admin === true;
 
     if (!isAdmin) {
-      showDenied("The backend did not confirm admin access.");
+      showDenied("Hệ thống backend không xác thực được quyền Admin của tài khoản này.");
       return false;
     }
 
     if (identityText) {
-      identityText.textContent = data.email || data.name || data.uid || "Admin";
+      identityText.textContent = data.email || data.name || data.uid || "Quản trị viên";
     }
 
     showOnly(dashboardView);
     await loadDashboard();
     return true;
   } catch (err) {
-    showDenied(err.message || "Admin access could not be confirmed.");
+    showDenied(err.message || "Không thể xác nhận quyền truy cập Admin.");
     return false;
   }
 }
@@ -206,10 +208,10 @@ async function loadDashboard() {
   if (!isAdmin) return;
 
   setBusy(true);
-  setStatus("Loading admin data...", "muted");
+  setStatus("Đang tải dữ liệu quản trị...", "muted");
 
   const safeRequest = (promise, fallback) => promise.catch(err => {
-    console.warn("Non-critical admin endpoint failed:", err);
+    console.warn("Yêu cầu tới endpoint không bắt buộc thất bại:", err);
     return fallback;
   });
 
@@ -237,12 +239,53 @@ async function loadDashboard() {
     renderErrors(errors.items || []);
     renderAudit(audit.items || []);
     renderSubmissions(submissions || []);
-    setStatus("Admin data is live.", "ok");
+    setStatus("Dữ liệu hệ thống đã được đồng bộ trực tiếp.", "ok");
   } catch (err) {
-    setStatus(err.message || "Could not load admin data.", "error");
+    setStatus(err.message || "Không thể tải dữ liệu quản trị.", "error");
   } finally {
     setBusy(false);
   }
+}
+
+/* Logic quy đổi Token sang chi phí API */
+function estimateCost(inputTokens, outputTokens, provider, model) {
+  const p = (provider || "google").toLowerCase();
+  const m = (model || "gemini-1.5-flash").toLowerCase();
+
+  // Giá mặc định: Gemini 1.5 Flash ($0.075 / 1M input, $0.30 / 1M output)
+  let inputRate = 0.075;
+  let outputRate = 0.30;
+
+  if (p.includes("openai") || m.includes("gpt")) {
+    if (m.includes("gpt-4o-mini")) {
+      inputRate = 0.15;
+      outputRate = 0.60;
+    } else if (m.includes("gpt-4")) {
+      inputRate = 2.50;
+      outputRate = 10.00;
+    }
+  } else if (p.includes("google") || p.includes("gemini")) {
+    if (m.includes("pro")) {
+      inputRate = 1.25;
+      outputRate = 5.00;
+    } else {
+      inputRate = 0.075;
+      outputRate = 0.30;
+    }
+  } else if (p.includes("mock")) {
+    inputRate = 0.0;
+    outputRate = 0.0;
+  }
+
+  const costUsd = (inputTokens * inputRate / 1000000) + (outputTokens * outputRate / 1000000);
+  const costVnd = costUsd * 25400; // Tỷ giá quy đổi mặc định sang VND
+  return { usd: costUsd, vnd: costVnd };
+}
+
+function formatCost(costObj) {
+  const usdStr = costObj.usd.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+  const vndStr = Math.round(costObj.vnd).toLocaleString("vi-VN");
+  return `$${usdStr} (~ ${vndStr} ₫)`;
 }
 
 function renderOverview(overview = {}) {
@@ -255,25 +298,41 @@ function renderOverview(overview = {}) {
   setText(usageErrorsToday, formatNumber(overview.usage_errors_today));
   setText(estimatedTokensToday, formatNumber(overview.estimated_tokens_today));
   setText(pointsSpentToday, formatNumber(overview.points_spent_today));
-  setText(rateLimitState, settings.rate_limit_enabled ? "On" : "Off");
+  setText(rateLimitState, settings.rate_limit_enabled ? "Bật" : "Tắt");
+
+  // Quy đổi chi phí cho Today và 30 ngày qua
+  const todayUsage = currentUsage?.today || {};
+  const thirtyUsage = currentUsage?.last_30d || {};
+  const provider = overview.text_provider;
+  const model = overview.text_model;
+
+  const inToday = todayUsage.actual_input_tokens || todayUsage.estimated_input_tokens || 0;
+  const outToday = todayUsage.actual_output_tokens || todayUsage.estimated_output_tokens || 0;
+  const costTodayVal = estimateCost(inToday, outToday, provider, model);
+  setText(costToday, formatCost(costTodayVal));
+
+  const inThirty = thirtyUsage.actual_input_tokens || thirtyUsage.estimated_input_tokens || 0;
+  const outThirty = thirtyUsage.actual_output_tokens || thirtyUsage.estimated_output_tokens || 0;
+  const costThirtyVal = estimateCost(inThirty, outThirty, provider, model);
+  setText(costThirty, formatCost(costThirtyVal));
 
   renderFacts(systemFacts, [
-    ["Environment", overview.app_env || "local"],
-    ["Provider", `${overview.text_provider || "-"} / ${overview.text_model || "-"}`],
-    ["API key", overview.text_provider === "mock" ? "Mock provider" : "Server-side secret"],
-    ["Embeddings", overview.embedding_provider || "-"],
-    ["Storage", overview.storage_mode || "-"],
-    ["Catalog", `${formatNumber(overview.catalog_count)} worlds`],
-    ["Latest session", formatDate(overview.latest_updated_at)],
+    ["Môi trường", overview.app_env || "local"],
+    ["Nhà cung cấp", `${overview.text_provider || "-"} / ${overview.text_model || "-"}`],
+    ["Khóa API", overview.text_provider === "mock" ? "Sử dụng mô phỏng (Mock)" : "Cấu hình phía máy chủ"],
+    ["Mô hình nhúng", overview.embedding_provider || "-"],
+    ["Cơ chế lưu trữ", overview.storage_mode || "-"],
+    ["Thư viện thế giới", `${formatNumber(overview.catalog_count)} thế giới`],
+    ["Cập nhật mới nhất", formatDate(overview.latest_updated_at)],
   ]);
 
   renderFacts(usageFacts, [
-    ["Today", `${formatNumber(overview.usage_today)} AI events`],
-    ["Errors", `${formatNumber(overview.usage_errors_today)} today`],
-    ["Est. tokens", `${formatNumber(overview.estimated_tokens_today)} today`],
-    ["30d est. tokens", formatNumber(overview.estimated_tokens_30d)],
-    ["Points spent", `${formatNumber(overview.points_spent_today)} today`],
-    ["Rate limit", settings.rate_limit_enabled ? `${settings.daily_turn_limit}/day turns` : "Disabled"],
+    ["Hôm nay", `${formatNumber(overview.usage_today)} yêu cầu`],
+    ["Sự cố hôm nay", `${formatNumber(overview.usage_errors_today)} lỗi`],
+    ["Token hôm nay", `${formatNumber(overview.estimated_tokens_today)} tokens`],
+    ["Token 30 ngày", formatNumber(overview.estimated_tokens_30d)],
+    ["Chi phí hôm nay", formatCost(costTodayVal)],
+    ["Giới hạn tần suất", settings.rate_limit_enabled ? `${settings.daily_turn_limit} lượt/ngày` : "Vô hiệu hóa"],
   ]);
 
   renderReadiness(overview.readiness || {});
@@ -284,31 +343,33 @@ function renderReadiness(readiness = {}) {
 
   const status = readiness.overall_status || "unknown";
   const statusClass = status === "ok" ? "ok" : status === "warning" ? "warn" : "danger";
+  const statusVi = status === "ok" ? "Hoạt động" : status === "warning" ? "Cảnh báo" : "Lỗi";
   const checks = Array.isArray(readiness.checks) ? readiness.checks : [];
   const errors = checks.filter((item) => item.status === "error").length;
   const warnings = checks.filter((item) => item.status === "warning").length;
-  const readyText = readiness.production_ready ? "Ready for production" : "Not production-ready yet";
+  const readyText = readiness.production_ready ? "Sẵn sàng chạy Production" : "Chưa đủ điều kiện Production";
 
   readinessSummary.innerHTML = `
-    <span class="admin-status-pill ${statusClass}">${escapeHtml(status)}</span>
+    <span class="admin-status-pill ${statusClass}">${escapeHtml(statusVi)}</span>
     <strong>${escapeHtml(readyText)}</strong>
-    <small>${formatNumber(errors)} errors / ${formatNumber(warnings)} warnings</small>
+    <small>${formatNumber(errors)} lỗi / ${formatNumber(warnings)} cảnh báo</small>
   `;
 
   if (!checks.length) {
-    readinessList.innerHTML = `<div class="admin-empty">No readiness checks returned.</div>`;
+    readinessList.innerHTML = `<div class="admin-empty">Không có nhật ký kiểm tra trạng thái nào.</div>`;
     return;
   }
 
   readinessList.innerHTML = checks.map((item) => {
     const itemClass = item.status === "ok" ? "ok" : item.status === "warning" ? "warn" : "danger";
+    const checkStatusVi = item.status === "ok" ? "Đạt" : item.status === "warning" ? "Cảnh báo" : "Lỗi";
     return `
       <div class="admin-check-row ${itemClass}">
-        <span class="admin-status-pill ${itemClass}">${escapeHtml(item.status || "-")}</span>
+        <span class="admin-status-pill ${itemClass}">${escapeHtml(checkStatusVi)}</span>
         <div>
-          <strong>${escapeHtml(item.label || item.check_id || "Check")}</strong>
+          <strong>${escapeHtml(item.label || item.check_id || "Kiểm tra")}</strong>
           <p>${escapeHtml(item.message || "")}</p>
-          ${item.hint ? `<small>${escapeHtml(item.hint)}</small>` : ""}
+          ${item.hint ? `<small>Gợi ý: ${escapeHtml(item.hint)}</small>` : ""}
         </div>
       </div>
     `;
@@ -320,7 +381,7 @@ function renderSettings(settings = {}) {
   if (maintenanceMessage) {
     maintenanceMessage.value =
       settings.maintenance_message ||
-      "AI Story Adventure is under maintenance. Please come back soon.";
+      "Hệ thống AI Story Adventure đang được bảo trì. Vui lòng quay lại sau.";
   }
   if (pointsToggle) pointsToggle.checked = Boolean(settings.points_enabled);
   if (costAdventure) costAdventure.value = settings.cost_start_adventure ?? 10;
@@ -338,25 +399,25 @@ function renderUsage(usage = {}) {
   const thirty = usage.last_30d || {};
 
   renderFacts(usageTodayFacts, [
-    ["Requests", formatNumber(today.requests)],
-    ["Success", formatNumber(today.successes)],
-    ["Errors", formatNumber(today.errors)],
-    ["Blocked", formatNumber(today.blocked)],
-    ["Est. input", formatNumber(today.estimated_input_tokens)],
-    ["Est. output", formatNumber(today.estimated_output_tokens)],
-    ["Actual tokens", actualTokenText(today)],
-    ["Points spent", formatNumber(today.points_spent)],
+    ["Tổng yêu cầu", formatNumber(today.requests)],
+    ["Thành công", formatNumber(today.successes)],
+    ["Thất bại (Lỗi)", formatNumber(today.errors)],
+    ["Bị chặn giới hạn", formatNumber(today.blocked)],
+    ["Token đầu vào (Input)", formatNumber(today.estimated_input_tokens)],
+    ["Token đầu ra (Output)", formatNumber(today.estimated_output_tokens)],
+    ["Tổng token tiêu hao", actualTokenText(today)],
+    ["Chi phí ước tính", formatCost(estimateCost(today.estimated_input_tokens, today.estimated_output_tokens, currentOverview?.text_provider, currentOverview?.text_model))],
   ]);
 
   renderFacts(usageThirtyFacts, [
-    ["Requests", formatNumber(thirty.requests)],
-    ["Success", formatNumber(thirty.successes)],
-    ["Errors", formatNumber(thirty.errors)],
-    ["Blocked", formatNumber(thirty.blocked)],
-    ["Est. input", formatNumber(thirty.estimated_input_tokens)],
-    ["Est. output", formatNumber(thirty.estimated_output_tokens)],
-    ["Actual tokens", actualTokenText(thirty)],
-    ["Points spent", formatNumber(thirty.points_spent)],
+    ["Tổng yêu cầu", formatNumber(thirty.requests)],
+    ["Thành công", formatNumber(thirty.successes)],
+    ["Thất bại (Lỗi)", formatNumber(thirty.errors)],
+    ["Bị chặn giới hạn", formatNumber(thirty.blocked)],
+    ["Token đầu vào (Input)", formatNumber(thirty.estimated_input_tokens)],
+    ["Token đầu ra (Output)", formatNumber(thirty.estimated_output_tokens)],
+    ["Tổng token tiêu hao", actualTokenText(thirty)],
+    ["Chi phí ước tính", formatCost(estimateCost(thirty.estimated_input_tokens, thirty.estimated_output_tokens, currentOverview?.text_provider, currentOverview?.text_model))],
   ]);
 
   renderUsageList(usage.items || []);
@@ -364,29 +425,29 @@ function renderUsage(usage = {}) {
 
 function actualTokenText(totals = {}) {
   const value = Number(totals.actual_input_tokens || 0) + Number(totals.actual_output_tokens || 0);
-  return value > 0 ? formatNumber(value) : "Estimate only";
+  return value > 0 ? formatNumber(value) : "Dựa theo ước tính";
 }
 
 function renderUsageUsers(items = []) {
   if (!usageUsersList) return;
   if (!items.length) {
-    usageUsersList.innerHTML = `<div class="admin-empty">No usage data yet.</div>`;
+    usageUsersList.innerHTML = `<div class="admin-empty">Chưa có dữ liệu tiêu thụ.</div>`;
     return;
   }
 
   usageUsersList.innerHTML = items.map((item) => `
-    <button class="admin-list-row three" type="button" data-user-uid="${escapeHtml(item.uid)}">
+    <button class="admin-list-row static" type="button" data-user-uid="${escapeHtml(item.uid)}">
       <span>
-        <strong>${escapeHtml(item.email || item.name || "Unknown user")}</strong>
+        <strong>${escapeHtml(item.email || item.name || "Người chơi ẩn danh")}</strong>
         <small>${escapeHtml(item.uid)}</small>
       </span>
       <span>
-        <strong>${formatNumber(item.requests_today)} today</strong>
-        <small>${formatNumber(item.requests_30d)} in 30d / ${formatNumber(item.errors_today)} errors</small>
+        <strong>${formatNumber(item.requests_today)} lượt hôm nay</strong>
+        <small>${formatNumber(item.requests_30d)} lượt / 30 ngày</small>
       </span>
       <span>
-        <strong>${formatNumber(item.estimated_tokens_today)} est. tokens</strong>
-        <small>${formatNumber(item.points_spent_today)} points today</small>
+        <strong>${formatNumber(item.estimated_tokens_today)} tokens</strong>
+        <small>Chi phí ngày: ${formatCost(estimateCost(item.estimated_tokens_today * 0.7, item.estimated_tokens_today * 0.3, currentOverview?.text_provider, currentOverview?.text_model))}</small>
       </span>
     </button>
   `).join("");
@@ -395,7 +456,7 @@ function renderUsageUsers(items = []) {
 function renderUsageList(items = []) {
   if (!usageList) return;
   if (!items.length) {
-    usageList.innerHTML = `<div class="admin-empty">No AI usage events yet.</div>`;
+    usageList.innerHTML = `<div class="admin-empty">Chưa có nhật ký API nào được tạo.</div>`;
     return;
   }
 
@@ -404,24 +465,27 @@ function renderUsageList(items = []) {
 
 function usageRow(item = {}) {
   const statusClass = item.status === "success" ? "ok" : item.status === "blocked" ? "warn" : "danger";
+  const statusVi = item.status === "success" ? "Thành công" : item.status === "blocked" ? "Bị chặn" : "Lỗi";
   const estimatedTokens = Number(item.estimated_input_tokens || 0) + Number(item.estimated_output_tokens || 0);
   const actualTokens = Number(item.actual_input_tokens || 0) + Number(item.actual_output_tokens || 0);
 
+  const calculatedCost = estimateCost(item.estimated_input_tokens, item.estimated_output_tokens, item.provider, item.model);
+
   return `
-    <div class="admin-list-row three static">
+    <div class="admin-list-row static">
       <span>
-        <strong>${escapeHtml(item.action || "unknown")}</strong>
-        <small>${escapeHtml(item.operation || "-")} / ${escapeHtml(item.provider || "-")}</small>
+        <strong>Tác vụ: ${escapeHtml(item.action || "Không rõ")}</strong>
+        <small>Provider: ${escapeHtml(item.provider || "-")} (${escapeHtml(item.model || "-")})</small>
       </span>
       <span>
-        <strong class="admin-status-pill ${statusClass}">${escapeHtml(item.status || "-")}</strong>
-        <small>${escapeHtml(item.error_kind || "no error")}</small>
+        <strong class="admin-status-pill ${statusClass}">${escapeHtml(statusVi)}</strong>
+        <small>Lỗi: ${escapeHtml(item.error_kind || "Không có")}</small>
       </span>
       <span>
-        <strong>${formatNumber(estimatedTokens)} est. tokens</strong>
-        <small>${actualTokens ? `${formatNumber(actualTokens)} actual` : "estimate only"} / ${formatNumber(Math.abs(item.points_delta || 0))} pts</small>
+        <strong>${formatNumber(estimatedTokens)} tokens</strong>
+        <small>Chi phí: ${formatCost(calculatedCost)} / -${formatNumber(Math.abs(item.points_delta || 0))} điểm</small>
       </span>
-      <p>${escapeHtml(item.uid || "-")} ${item.session_id ? `- ${escapeHtml(item.session_id)}` : ""} - ${formatDate(item.created_at)} - ${formatNumber(item.latency_ms)}ms</p>
+      <p>ID: ${escapeHtml(item.uid || "-")} ${item.session_id ? `| Phiên: ${escapeHtml(item.session_id)}` : ""} | Thời gian: ${formatDate(item.created_at)} | Độ trễ: ${formatNumber(item.latency_ms)}ms</p>
     </div>
   `;
 }
@@ -429,25 +493,26 @@ function usageRow(item = {}) {
 function renderUsers(users = []) {
   if (!usersList) return;
   if (!users.length) {
-    usersList.innerHTML = `<div class="admin-empty">No known users yet.</div>`;
+    usersList.innerHTML = `<div class="admin-empty">Không tìm thấy người chơi nào.</div>`;
     return;
   }
 
   usersList.innerHTML = users.map((user) => {
-    const status = user.is_banned ? "Banned" : "Active";
+    const status = user.is_banned ? "Đã cấm" : "Hoạt động";
+    const statusClass = user.is_banned ? "danger" : "ok";
     return `
-      <button class="admin-list-row three" type="button" data-user-uid="${escapeHtml(user.uid)}">
+      <button class="admin-list-row" type="button" data-user-uid="${escapeHtml(user.uid)}">
         <span>
-          <strong>${escapeHtml(user.email || user.name || "Unknown user")}</strong>
+          <strong>${escapeHtml(user.email || user.name || "Người chơi ẩn danh")}</strong>
           <small>${escapeHtml(user.uid)}</small>
         </span>
         <span>
-          <strong>${formatNumber(user.points_balance)} pts / ${escapeHtml(status)}</strong>
-          <small>${formatNumber(user.saved_sessions)} saved / ${formatNumber(user.draft_sessions)} draft</small>
+          <strong class="admin-status-pill ${statusClass}">${status} | ${formatNumber(user.points_balance)} điểm</strong>
+          <small>Phiên chơi: ${formatNumber(user.saved_sessions)} đã lưu / ${formatNumber(user.draft_sessions)} nháp</small>
         </span>
         <span>
-          <strong>${formatNumber(user.usage_today)} usage today</strong>
-          <small>${formatNumber(user.estimated_tokens_today)} est. tokens / last seen ${formatDate(user.last_seen_at)}</small>
+          <strong>${formatNumber(user.usage_today)} lượt dùng hôm nay</strong>
+          <small>Hoạt động cuối: ${formatDate(user.last_seen_at)}</small>
         </span>
       </button>
     `;
@@ -457,27 +522,28 @@ function renderUsers(users = []) {
 function renderSessions(sessions = []) {
   if (!sessionsList) return;
   if (!sessions.length) {
-    sessionsList.innerHTML = `<div class="admin-empty">No sessions found.</div>`;
+    sessionsList.innerHTML = `<div class="admin-empty">Không có phiên chơi nào hoạt động.</div>`;
     return;
   }
 
   sessionsList.innerHTML = sessions.map((session) => {
-    const saveState = session.is_saved ? "Saved" : "Draft";
+    const saveState = session.is_saved ? "Đã lưu" : "Nháp";
+    const modeVi = session.mode === "adventure" ? "Nhập Vai (Adventure)" : "Tiểu Thuyết (Novel)";
     return `
-      <div class="admin-list-row three static">
+      <div class="admin-list-row static">
         <span>
-          <strong>${escapeHtml(session.title || "Untitled")}</strong>
-          <small>${escapeHtml(session.session_id)}</small>
+          <strong>Tiêu đề: ${escapeHtml(session.title || "Chưa đặt tên")}</strong>
+          <small>Mã phiên: ${escapeHtml(session.session_id)}</small>
         </span>
         <span>
-          <strong>${escapeHtml(session.mode || "unknown")} / ${saveState}</strong>
-          <small>${formatNumber(session.target_words)} target words</small>
+          <strong>Chế độ: ${modeVi} | Trạng thái: ${saveState}</strong>
+          <small>Độ dài tối thiểu: ${formatNumber(session.target_words)} từ</small>
         </span>
         <span>
-          <strong>${escapeHtml(session.summary_source || "preview")}</strong>
-          <small>${formatDate(session.updated_at)}</small>
+          <strong>Nguồn tóm tắt: ${escapeHtml(session.summary_source || "preview")}</strong>
+          <small>Cập nhật lúc: ${formatDate(session.updated_at)}</small>
         </span>
-        <p>${escapeHtml(session.preview || "No preview available.")}</p>
+        <p>Bản xem trước nội dung: ${escapeHtml(session.preview || "Không có bản xem trước nào.")}</p>
       </div>
     `;
   }).join("");
@@ -487,7 +553,7 @@ function renderErrors(items = []) {
   const targets = [recentErrorsList].filter(Boolean);
   targets.forEach((target) => {
     if (!items.length) {
-      target.innerHTML = `<div class="admin-empty">No recent AI errors.</div>`;
+      target.innerHTML = `<div class="admin-empty">Không ghi nhận lỗi hệ thống nào gần đây.</div>`;
       return;
     }
     target.innerHTML = items.slice(0, 8).map((item) => usageRow(item)).join("");
@@ -497,10 +563,10 @@ function renderErrors(items = []) {
 function renderAudit(items = []) {
   const text = items.length
     ? items.map((item) => {
-        const target = item.target_uid ? ` -> ${item.target_uid}` : "";
-        return `[${item.created_at}] ${item.actor_email || item.actor_uid}: ${item.action}${target}`;
+        const target = item.target_uid ? ` -> đối tượng: ${item.target_uid}` : "";
+        return `[${formatDate(item.created_at)}] Admin ${item.actor_email || item.actor_uid}: ${item.action}${target}`;
       }).join("\n")
-    : "No audit log entries yet.";
+    : "Chưa ghi nhận nhật ký tác vụ admin nào.";
 
   if (auditOutput) auditOutput.textContent = text;
   if (auditPreview) auditPreview.textContent = text;
@@ -523,22 +589,22 @@ async function saveSettings() {
   const newRateLimit = Boolean(rateLimitToggle?.checked);
 
   if (newMaintenance && !oldSettings.maintenance_enabled) {
-    const confirmed = window.confirm("Turn on maintenance mode for normal players?");
+    const confirmed = window.confirm("Bạn có chắc chắn muốn BẬT chế độ bảo trì toàn hệ thống không? Người chơi bình thường sẽ không thể trải nghiệm game.");
     if (!confirmed) return;
   }
 
   if (newPoints !== Boolean(oldSettings.points_enabled)) {
-    const confirmed = window.confirm("Change point spending mode?");
+    const confirmed = window.confirm("Bạn có chắc chắn muốn thay đổi trạng thái tiêu hao điểm số không?");
     if (!confirmed) return;
   }
 
   if (newRateLimit !== Boolean(oldSettings.rate_limit_enabled)) {
-    const confirmed = window.confirm("Change daily rate limit mode?");
+    const confirmed = window.confirm("Bạn có chắc chắn muốn thay đổi giới hạn tần suất API hàng ngày không?");
     if (!confirmed) return;
   }
 
   setBusy(true);
-  setStatus("Saving settings...", "muted");
+  setStatus("Đang lưu cấu hình hệ thống...", "muted");
 
   try {
     await requestJson(`${API_BASE}/admin/settings`, {
@@ -547,7 +613,7 @@ async function saveSettings() {
         maintenance_enabled: newMaintenance,
         maintenance_message:
           maintenanceMessage?.value?.trim() ||
-          "AI Story Adventure is under maintenance. Please come back soon.",
+          "Hệ thống AI Story Adventure đang được bảo trì. Vui lòng quay lại sau.",
         points_enabled: newPoints,
         cost_start_adventure: numberValue(costAdventure, 10),
         cost_novel_world: numberValue(costNovelWorld, 5),
@@ -561,7 +627,7 @@ async function saveSettings() {
     });
     await loadDashboard();
   } catch (err) {
-    setStatus(err.message || "Could not save settings.", "error");
+    setStatus(err.message || "Không thể lưu cấu hình hệ thống.", "error");
   } finally {
     setBusy(false);
   }
@@ -570,18 +636,18 @@ async function saveSettings() {
 async function adjustPoints() {
   const uid = targetUidInput?.value?.trim() || "";
   const delta = Number(pointDeltaInput?.value);
-  const reason = pointReasonInput?.value?.trim() || "Manual admin adjustment";
+  const reason = pointReasonInput?.value?.trim() || "Thay đổi điểm thủ công bởi Admin";
 
   if (!uid || !Number.isFinite(delta) || delta === 0) {
-    setStatus("Enter a target UID and a non-zero point delta.", "error");
+    setStatus("Vui lòng nhập UID người chơi và số điểm muốn thay đổi (khác 0).", "error");
     return;
   }
 
-  const confirmed = window.confirm(`${delta > 0 ? "Grant" : "Deduct"} ${Math.abs(delta)} points for this user?`);
+  const confirmed = window.confirm(`Bạn có chắc chắn muốn ${delta > 0 ? "cộng" : "trừ"} ${Math.abs(delta)} điểm đối với người chơi này không?`);
   if (!confirmed) return;
 
   setBusy(true);
-  setStatus("Applying point change...", "muted");
+  setStatus("Đang thực hiện cộng/trừ điểm...", "muted");
 
   try {
     await requestJson(`${API_BASE}/admin/users/${encodeURIComponent(uid)}/points`, {
@@ -590,7 +656,7 @@ async function adjustPoints() {
     });
     await loadDashboard();
   } catch (err) {
-    setStatus(err.message || "Could not adjust points.", "error");
+    setStatus(err.message || "Không thể điều chỉnh điểm người chơi.", "error");
   } finally {
     setBusy(false);
   }
@@ -599,15 +665,15 @@ async function adjustPoints() {
 async function setBanState(shouldBan) {
   const uid = targetUidInput?.value?.trim() || "";
   if (!uid) {
-    setStatus("Enter a target UID first.", "error");
+    setStatus("Vui lòng điền UID người chơi mục tiêu.", "error");
     return;
   }
 
-  const confirmed = window.confirm(shouldBan ? "Ban this account?" : "Unban this account?");
+  const confirmed = window.confirm(shouldBan ? "Bạn có chắc chắn muốn CẤM người chơi này không?" : "Bạn có chắc chắn muốn MỞ KHÓA cho người chơi này không?");
   if (!confirmed) return;
 
   setBusy(true);
-  setStatus(shouldBan ? "Banning user..." : "Unbanning user...", "muted");
+  setStatus(shouldBan ? "Đang tiến hành cấm người chơi..." : "Đang tiến hành mở khóa...", "muted");
 
   try {
     const endpoint = shouldBan ? "ban" : "unban";
@@ -621,7 +687,7 @@ async function setBanState(shouldBan) {
     await requestJson(`${API_BASE}/admin/users/${encodeURIComponent(uid)}/${endpoint}`, options);
     await loadDashboard();
   } catch (err) {
-    setStatus(err.message || "Could not update ban state.", "error");
+    setStatus(err.message || "Không thể cập nhật trạng thái hoạt động.", "error");
   } finally {
     setBusy(false);
   }
@@ -639,7 +705,7 @@ function switchTab(name) {
 function selectTargetUid(uid) {
   if (!uid || !targetUidInput) return;
   targetUidInput.value = uid;
-  setStatus("Target UID selected.", "ok");
+  setStatus("Đã chọn UID người chơi mục tiêu.", "ok");
   switchTab("users");
 }
 
@@ -658,10 +724,10 @@ function formatNumber(value) {
 }
 
 function formatDate(value) {
-  if (!value) return "Unknown";
+  if (!value) return "Không rõ";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString();
+  return date.toLocaleString("vi-VN");
 }
 
 function escapeHtml(value) {
@@ -675,12 +741,12 @@ function escapeHtml(value) {
 
 googleLoginBtn?.addEventListener("click", async () => {
   setBusy(true);
-  setLoginStatus("Opening Firebase login...", "muted");
+  setLoginStatus("Đang mở trang đăng nhập Google...", "muted");
 
   try {
     await signInWithPopup(auth, provider);
   } catch (err) {
-    setLoginStatus(err.message || "Google login failed.", "error");
+    setLoginStatus(err.message || "Đăng nhập Google thất bại.", "error");
   } finally {
     setBusy(false);
   }
@@ -691,17 +757,17 @@ emailLoginBtn?.addEventListener("click", async () => {
   const password = passwordInput?.value || "";
 
   if (!email || !password) {
-    setLoginStatus("Enter email and password.", "error");
+    setLoginStatus("Vui lòng nhập đầy đủ Email và Mật khẩu.", "error");
     return;
   }
 
   setBusy(true);
-  setLoginStatus("Signing in...", "muted");
+  setLoginStatus("Đang đăng nhập hệ thống...", "muted");
 
   try {
     await signInWithEmailAndPassword(auth, email, password);
   } catch (err) {
-    setLoginStatus(err.message || "Email login failed.", "error");
+    setLoginStatus(err.message || "Đăng nhập thất bại. Kiểm tra lại thông tin.", "error");
   } finally {
     setBusy(false);
   }
@@ -774,25 +840,25 @@ const submissionsList = $("adminSubmissionsList");
 function renderSubmissions(items = []) {
   if (!submissionsList) return;
   if (!items.length) {
-    submissionsList.innerHTML = `<div class="admin-empty">No pending submissions.</div>`;
+    submissionsList.innerHTML = `<div class="admin-empty">Không có thế giới nào đang chờ duyệt.</div>`;
     return;
   }
 
   submissionsList.innerHTML = items.map((item) => `
-    <div class="submission-card glass-panel" data-sub-id="${escapeHtml(item.id)}">
+    <div class="submission-card" data-sub-id="${escapeHtml(item.id)}">
       <div>
-        <h3>${escapeHtml(item.title || "Untitled")}</h3>
-        <p class="admin-muted" style="margin-bottom:10px;">${escapeHtml(item.description || "No description")}</p>
+        <h3>${escapeHtml(item.title || "Chưa đặt tên")}</h3>
+        <p class="admin-muted" style="margin-bottom:10px;">${escapeHtml(item.description || "Không có mô tả")}</p>
         <div class="submission-meta">
-          <span>By: <strong>${escapeHtml(item.author_name)}</strong></span> |
-          <span>Mode: <strong>${escapeHtml(item.mode)}</strong></span> |
-          <span>Tags: <strong>${escapeHtml(item.tags?.join(", ") || "None")}</strong></span> |
-          <span>Date: <strong>${formatDate(item.created_at)}</strong></span>
+          <span>Người tạo: <strong>${escapeHtml(item.author_name)}</strong></span> |
+          <span>Chế độ: <strong>${escapeHtml(item.mode)}</strong></span> |
+          <span>Thẻ: <strong>${escapeHtml(item.tags?.join(", ") || "Không có")}</strong></span> |
+          <span>Ngày gửi: <strong>${formatDate(item.created_at)}</strong></span>
         </div>
       </div>
       <div class="submission-actions" style="margin-top:15px; display:flex; gap:10px;">
-        <button class="primary-btn approve-btn" type="button">Approve</button>
-        <button class="danger-btn reject-btn" type="button">Reject</button>
+        <button class="primary-btn approve-btn" type="button">Phê Duyệt</button>
+        <button class="danger-btn reject-btn" type="button">Từ Chối</button>
       </div>
     </div>
   `).join("");
@@ -809,11 +875,12 @@ function renderSubmissions(items = []) {
 }
 
 async function moderateSubmission(subId, action) {
-  const confirmed = window.confirm(`Are you sure you want to ${action} this submission?`);
+  const actionVi = action === "approve" ? "phê duyệt" : "từ chối và xóa";
+  const confirmed = window.confirm(`Bạn có chắc chắn muốn ${actionVi} thế giới cộng đồng này không?`);
   if (!confirmed) return;
 
   setBusy(true);
-  setStatus(`${action === "approve" ? "Approving" : "Rejecting"} submission...`, "muted");
+  setStatus(`Đang tiến hành ${action === "approve" ? "phê duyệt" : "từ chối"} bài đăng...`, "muted");
 
   try {
     await requestJson(`${API_BASE}/admin/submissions/${encodeURIComponent(subId)}/${action}`, {
@@ -821,9 +888,8 @@ async function moderateSubmission(subId, action) {
     });
     await loadDashboard();
   } catch (err) {
-    setStatus(err.message || `Could not ${action} submission.`, "error");
+    setStatus(err.message || `Không thể hoàn thành hành động ${actionVi}.`, "error");
   } finally {
     setBusy(false);
   }
 }
-

@@ -1,350 +1,366 @@
 <!doctype html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Story Adventure Admin</title>
+  <title>Bảng Điều Khiển Quản Trị - AI Story Adventure</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css?v=admin-v2-readiness-1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="admin.css?v=admin-v3-perf-1" />
 </head>
 <body>
-  <div class="ambient ambient-one"></div>
-  <div class="ambient ambient-two"></div>
-
   <main class="admin-app">
+    <!-- KHU VỰC ĐĂNG NHẬP -->
     <section id="adminLoginView" class="admin-login-view">
-      <div class="admin-login-card glass-panel">
-        <p class="eyebrow">Admin Realm</p>
-        <h1>Control Console</h1>
+      <div class="admin-login-card">
+        <p class="eyebrow">Hệ thống quản trị</p>
+        <h1>Bảng Điều Khiển</h1>
         <p class="admin-muted">
-          Sign in with a Firebase account that has the backend admin claim.
+          Đăng nhập bằng tài khoản Firebase có quyền quản trị viên (Admin Claim).
         </p>
 
         <button id="adminGoogleLoginBtn" type="button" class="primary-btn">
-          Continue with Google
+          Đăng nhập bằng Google
         </button>
 
-        <div class="admin-login-divider">or</div>
+        <div class="admin-login-divider">hoặc sử dụng email</div>
 
         <label>
           <span>Email</span>
-          <input id="adminEmailInput" type="email" autocomplete="email" />
+          <input id="adminEmailInput" type="email" autocomplete="email" placeholder="email@vi-du.com" />
         </label>
 
         <label>
-          <span>Password</span>
-          <input id="adminPasswordInput" type="password" autocomplete="current-password" />
+          <span>Mật khẩu</span>
+          <input id="adminPasswordInput" type="password" autocomplete="current-password" placeholder="••••••••" />
         </label>
 
         <button id="adminEmailLoginBtn" type="button" class="ghost">
-          Sign In
+          Đăng Nhập
         </button>
 
         <p id="adminLoginStatus" class="admin-status" aria-live="polite"></p>
       </div>
     </section>
 
+    <!-- TRANG TỪ CHỐI TRUY CẬP -->
     <section id="adminDeniedView" class="admin-denied-view hidden">
-      <div class="admin-login-card glass-panel">
-        <p class="eyebrow">Access Denied</p>
-        <h1>No Admin Claim</h1>
+      <div class="admin-login-card">
+        <p class="eyebrow">Truy cập bị từ chối</p>
+        <h1>Không có quyền Admin</h1>
         <p id="adminDeniedText" class="admin-muted">
-          This account is signed in, but the backend did not confirm admin access.
+          Tài khoản này đã đăng nhập thành công, nhưng hệ thống backend không xác nhận quyền admin của bạn.
         </p>
         <div class="admin-action-row">
-          <button id="adminRetryAccessBtn" type="button" class="primary-btn">Retry Access</button>
-          <button id="adminDeniedLogoutBtn" type="button" class="ghost">Logout</button>
+          <button id="adminRetryAccessBtn" type="button" class="primary-btn">Thử lại</button>
+          <button id="adminDeniedLogoutBtn" type="button" class="ghost">Đăng xuất</button>
         </div>
       </div>
     </section>
 
+    <!-- BẢNG ĐIỀU KHIỂN CHÍNH -->
     <section id="adminDashboardView" class="admin-dashboard-view hidden">
-      <header class="admin-topbar glass-panel">
+      <header class="admin-topbar">
         <div>
           <p class="eyebrow">AI Story Adventure</p>
-          <h1>Admin Control</h1>
-          <p id="adminStatus" class="admin-status" aria-live="polite">Loading admin data...</p>
+          <h1>Quản Trị Hệ Thống</h1>
+          <p id="adminStatus" class="admin-status" aria-live="polite">Đang tải dữ liệu...</p>
         </div>
         <div class="admin-topbar-actions">
           <span id="adminIdentity" class="admin-identity"></span>
-          <button id="adminRefreshBtn" type="button" class="primary-btn">Refresh</button>
-          <button id="adminLogoutBtn" type="button" class="ghost">Logout</button>
+          <button id="adminRefreshBtn" type="button" class="primary-btn">Làm mới</button>
+          <button id="adminLogoutBtn" type="button" class="ghost">Đăng xuất</button>
         </div>
       </header>
 
-      <nav class="admin-tabs glass-panel" aria-label="Admin sections">
-        <button class="admin-tab active" type="button" data-admin-tab="overview">Overview</button>
-        <button class="admin-tab" type="button" data-admin-tab="usage">AI Usage</button>
-        <button class="admin-tab" type="button" data-admin-tab="users">Users</button>
-        <button class="admin-tab" type="button" data-admin-tab="sessions">Sessions</button>
-        <button class="admin-tab" type="button" data-admin-tab="system">System Config</button>
-        <button class="admin-tab" type="button" data-admin-tab="moderation">Moderation</button>
-        <button class="admin-tab" type="button" data-admin-tab="audit">Audit</button>
+      <!-- THANH TAB QUẢN TRỊ -->
+      <nav class="admin-tabs" aria-label="Chức năng quản trị">
+        <button class="admin-tab active" type="button" data-admin-tab="overview">Tổng Quan</button>
+        <button class="admin-tab" type="button" data-admin-tab="usage">Sử Dụng AI</button>
+        <button class="admin-tab" type="button" data-admin-tab="users">Người Chơi</button>
+        <button class="admin-tab" type="button" data-admin-tab="sessions">Phiên Chơi</button>
+        <button class="admin-tab" type="button" data-admin-tab="system">Cấu Hình</button>
+        <button class="admin-tab" type="button" data-admin-tab="moderation">Duyệt Thế Giới</button>
+        <button class="admin-tab" type="button" data-admin-tab="audit">Nhật Ký Tác Vụ</button>
       </nav>
 
-      <section class="admin-stats-grid" aria-label="Admin overview">
-        <article class="admin-stat-card glass-panel">
-          <span>Sessions</span>
+      <!-- CÁC THẺ THỐNG KÊ TỔNG QUAN -->
+      <section class="admin-stats-grid" aria-label="Thống kê nhanh">
+        <article class="admin-stat-card">
+          <span>Phiên Chơi</span>
           <strong id="adminTotalSessions">-</strong>
         </article>
-        <article class="admin-stat-card glass-panel">
-          <span>Users</span>
+        <article class="admin-stat-card">
+          <span>Tổng Người Chơi</span>
           <strong id="adminUsersCount">-</strong>
         </article>
-        <article class="admin-stat-card glass-panel">
-          <span>Usage Today</span>
+        <article class="admin-stat-card">
+          <span>Yêu Cầu Hôm Nay</span>
           <strong id="adminUsageToday">-</strong>
         </article>
-        <article class="admin-stat-card glass-panel">
-          <span>Errors Today</span>
+        <article class="admin-stat-card">
+          <span>Lỗi Hôm Nay</span>
           <strong id="adminUsageErrorsToday">-</strong>
         </article>
-        <article class="admin-stat-card glass-panel">
-          <span>Est. Tokens Today</span>
+        <article class="admin-stat-card">
+          <span>Token Hôm Nay</span>
           <strong id="adminEstimatedTokensToday">-</strong>
         </article>
-        <article class="admin-stat-card glass-panel">
-          <span>Points Spent Today</span>
+        <article class="admin-stat-card">
+          <span>Điểm Tiêu Dùng Hôm Nay</span>
           <strong id="adminPointsSpentToday">-</strong>
         </article>
-        <article class="admin-stat-card glass-panel">
-          <span>Banned</span>
+        <article class="admin-stat-card">
+          <span>Chi Phí Hôm Nay (Ước Tính)</span>
+          <strong id="adminCostToday">-</strong>
+        </article>
+        <article class="admin-stat-card">
+          <span>Chi Phí 30 Ngày (Ước Tính)</span>
+          <strong id="adminCostThirty">-</strong>
+        </article>
+        <article class="admin-stat-card">
+          <span>Tài Khoản Bị Cấm</span>
           <strong id="adminBannedCount">-</strong>
         </article>
-        <article class="admin-stat-card glass-panel">
-          <span>Rate Limit</span>
+        <article class="admin-stat-card">
+          <span>Giới Hạn Tần Suất</span>
           <strong id="adminRateLimitState">-</strong>
         </article>
       </section>
 
+      <!-- TAB PANEL: TỔNG QUAN -->
       <section class="admin-tab-panel active" data-admin-panel="overview">
         <section class="admin-grid">
-          <article class="admin-card glass-panel">
-            <p class="eyebrow">System</p>
-            <h2>Backend Status</h2>
+          <article class="admin-card">
+            <p class="eyebrow">Hệ thống</p>
+            <h2>Trạng Thái Backend</h2>
             <div id="adminSystemFacts" class="admin-kv-grid" aria-live="polite"></div>
           </article>
 
-          <article class="admin-card glass-panel">
-            <p class="eyebrow">Usage</p>
-            <h2>Cost Guard</h2>
+          <article class="admin-card">
+            <p class="eyebrow">Sử dụng</p>
+            <h2>Chi Phí & Hạn Mức</h2>
             <div id="adminUsageFacts" class="admin-kv-grid" aria-live="polite"></div>
           </article>
 
-          <article class="admin-card glass-panel">
-            <p class="eyebrow">Production</p>
-            <h2>Readiness</h2>
+          <article class="admin-card">
+            <p class="eyebrow">Vận hành</p>
+            <h2>Mức Độ Sẵn Sàng (Production)</h2>
             <div id="adminReadinessSummary" class="admin-readiness-summary" aria-live="polite"></div>
             <div id="adminReadinessList" class="admin-readiness-list" aria-live="polite"></div>
           </article>
         </section>
 
         <section class="admin-grid wide">
-          <article class="admin-card glass-panel">
-            <p class="eyebrow">Errors</p>
-            <h2>Recent AI Errors</h2>
+          <article class="admin-card">
+            <p class="eyebrow">Sự cố</p>
+            <h2>Lỗi AI Gần Đây</h2>
             <div id="adminRecentErrorsList" class="admin-list compact" aria-live="polite"></div>
           </article>
 
-          <article class="admin-card glass-panel">
-            <p class="eyebrow">Audit</p>
-            <h2>Recent Admin Actions</h2>
+          <article class="admin-card">
+            <p class="eyebrow">Giám sát</p>
+            <h2>Nhật Ký Tác Vụ Gần Đây</h2>
             <pre id="adminAuditPreview" class="admin-output compact" aria-live="polite"></pre>
           </article>
         </section>
       </section>
 
+      <!-- TAB PANEL: SỬ DỤNG AI -->
       <section class="admin-tab-panel" data-admin-panel="usage">
         <section class="admin-grid">
-          <article class="admin-card glass-panel">
-            <p class="eyebrow">Today</p>
-            <h2>AI Usage</h2>
+          <article class="admin-card">
+            <p class="eyebrow">Hôm nay</p>
+            <h2>Chi Tiết Sử Dụng AI</h2>
             <div id="adminUsageTodayFacts" class="admin-kv-grid" aria-live="polite"></div>
           </article>
 
-          <article class="admin-card glass-panel">
-            <p class="eyebrow">30 Days</p>
-            <h2>Usage Window</h2>
+          <article class="admin-card">
+            <p class="eyebrow">30 Ngày Qua</p>
+            <h2>Tổng Lượng Tiêu Thụ</h2>
             <div id="adminUsageThirtyFacts" class="admin-kv-grid" aria-live="polite"></div>
           </article>
         </section>
 
         <section class="admin-grid wide">
-          <article class="admin-card glass-panel">
-            <p class="eyebrow">Users</p>
-            <h2>Top Usage</h2>
+          <article class="admin-card">
+            <p class="eyebrow">Người dùng</p>
+            <h2>Người Chơi Sử Dụng Nhiều Nhất</h2>
             <div id="adminUsageUsersList" class="admin-list" aria-live="polite"></div>
           </article>
 
-          <article class="admin-card glass-panel">
-            <p class="eyebrow">Events</p>
-            <h2>Recent Usage Logs</h2>
+          <article class="admin-card">
+            <p class="eyebrow">Nhật ký</p>
+            <h2>Sự Kiện Gọi API Gần Đây</h2>
             <div id="adminUsageList" class="admin-list" aria-live="polite"></div>
           </article>
         </section>
       </section>
 
+      <!-- TAB PANEL: NGƯỜI CHƠI -->
       <section class="admin-tab-panel" data-admin-panel="users">
         <section class="admin-grid">
-          <article class="admin-card glass-panel">
-            <p class="eyebrow">User Control</p>
-            <h2>Points & Ban</h2>
+          <article class="admin-card">
+            <p class="eyebrow">Quản lý người chơi</p>
+            <h2>Cấp Điểm & Khóa Tài Khoản</h2>
 
             <label>
-              <span>Target UID</span>
-              <input id="adminTargetUid" type="text" placeholder="Firebase uid" />
+              <span>UID Người chơi mục tiêu</span>
+              <input id="adminTargetUid" type="text" placeholder="Nhập Firebase UID..." />
             </label>
 
             <div class="admin-action-row">
               <label>
-                <span>Point delta</span>
-                <input id="adminPointDelta" type="number" step="1" placeholder="100" />
+                <span>Số điểm thay đổi</span>
+                <input id="adminPointDelta" type="number" step="1" placeholder="Ví dụ: 100 hoặc -50" />
               </label>
               <label>
-                <span>Reason</span>
-                <input id="adminPointReason" type="text" maxlength="240" placeholder="Manual grant" />
+                <span>Lý do cộng/trừ điểm</span>
+                <input id="adminPointReason" type="text" maxlength="240" placeholder="Lý do thủ công..." />
               </label>
             </div>
 
             <button id="adminAdjustPointsBtn" type="button" class="primary-btn">
-              Apply Points
+              Áp Dụng Thay Đổi Điểm
             </button>
 
             <label>
-              <span>Ban reason</span>
-              <input id="adminBanReason" type="text" maxlength="240" placeholder="Reason shown to the player" />
+              <span>Lý do cấm chơi</span>
+              <input id="adminBanReason" type="text" maxlength="240" placeholder="Lý do hiển thị với người chơi..." />
             </label>
 
             <div class="admin-action-row">
-              <button id="adminBanUserBtn" type="button" class="danger-btn">Ban User</button>
-              <button id="adminUnbanUserBtn" type="button" class="ghost">Unban User</button>
+              <button id="adminBanUserBtn" type="button" class="danger-btn">Cấm Người Dùng</button>
+              <button id="adminUnbanUserBtn" type="button" class="ghost">Mở Khóa Người Dùng</button>
             </div>
           </article>
 
-          <article class="admin-card glass-panel">
-            <p class="eyebrow">Privacy</p>
-            <h2>Log Viewer Policy</h2>
+          <article class="admin-card">
+            <p class="eyebrow">Quyền riêng tư</p>
+            <h2>Chính Sách Nhật Ký</h2>
             <p class="admin-muted">
-              This dashboard shows user metadata, short story previews, usage events, and error kinds only.
-              It does not render full player conversations.
+              Bảng điều khiển này chỉ hiển thị dữ liệu siêu thông tin (metadata), bản xem trước thế giới ngắn gọn, sự kiện tiêu thụ API và phân loại lỗi.
+              Nội dung cuộc hội thoại đầy đủ giữa người chơi và AI được ẩn để đảm bảo quyền riêng tư.
             </p>
           </article>
         </section>
 
-        <article class="admin-card glass-panel">
-          <p class="eyebrow">Users</p>
-          <h2>Known Players</h2>
+        <article class="admin-card">
+          <p class="eyebrow">Danh sách</p>
+          <h2>Người Chơi Đã Đăng Ký</h2>
           <div id="adminUsersList" class="admin-list" aria-live="polite"></div>
         </article>
       </section>
 
+      <!-- TAB PANEL: PHIÊN CHƠI -->
       <section class="admin-tab-panel" data-admin-panel="sessions">
-        <article class="admin-card glass-panel">
-          <p class="eyebrow">Sessions</p>
-          <h2>Recent Activity</h2>
+        <article class="admin-card">
+          <p class="eyebrow">Hoạt động</p>
+          <h2>Các Phiên Chơi Gần Đây</h2>
           <p class="admin-muted">
-            Metadata and short previews only. Full conversation content is intentionally hidden in this admin v2.
+            Chỉ hiển thị tiêu đề và tóm tắt xem trước. Các nội dung chi tiết hội thoại của người chơi được bảo mật.
           </p>
           <div id="adminSessionsList" class="admin-list" aria-live="polite"></div>
         </article>
       </section>
 
+      <!-- TAB PANEL: CẤU HÌNH HỆ THỐNG -->
       <section class="admin-tab-panel" data-admin-panel="system">
         <section class="admin-grid">
-          <article class="admin-card glass-panel">
-            <p class="eyebrow">Controls</p>
-            <h2>Maintenance & Points</h2>
+          <article class="admin-card">
+            <p class="eyebrow">Trạng thái hệ thống</p>
+            <h2>Bảo Trì & Điểm Số</h2>
 
             <label class="admin-toggle-row">
               <input id="adminMaintenanceToggle" type="checkbox" />
-              <span>Maintenance mode</span>
+              <span>Bật chế độ bảo trì hệ thống</span>
             </label>
 
             <label>
-              <span>Maintenance message</span>
+              <span>Thông báo bảo trì hiển thị cho người chơi</span>
               <textarea id="adminMaintenanceMessage" rows="3"></textarea>
             </label>
 
             <label class="admin-toggle-row">
               <input id="adminPointsToggle" type="checkbox" />
-              <span>Enable point spending</span>
+              <span>Bật tính năng trừ điểm khi chơi</span>
             </label>
 
             <div class="admin-cost-grid">
               <label>
-                <span>Adventure</span>
+                <span>Bắt đầu Adventure (điểm)</span>
                 <input id="adminCostAdventure" type="number" min="0" step="1" />
               </label>
               <label>
-                <span>Novel World</span>
+                <span>Tạo Novel World (điểm)</span>
                 <input id="adminCostNovelWorld" type="number" min="0" step="1" />
               </label>
               <label>
-                <span>Novel Foundation</span>
+                <span>Tạo Novel Foundation (điểm)</span>
                 <input id="adminCostNovelFoundation" type="number" min="0" step="1" />
               </label>
               <label>
-                <span>Turn</span>
+                <span>Mỗi lượt gửi Turn (điểm)</span>
                 <input id="adminCostTurn" type="number" min="0" step="1" />
               </label>
             </div>
           </article>
 
-          <article class="admin-card glass-panel">
-            <p class="eyebrow">Rate Limit</p>
-            <h2>Daily Limits</h2>
+          <article class="admin-card">
+            <p class="eyebrow">Hạn mức cuộc gọi</p>
+            <h2>Giới Hạn Tần Suất</h2>
 
             <label class="admin-toggle-row">
               <input id="adminRateLimitToggle" type="checkbox" />
-              <span>Enable daily rate limit</span>
+              <span>Bật giới hạn lượt gọi API hàng ngày</span>
             </label>
 
             <div class="admin-cost-grid">
               <label>
-                <span>Turns / day</span>
+                <span>Số lượt Turn / ngày</span>
                 <input id="adminDailyTurnLimit" type="number" min="0" step="1" />
               </label>
               <label>
-                <span>Creates / day</span>
+                <span>Số lượt Tạo World / ngày</span>
                 <input id="adminDailyCreateLimit" type="number" min="0" step="1" />
               </label>
               <label>
-                <span>Log retention days</span>
+                <span>Thời gian giữ log (ngày)</span>
                 <input id="adminUsageRetentionDays" type="number" min="1" max="365" step="1" />
               </label>
             </div>
 
             <p class="admin-muted">
-              API keys are not editable in this web console. Rotate keys through server secrets or `.env`,
-              then restart the backend.
+              Không thể thay đổi API Key trực tiếp trên bảng điều khiển này vì lý do bảo mật. Hãy cập nhật qua file cấu hình `.env` trên máy chủ và khởi động lại backend.
             </p>
           </article>
         </section>
 
         <button id="adminSaveSettingsBtn" type="button" class="primary-btn admin-save-wide">
-          Save System Settings
+          Lưu Cấu Hình Hệ Thống
         </button>
       </section>
 
+      <!-- TAB PANEL: DUYỆT THẾ GIỚI -->
       <section class="admin-tab-panel" data-admin-panel="moderation">
-        <article class="admin-card glass-panel">
-          <p class="eyebrow">Moderation</p>
-          <h2>Pending Community Submissions</h2>
+        <article class="admin-card">
+          <p class="eyebrow">Duyệt nội dung</p>
+          <h2>Thế Giới Cộng Đồng Chờ Phê Duyệt</h2>
           <p class="admin-muted">
-            Review and approve or reject community story publications before they appear in the public Discover section.
+            Xem xét kỹ lưỡng và phê duyệt hoặc từ chối các thế giới do người chơi xuất bản trước khi hiển thị công khai ở mục Khám Phá.
           </p>
           <div id="adminSubmissionsList" class="admin-submissions-grid" aria-live="polite">
-            <p class="admin-muted">Loading submissions...</p>
+            <p class="admin-muted">Đang tải danh sách chờ duyệt...</p>
           </div>
         </article>
       </section>
 
+      <!-- TAB PANEL: NHẬT KÝ TÁC VỤ -->
       <section class="admin-tab-panel" data-admin-panel="audit">
-        <article class="admin-card glass-panel">
-          <p class="eyebrow">Audit</p>
-          <h2>Recent Admin Actions</h2>
+        <article class="admin-card">
+          <p class="eyebrow">Lịch sử</p>
+          <h2>Nhật Ký Tác Vụ Admin Gần Đây</h2>
           <pre id="adminOutput" class="admin-output" aria-live="polite"></pre>
         </article>
       </section>
@@ -352,6 +368,6 @@
   </main>
 
   <script src="config.js?v=config-1"></script>
-  <script type="module" src="admin.js?v=admin-v2-readiness-1"></script>
+  <script type="module" src="admin.js?v=admin-v3-perf-1"></script>
 </body>
 </html>
