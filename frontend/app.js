@@ -261,7 +261,7 @@ const creatorWorlds = [
     description:
       "An ocean without water, filled with drifting ships and voices beneath the sand.",
     image:
-      "linear-gradient(135deg, rgba(10,12,18,.3), rgba(0,0,0,.7)), url('./assets/world-hollow-sea.PNG')",
+      "linear-gradient(135deg, rgba(10,12,18,.3), rgba(0,0,0,.7)), url('./assets/world-hollow-sea.png')",
     worldSeed:
       "Biển Rỗng là một đại dương không còn nước, chỉ còn cát đen, xác tàu trôi lơ lửng và những giọng nói vọng lên từ lòng đất. Cát đen nóng bỏng vào ban ngày và lạnh cắt da ban đêm, biết bám chặt lấy bất cứ ai đi chân trần và kéo họ xuống. Những xác tàu đủ loại – từ thuyền buồm cổ đến tàu chiến bọc thép – mọc lên từ cát như bộ xương, một số lơ lửng cách mặt đất vài sải tay nhờ từ trường dị thường. Giọng nói dưới lòng đất có thể là của người thân đã khuất hoặc của chính bạn trong tương lai, và mỗi lần bạn trả lời, chúng lại rõ hơn một chút. Sinh vật bản địa duy nhất là 'bóng cát' – những thực thể vô hình chỉ lộ ra khi đèn lồng bão tắt, và 'dây leo mộng' mọc từ xác chết bên trong tàu đắm, thứ nước nhầy từ dây leo có thể thay thế nước uống nhưng khiến người dùng mơ thấy đáy biển cũ. Nơi trú ẩn cuối cùng của con người là Xác Tàu Song Hỷ – một con tàu bọc đồng nằm nghiêng, được hàn dính bằng tôn và xương cá voi, bên trong có chợ đen, bar và những kẻ săn giọng nói. Phía nam nơi những con tàu mới nhất nằm, cát mỏng dần và lộ ra một vực thẳm tối om, từ đó có mùi muối và tiếng sóng xa xăm – nhưng không ai quay lại được sau khi bước qua mép vực.",
   },

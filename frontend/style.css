@@ -12270,3 +12270,42 @@ body[data-theme="forest"] .forest-tree-frame {
   background-size: 100% 100%;
   transform: scaleX(-1);
 }
+
+/* ── Prevent Theme Glass-Panel Background Overrides from Hiding Hero Images ── */
+body[data-theme="amoled"] .home-hero,
+body[data-theme="forest"] .home-hero {
+  background:
+    linear-gradient(90deg,
+      rgba(5, 8, 12, 0.9) 0%,
+      rgba(5, 8, 12, 0.65) 40%,
+      rgba(5, 8, 12, 0.15) 100%),
+    var(--featured-bg, linear-gradient(135deg, #101820, #34251c)) !important;
+}
+
+body[data-theme="amoled"] .preset-detail-hero,
+body[data-theme="forest"] .preset-detail-hero {
+  background:
+    linear-gradient(90deg,
+      rgba(4, 5, 8, 0.94) 0%,
+      rgba(4, 5, 8, 0.74) 42%,
+      rgba(4, 5, 8, 0.25) 100%),
+    var(--preset-detail-bg, linear-gradient(135deg, #111, #2a1c12)) !important;
+}
+
+body[data-theme="sepia"] .home-hero {
+  background:
+    linear-gradient(90deg,
+      rgba(248, 243, 231, 0.95) 0%,
+      rgba(248, 243, 231, 0.8) 40%,
+      rgba(248, 243, 231, 0.2) 100%),
+    var(--featured-bg, linear-gradient(135deg, #ebdcc3, #ebdcc3)) !important;
+}
+
+body[data-theme="sepia"] .preset-detail-hero {
+  background:
+    linear-gradient(90deg,
+      rgba(248, 243, 231, 0.95) 0%,
+      rgba(248, 243, 231, 0.8) 42%,
+      rgba(248, 243, 231, 0.2) 100%),
+    var(--preset-detail-bg, linear-gradient(135deg, #ebdcc3, #ebdcc3)) !important;
+}

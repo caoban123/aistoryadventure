@@ -95,7 +95,7 @@ WORLD_CATALOG: tuple[WorldCatalogItem, ...] = (
         ),
         image=(
             "linear-gradient(135deg, rgba(10,12,18,.3), rgba(0,0,0,.7)), "
-            "url('./assets/world-hollow-sea.PNG')"
+            "url('./assets/world-hollow-sea.png')"
         ),
         tags=["Survival", "Black Sand", "Lost Ships"],
         world_seed=(
