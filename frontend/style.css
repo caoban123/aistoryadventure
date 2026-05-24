@@ -12324,16 +12324,35 @@ body[data-theme="sepia"] .preset-detail-hero {
   margin: 0 15px;
 }
 
+.greeting-container {
+  overflow: hidden;
+  position: relative;
+  width: 240px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  mask-image: linear-gradient(to right, transparent 0%, #000 8%, #000 92%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 8%, #000 92%, transparent 100%);
+}
+
 .dynamic-greeting {
   font-size: 0.95rem;
   color: var(--muted);
   font-weight: 500;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 250px;
-  transition: opacity 0.3s ease;
+  position: absolute;
+  will-change: transform;
+  animation: marquee-right 12s linear infinite;
+}
+
+@keyframes marquee-right {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(240px);
+  }
 }
 
 .points-badge {
@@ -12578,6 +12597,7 @@ body[data-theme="sepia"] .preset-detail-hero {
     gap: 12px;
     margin: 0 5px;
   }
+  .greeting-container,
   .dynamic-greeting {
     display: none !important;
   }
