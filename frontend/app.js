@@ -613,6 +613,12 @@ async function initPortalScene() {
       current: getPortalProfile(pendingPortalPageId, pendingPortalMode),
       rafId: 0,
       running: true,
+      themeOpacity: {
+        cosmic: 1,
+        sepia: 0,
+        amoled: 0,
+        forest: 0
+      }
     };
 
     const baseGold = new THREE.Color("#ffd980");
@@ -728,6 +734,187 @@ async function initPortalScene() {
       0.3
     );
 
+    // ── Theme-specific 3D Groups ──
+    const constellationGroup = new THREE.Group();
+    const smokeGroup = new THREE.Group();
+    const gridGroup = new THREE.Group();
+    const forestGroup = new THREE.Group();
+
+    portalGroup.add(constellationGroup);
+    portalGroup.add(smokeGroup);
+    portalGroup.add(gridGroup);
+    portalGroup.add(forestGroup);
+
+    // 1. Constellation Group (Cosmic - Stars & Connecting Lines)
+    const constellationCount = smallScreenQuery.matches ? 18 : 36;
+    const constellationPositions = new Float32Array(constellationCount * 3);
+    const constellationVelocities = [];
+
+    for (let i = 0; i < constellationCount; i++) {
+      constellationPositions[i * 3] = (Math.random() - 0.5) * 6;
+      constellationPositions[i * 3 + 1] = (Math.random() - 0.5) * 6;
+      constellationPositions[i * 3 + 2] = (Math.random() - 0.5) * 3;
+      constellationVelocities.push({
+        x: (Math.random() - 0.5) * 0.002,
+        y: (Math.random() - 0.5) * 0.002,
+        z: (Math.random() - 0.5) * 0.001
+      });
+    }
+
+    const constellationGeometry = new THREE.BufferGeometry();
+    constellationGeometry.setAttribute("position", new THREE.BufferAttribute(constellationPositions, 3));
+
+    const starMaterial = new THREE.PointsMaterial({
+      color: memoryGold,
+      size: smallScreenQuery.matches ? 0.07 : 0.05,
+      transparent: true,
+      opacity: 0.75,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const stars = new THREE.Points(constellationGeometry, starMaterial);
+    constellationGroup.add(stars);
+
+    const lineIndices = [];
+    for (let i = 0; i < constellationCount; i++) {
+      for (let j = i + 1; j < constellationCount; j++) {
+        const dx = constellationPositions[i * 3] - constellationPositions[j * 3];
+        const dy = constellationPositions[i * 3 + 1] - constellationPositions[j * 3 + 1];
+        const dz = constellationPositions[i * 3 + 2] - constellationPositions[j * 3 + 2];
+        const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (dist < 1.6) {
+          lineIndices.push(i, j);
+        }
+      }
+    }
+
+    const lineGeometry = new THREE.BufferGeometry();
+    lineGeometry.setAttribute("position", new THREE.BufferAttribute(constellationPositions, 3));
+    lineGeometry.setIndex(lineIndices);
+
+    const lineMaterial = new THREE.LineBasicMaterial({
+      color: portalViolet,
+      transparent: true,
+      opacity: 0.16,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+    constellationGroup.add(lines);
+
+    // 2. Sepia Theme (Vintage Smoke / Ink Drift & Flicker)
+    const smokeClouds = [];
+    const smokeCount = smallScreenQuery.matches ? 3 : 6;
+    for (let i = 0; i < smokeCount; i++) {
+      const size = 1.6 + Math.random() * 2.2;
+      const geom = new THREE.PlaneGeometry(size, size);
+      const mat = new THREE.MeshBasicMaterial({
+        color: new THREE.Color("#4a3b2c"),
+        transparent: true,
+        opacity: 0.035 + Math.random() * 0.045,
+        blending: THREE.NormalBlending,
+        depthWrite: false
+      });
+      const mesh = new THREE.Mesh(geom, mat);
+      mesh.position.set(
+        (Math.random() - 0.5) * 5,
+        (Math.random() - 0.5) * 5,
+        -1.4 - Math.random() * 1.6
+      );
+      mesh.rotation.z = Math.random() * Math.PI * 2;
+      smokeGroup.add(mesh);
+      smokeClouds.push({
+        mesh,
+        material: mat,
+        baseOpacity: mat.opacity,
+        speedY: 0.0012 + Math.random() * 0.0016,
+        speedRot: (Math.random() - 0.5) * 0.0008
+      });
+    }
+
+    // 3. AMOLED Theme (Digital Wireframe Wave)
+    const gridSegments = smallScreenQuery.matches ? 10 : 15;
+    const gridGeo = new THREE.PlaneGeometry(16, 8, gridSegments, gridSegments);
+    const gridMat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color("#334155"),
+      wireframe: true,
+      transparent: true,
+      opacity: 0.15,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const gridMesh = new THREE.Mesh(gridGeo, gridMat);
+    gridMesh.rotation.x = -Math.PI / 2.3;
+    gridMesh.position.set(0, -2.1, -3.5);
+    gridGroup.add(gridMesh);
+
+    // 4. Forest Theme (Emerald Fog & Leaves)
+    const forestMists = [];
+    const mistCount = smallScreenQuery.matches ? 2 : 4;
+    for (let i = 0; i < mistCount; i++) {
+      const size = 2.2 + Math.random() * 2.6;
+      const geom = new THREE.PlaneGeometry(size, size);
+      const mat = new THREE.MeshBasicMaterial({
+        color: new THREE.Color("#0c2d1c"),
+        transparent: true,
+        opacity: 0.07 + Math.random() * 0.05,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+      const mesh = new THREE.Mesh(geom, mat);
+      mesh.position.set(
+        (Math.random() - 0.5) * 6,
+        (Math.random() - 0.5) * 4,
+        -1.6 - Math.random() * 1.4
+      );
+      forestGroup.add(mesh);
+      forestMists.push({
+        mesh,
+        material: mat,
+        baseOpacity: mat.opacity,
+        speedX: 0.0008 + Math.random() * 0.0012
+      });
+    }
+
+    const leaves = [];
+    const leafCount = smallScreenQuery.matches ? 6 : 12;
+    const leafColor = new THREE.Color("#10b981");
+    for (let i = 0; i < leafCount; i++) {
+      const geom = new THREE.PlaneGeometry(0.12, 0.18);
+      const mat = new THREE.MeshBasicMaterial({
+        color: leafColor,
+        transparent: true,
+        opacity: 0.4 + Math.random() * 0.25,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide
+      });
+      const mesh = new THREE.Mesh(geom, mat);
+      mesh.position.set(
+        (Math.random() - 0.5) * 6,
+        Math.random() * 4 - 1.5,
+        -0.6 - Math.random() * 1.4
+      );
+      mesh.rotation.set(
+        Math.random() * Math.PI,
+        Math.random() * Math.PI,
+        Math.random() * Math.PI
+      );
+      forestGroup.add(mesh);
+      leaves.push({
+        mesh,
+        material: mat,
+        baseOpacity: mat.opacity,
+        speedY: 0.005 + Math.random() * 0.004,
+        swaySpeed: 1.2 + Math.random() * 1.2,
+        swayAmp: 0.002 + Math.random() * 0.003,
+        rotSpeedX: (Math.random() - 0.5) * 0.012,
+        rotSpeedY: (Math.random() - 0.5) * 0.016,
+        rotSpeedZ: (Math.random() - 0.5) * 0.008,
+        id: i
+      });
+    }
+
     const resize = () => {
       const width = window.innerWidth || 1;
       const height = window.innerHeight || 1;
@@ -796,13 +983,101 @@ async function initPortalScene() {
       pointer.y += (pointer.ty - pointer.y) * 0.035;
       state.pulse *= 0.92;
 
+      const activeTheme = document.body.dataset.theme || "cosmic";
+      const targetThemeOpacity = {
+        cosmic: (activeTheme === "cosmic") ? 1 : 0,
+        sepia: (activeTheme === "sepia") ? 1 : 0,
+        amoled: (activeTheme === "amoled") ? 1 : 0,
+        forest: (activeTheme === "forest") ? 1 : 0
+      };
+
+      state.themeOpacity.cosmic += (targetThemeOpacity.cosmic - state.themeOpacity.cosmic) * smooth;
+      state.themeOpacity.sepia += (targetThemeOpacity.sepia - state.themeOpacity.sepia) * smooth;
+      state.themeOpacity.amoled += (targetThemeOpacity.amoled - state.themeOpacity.amoled) * smooth;
+      state.themeOpacity.forest += (targetThemeOpacity.forest - state.themeOpacity.forest) * smooth;
+
+      constellationGroup.visible = state.themeOpacity.cosmic > 0.01;
+      smokeGroup.visible = state.themeOpacity.sepia > 0.01;
+      gridGroup.visible = state.themeOpacity.amoled > 0.01;
+      forestGroup.visible = state.themeOpacity.forest > 0.01;
+
+      if (constellationGroup.visible) {
+        const pos = constellationGeometry.attributes.position;
+        for (let i = 0; i < constellationCount; i++) {
+          let px = pos.getX(i) + constellationVelocities[i].x;
+          let py = pos.getY(i) + constellationVelocities[i].y;
+          let pz = pos.getZ(i) + constellationVelocities[i].z;
+
+          if (px < -3.5 || px > 3.5) constellationVelocities[i].x *= -1;
+          if (py < -3.5 || py > 3.5) constellationVelocities[i].y *= -1;
+          if (pz < -1.5 || pz > 1.5) constellationVelocities[i].z *= -1;
+
+          pos.setXYZ(i, px, py, pz);
+        }
+        pos.needsUpdate = true;
+        lineGeometry.attributes.position.needsUpdate = true;
+
+        starMaterial.opacity = 0.75 * state.themeOpacity.cosmic;
+        lineMaterial.opacity = 0.16 * state.themeOpacity.cosmic;
+      }
+
+      if (smokeGroup.visible) {
+        const flicker = 1.0 + (Math.sin(time * 8.0) * 0.05 + Math.sin(time * 19.3) * 0.03);
+        smokeClouds.forEach(cloud => {
+          cloud.mesh.position.y += cloud.speedY;
+          cloud.mesh.rotation.z += cloud.speedRot;
+          if (cloud.mesh.position.y > 3.5) {
+            cloud.mesh.position.y = -3.5;
+            cloud.mesh.position.x = (Math.random() - 0.5) * 5;
+          }
+          cloud.material.opacity = cloud.baseOpacity * state.themeOpacity.sepia * flicker;
+        });
+      }
+
+      if (gridGroup.visible) {
+        gridMat.opacity = 0.15 * state.themeOpacity.amoled;
+        const gridPos = gridGeo.attributes.position;
+        for (let i = 0; i < gridPos.count; i++) {
+          const x = gridPos.getX(i);
+          const y = gridPos.getY(i);
+          const z = Math.sin(x * 0.35 + time * 0.42) * Math.cos(y * 0.45 + time * 0.35) * 0.28;
+          gridPos.setZ(i, z);
+        }
+        gridPos.needsUpdate = true;
+      }
+
+      if (forestGroup.visible) {
+        forestMists.forEach(mist => {
+          mist.mesh.position.x += mist.speedX;
+          if (mist.mesh.position.x > 4.5) {
+            mist.mesh.position.x = -4.5;
+            mist.mesh.position.y = (Math.random() - 0.5) * 4;
+          }
+          mist.material.opacity = mist.baseOpacity * state.themeOpacity.forest;
+        });
+
+        leaves.forEach(leaf => {
+          leaf.mesh.position.y -= leaf.speedY;
+          leaf.mesh.position.x += Math.sin(time * leaf.swaySpeed + leaf.id) * leaf.swayAmp;
+          leaf.mesh.rotation.x += leaf.rotSpeedX;
+          leaf.mesh.rotation.y += leaf.rotSpeedY;
+          leaf.mesh.rotation.z += leaf.rotSpeedZ;
+
+          if (leaf.mesh.position.y < -3.5) {
+            leaf.mesh.position.y = 3.5;
+            leaf.mesh.position.x = (Math.random() - 0.5) * 6;
+          }
+          leaf.material.opacity = leaf.baseOpacity * state.themeOpacity.forest;
+        });
+      }
+
       const pulseLift = Math.min(state.pulse, 1.4);
       const pageBoost =
         state.pageId === "foundationPage" || state.pageId === "gamePage"
           ? 1
           : 0.55;
 
-      portalGroup.visible = state.current.opacity > 0.025;
+      portalGroup.visible = state.current.opacity > 0.025 || state.themeOpacity.sepia > 0.025 || state.themeOpacity.amoled > 0.025 || state.themeOpacity.forest > 0.025;
       portalGroup.position.x = pointer.x * pageBoost;
       portalGroup.position.y =
         state.current.y -
@@ -821,15 +1096,15 @@ async function initPortalScene() {
 
       ringMaterials.forEach((material, index) => {
         material.opacity =
-          state.current.ringOpacity *
+          (state.current.ringOpacity *
             (index === ringMaterials.length - 1 ? 0.32 : 1 - index * 0.18) +
-          pulseLift * 0.08;
+          pulseLift * 0.08) * state.themeOpacity.cosmic;
       });
 
       particleMaterials.forEach((material, index) => {
         material.opacity =
-          state.current.particleOpacity * (index ? 0.72 : 1) +
-          pulseLift * 0.045;
+          (state.current.particleOpacity * (index ? 0.72 : 1) +
+          pulseLift * 0.045) * state.themeOpacity.cosmic;
       });
 
       memoryGold.lerpColors(baseGold, ember, state.current.hueShift);

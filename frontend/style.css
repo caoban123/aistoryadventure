@@ -11778,10 +11778,19 @@ body[data-theme="amoled"] .navbar-theme-selector {
 /* ── Theme Color Overrides (Amoled, Sepia, Forest) ── */
 
 /* ── Global Canvas & Glow Hiding for custom themes ── */
-body[data-theme="sepia"] #particleCanvas,
-body[data-theme="amoled"] #particleCanvas,
+body[data-theme="sepia"] #particleCanvas {
+  opacity: 0.55 !important;
+  mix-blend-mode: multiply !important;
+}
+
+body[data-theme="amoled"] #particleCanvas {
+  opacity: 0.28 !important;
+  mix-blend-mode: screen !important;
+}
+
 body[data-theme="forest"] #particleCanvas {
-  opacity: 0 !important;
+  opacity: 0.46 !important;
+  mix-blend-mode: screen !important;
 }
 
 body[data-theme="sepia"] .ambient,
