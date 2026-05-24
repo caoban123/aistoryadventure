@@ -32,6 +32,7 @@ class QdrantStore:
                 host=self.settings.qdrant_host,
                 port=self.settings.qdrant_port,
                 api_key=self.settings.qdrant_api_key,
+                https=self.settings.qdrant_https,
             )
 
         if not self._collection_verified:
