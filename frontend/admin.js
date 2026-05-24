@@ -216,7 +216,7 @@ async function loadDashboard() {
   });
 
   try {
-    const [overview, users, sessions, audit, usage, usageUsers, errors, submissions] = await Promise.all([
+    const [overview, users, sessions, audit, usage, usageUsers, errors, submissions, announcements] = await Promise.all([
       requestJson(`${API_BASE}/admin/overview`),
       safeRequest(requestJson(`${API_BASE}/admin/users?limit=100`), { items: [] }),
       safeRequest(requestJson(`${API_BASE}/admin/sessions?limit=40`), { items: [] }),
@@ -225,6 +225,7 @@ async function loadDashboard() {
       safeRequest(requestJson(`${API_BASE}/admin/usage/users?limit=100`), { items: [] }),
       safeRequest(requestJson(`${API_BASE}/admin/errors?limit=50`), { items: [] }),
       safeRequest(requestJson(`${API_BASE}/admin/submissions`), []),
+      safeRequest(requestJson(`${API_BASE}/admin/announcements`), []),
     ]);
 
     currentOverview = overview;
@@ -239,6 +240,7 @@ async function loadDashboard() {
     renderErrors(errors.items || []);
     renderAudit(audit.items || []);
     renderSubmissions(submissions || []);
+    renderAnnouncements(announcements || []);
     setStatus("Dữ liệu hệ thống đã được đồng bộ trực tiếp.", "ok");
   } catch (err) {
     setStatus(err.message || "Không thể tải dữ liệu quản trị.", "error");
@@ -893,3 +895,91 @@ async function moderateSubmission(subId, action) {
     setBusy(false);
   }
 }
+
+/* =========================================================================
+   ANNOUNCEMENT SYSTEM LOGIC
+   ========================================================================= */
+
+const announcementsList = $("adminAnnouncementsList");
+const announcementForm = $("announcementForm");
+
+function renderAnnouncements(items = []) {
+  if (!announcementsList) return;
+  if (!items.length) {
+    announcementsList.innerHTML = `<div class="admin-empty">Không có thông báo nào được đăng.</div>`;
+    return;
+  }
+
+  announcementsList.innerHTML = items.map((item) => `
+    <div class="admin-item" data-announcement-id="${escapeHtml(item.id)}" style="display:flex; justify-content:space-between; align-items:center; padding:12px; margin-bottom:8px; border:1px solid #444; border-radius:4px; background:#222;">
+      <div style="flex:1; margin-right:15px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <strong style="color:#fff;">${escapeHtml(item.title)}</strong>
+          <span style="font-size:0.75rem; padding:2px 6px; border-radius:3px; font-weight:bold; background:${item.type === 'fixed' ? 'rgba(255,215,0,0.15)' : 'rgba(255,255,255,0.08)'}; color:${item.type === 'fixed' ? '#ffd700' : '#bbb'}; border:1px solid ${item.type === 'fixed' ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.15)'};">
+            ${item.type === 'fixed' ? 'Cố định' : 'Hiện tại'}
+          </span>
+        </div>
+        <p style="margin:6px 0 0 0; font-size:0.9rem; color:#aaa; line-height:1.4; word-break:break-word;">${escapeHtml(item.content)}</p>
+        <div style="margin-top:6px; font-size:0.75rem; color:#666;">
+          Đăng bởi: <strong>${escapeHtml(item.created_by)}</strong> | Ngày: <strong>${formatDate(item.created_at)}</strong>
+        </div>
+      </div>
+      <button class="danger-btn delete-announcement-btn" type="button" style="padding:6px 12px; font-size:0.85rem;">Xóa</button>
+    </div>
+  `).join("");
+
+  announcementsList.querySelectorAll(".delete-announcement-btn").forEach((btn) => {
+    const parent = btn.closest("[data-announcement-id]");
+    const announcementId = parent.dataset.announcementId;
+    btn.addEventListener("click", async () => {
+      if (confirm("Bạn có chắc chắn muốn xóa thông báo này?")) {
+        setBusy(true);
+        setStatus("Đang xóa thông báo...", "muted");
+        try {
+          await requestJson(`${API_BASE}/admin/announcements/${encodeURIComponent(announcementId)}`, {
+            method: "DELETE",
+          });
+          await loadDashboard();
+        } catch (err) {
+          setStatus(err.message || "Không thể xóa thông báo.", "error");
+        } finally {
+          setBusy(false);
+        }
+      }
+    });
+  });
+}
+
+announcementForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const title = $("announcementTitle")?.value?.trim() || "";
+  const content = $("announcementContent")?.value?.trim() || "";
+  const type = $("announcementType")?.value || "temporary";
+
+  if (!title || !content) {
+    alert("Vui lòng điền đầy đủ tiêu đề và nội dung.");
+    return;
+  }
+
+  setBusy(true);
+  setStatus("Đang phát sóng thông báo mới...", "muted");
+
+  try {
+    await requestJson(`${API_BASE}/admin/announcements`, {
+      method: "POST",
+      body: JSON.stringify({ title, content, type }),
+    });
+    
+    // Clear form
+    if ($("announcementTitle")) $("announcementTitle").value = "";
+    if ($("announcementContent")) $("announcementContent").value = "";
+    if ($("announcementType")) $("announcementType").value = "temporary";
+    
+    await loadDashboard();
+    setStatus("Phát sóng thông báo thành công!", "ok");
+  } catch (err) {
+    setStatus(err.message || "Không thể phát sóng thông báo.", "error");
+  } finally {
+    setBusy(false);
+  }
+});

@@ -64,27 +64,37 @@
     </button>
   </div>
 
-  <div class="nav-search">
-    <span class="nav-search-icon">⌕</span>
-    <input
-      id="globalSearchInput"
-      type="text"
-      placeholder="Search"
-      autocomplete="off"
-    />
+  <div class="nav-center-widget">
+    <div id="dynamicGreeting" class="dynamic-greeting"></div>
+    <div id="pointsBadge" class="points-badge hidden" title="Số điểm hiện tại">
+      <span class="points-icon">✨</span>
+      <span id="pointsValue">0</span>
+    </div>
+    <div class="notification-container">
+      <button id="notificationBellBtn" class="notification-bell-btn" type="button" aria-label="Xem thông báo">
+        <span class="bell-icon">🔔</span>
+        <span id="notificationCountBadge" class="notification-count-badge hidden">0</span>
+      </button>
+      <div id="notificationDropdown" class="notification-dropdown hidden">
+        <div class="notification-header">
+          <h3>Thông báo hệ thống</h3>
+          <button id="clearNotificationsBtn" class="ghost-btn-xs" type="button">Xóa hết</button>
+        </div>
+        <div id="notificationList" class="notification-list">
+          <div class="notification-empty">Không có thông báo mới</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legacy elements for JS compatibility -->
+  <div style="display: none !important;">
+    <input id="globalSearchInput" type="text" />
+    <button id="globalSearchToggle" type="button"></button>
   </div>
 
   <div class="nav-right">
-    <button
-      id="globalSearchToggle"
-      class="nav-search-toggle"
-      type="button"
-      aria-label="Open search"
-      aria-expanded="false"
-      aria-controls="globalSearchInput"
-    >
-      ⌕
-    </button>
+
 
     <div class="nav-user-menu">
   <button id="navAvatarBtn" class="nav-avatar-btn" type="button" aria-label="Open profile menu" aria-haspopup="menu" aria-expanded="false">

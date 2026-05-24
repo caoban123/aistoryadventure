@@ -83,6 +83,7 @@
         <button class="admin-tab" type="button" data-admin-tab="system">Cấu Hình</button>
         <button class="admin-tab" type="button" data-admin-tab="moderation">Duyệt Thế Giới</button>
         <button class="admin-tab" type="button" data-admin-tab="audit">Nhật Ký Tác Vụ</button>
+        <button class="admin-tab" type="button" data-admin-tab="announcements">Thông Báo</button>
       </nav>
 
       <!-- CÁC THẺ THỐNG KÊ TỔNG QUAN -->
@@ -363,6 +364,42 @@
           <h2>Nhật Ký Tác Vụ Admin Gần Đây</h2>
           <pre id="adminOutput" class="admin-output" aria-live="polite"></pre>
         </article>
+      </section>
+
+      <!-- TAB PANEL: THÔNG BÁO HỆ THỐNG -->
+      <section class="admin-tab-panel" data-admin-panel="announcements">
+        <section class="admin-grid">
+          <article class="admin-card">
+            <p class="eyebrow">Phát sóng</p>
+            <h2>Đăng Thông Báo Toàn Hệ Thống</h2>
+            <form id="announcementForm" class="admin-form" style="margin-top: 15px;">
+              <div style="margin-bottom: 15px;">
+                <label for="announcementTitle" style="display: block; margin-bottom: 6px; font-weight: bold;">Tiêu đề thông báo</label>
+                <input type="text" id="announcementTitle" placeholder="Ví dụ: Bảo trì hệ thống..." required style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #222; color: #fff;" />
+              </div>
+              <div style="margin-bottom: 15px;">
+                <label for="announcementContent" style="display: block; margin-bottom: 6px; font-weight: bold;">Nội dung chi tiết</label>
+                <textarea id="announcementContent" rows="4" placeholder="Nhập nội dung chi tiết tại đây..." required style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #222; color: #fff; font-family: inherit; resize: vertical;"></textarea>
+              </div>
+              <div style="margin-bottom: 15px;">
+                <label for="announcementType" style="display: block; margin-bottom: 6px; font-weight: bold;">Loại thông báo</label>
+                <select id="announcementType" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #222; color: #fff;">
+                  <option value="temporary">Hiện tại / Tạm thời (Người chơi có thể đóng/xóa)</option>
+                  <option value="fixed">Cố định / Pinned (Luôn ghim ở đầu hộp thư)</option>
+                </select>
+              </div>
+              <button type="submit" class="primary-btn" style="width: 100%; padding: 10px; font-weight: bold;">Gửi Thông Báo</button>
+            </form>
+          </article>
+
+          <article class="admin-card">
+            <p class="eyebrow">Quản lý</p>
+            <h2>Danh Sách Thông Báo Đã Đăng</h2>
+            <div id="adminAnnouncementsList" class="admin-list" aria-live="polite" style="margin-top: 15px;">
+              <p class="admin-muted">Đang tải danh sách thông báo...</p>
+            </div>
+          </article>
+        </section>
       </section>
     </section>
   </main>

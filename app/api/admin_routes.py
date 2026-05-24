@@ -220,3 +220,62 @@ async def admin_reject_submission(item_id: str, user=Depends(require_admin_user)
     )
     return {"message": "Đã từ chối và xóa bài xuất bản thành công."}
 
+
+from pydantic import BaseModel, Field
+from typing import Literal
+import uuid
+from app.domain.models import Announcement
+
+class AnnouncementCreateRequest(BaseModel):
+    title: str = Field(..., min_length=1, max_length=120)
+    content: str = Field(..., min_length=1, max_length=1000)
+    type: Literal["fixed", "temporary"] = "temporary"
+
+
+@router.post("/announcements", response_model=Announcement)
+async def admin_create_announcement(
+    request: AnnouncementCreateRequest,
+    user=Depends(require_admin_user),
+):
+    await admin_service.ensure_user_state(user)
+    
+    item = Announcement(
+        id=str(uuid.uuid4()),
+        title=request.title.strip(),
+        content=request.content.strip(),
+        type=request.type,
+        created_by=user.get("email") or user["uid"],
+    )
+    await db_store.create_announcement(item)
+    
+    await admin_service.audit(
+        actor=user,
+        action="announcement.create",
+        target_uid=item.id,
+        metadata={"title": item.title, "type": item.type},
+    )
+    return item
+
+
+@router.get("/announcements", response_model=list[Announcement])
+async def admin_list_announcements(user=Depends(require_admin_user)):
+    await admin_service.ensure_user_state(user)
+    return await db_store.list_announcements(limit=100)
+
+
+@router.delete("/announcements/{item_id}")
+async def admin_delete_announcement(
+    item_id: str,
+    user=Depends(require_admin_user),
+):
+    await admin_service.ensure_user_state(user)
+    await db_store.delete_announcement(item_id)
+    
+    await admin_service.audit(
+        actor=user,
+        action="announcement.delete",
+        target_uid=item_id,
+    )
+    return {"message": "Đã xóa thông báo thành công."}
+
+

@@ -147,3 +147,13 @@ class CommunityWorld(BaseModel):
     created_at: str = Field(default_factory=utc_now_iso)
     updated_at: str = Field(default_factory=utc_now_iso)
 
+
+class Announcement(BaseModel):
+    id: str
+    title: str
+    content: str
+    type: str  # "fixed" or "temporary"
+    created_at: str = Field(default_factory=utc_now_iso)
+    created_by: str
+
+

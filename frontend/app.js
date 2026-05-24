@@ -205,6 +205,19 @@ const navAvatarBtn = document.getElementById("navAvatarBtn");
 const navAvatar = document.getElementById("navAvatar");
 const globalSearchInput = document.getElementById("globalSearchInput");
 const globalSearchToggle = document.getElementById("globalSearchToggle");
+
+const dynamicGreeting = document.getElementById("dynamicGreeting");
+const pointsBadge = document.getElementById("pointsBadge");
+const pointsValue = document.getElementById("pointsValue");
+const notificationBellBtn = document.getElementById("notificationBellBtn");
+const notificationCountBadge = document.getElementById("notificationCountBadge");
+const notificationDropdown = document.getElementById("notificationDropdown");
+const notificationList = document.getElementById("notificationList");
+const clearNotificationsBtn = document.getElementById("clearNotificationsBtn");
+
+let playerPoints = 0;
+let playerAnnouncements = [];
+let pointsInterval = null;
 const mobileHomeBtn = document.getElementById("mobileHomeBtn");
 const mobileDiscoverBtn = document.getElementById("mobileDiscoverBtn");
 const mobileHistoryBtn = document.getElementById("mobileHistoryBtn");
@@ -3603,6 +3616,8 @@ async function submitAction(actionText) {
 
     await addMessage("ai", message, true);
     renderChoicesFromArray(choices);
+    addLocalNotification("Lượt chơi mới", `Đã thực hiện lượt hành động: "${action.length > 30 ? action.slice(0, 30) + '...' : action}".`);
+    fetchPlayerProfile();
   } catch (err) {
     console.error(err);
     if (isRetryCancelledError(err)) {
@@ -4125,6 +4140,8 @@ updateFoundationSidebar();
 
     showPage(foundationPage);
     pulseAmbient();
+    addLocalNotification("Khởi tạo Novel", `Đã thiết lập cốt truyện tiểu thuyết thành công.`);
+    fetchPlayerProfile();
   } catch (err) {
   console.error(err);
   if (!isRetryCancelledError(err)) {
@@ -4444,7 +4461,8 @@ async function startAdventureGame() {
 
     showPage(foundationPage);
     pulseAmbient();
-
+    addLocalNotification("Bắt đầu phiêu lưu", `Khởi hành thành công tại thế giới "${data.session?.title || 'Chưa đặt tên'}".`);
+    fetchPlayerProfile();
   } catch (err) {
     console.error(err);
     if (!isRetryCancelledError(err)) {
@@ -5323,6 +5341,252 @@ async function deleteSession(targetSessionId) {
   return deleteHistorySession(targetSessionId);
 }
 
+// ── Player Widget & Notification Center Logic ─────────────────────────────────
+
+function updateGreeting(user) {
+  if (!dynamicGreeting) return;
+  const hour = new Date().getHours();
+  let greetingText = "";
+  const name = user?.displayName || user?.email?.split("@")[0] || "lữ khách";
+
+  if (hour >= 5 && hour < 12) {
+    greetingText = `Chào buổi sáng, ${name}! ☀️`;
+  } else if (hour >= 12 && hour < 18) {
+    greetingText = `Chào buổi chiều, ${name}! 🌤️`;
+  } else if (hour >= 18 && hour < 22) {
+    greetingText = `Chào buổi tối, ${name}! 🌙`;
+  } else {
+    greetingText = `Chúc ${name} ngủ ngon! 🔮`;
+  }
+  
+  dynamicGreeting.textContent = greetingText;
+}
+
+async function fetchPlayerProfile() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  try {
+    const data = await requestJson(`${API_BASE}/game/me`);
+    playerPoints = data.points_balance || 0;
+    playerAnnouncements = data.announcements || [];
+
+    if (pointsValue) {
+      pointsValue.textContent = playerPoints.toLocaleString();
+    }
+    pointsBadge?.classList.remove("hidden");
+
+    renderPlayerNotifications();
+  } catch (err) {
+    console.warn("Lỗi khi tải thông tin người chơi:", err);
+  }
+}
+
+function getLocalNotificationsKey() {
+  const uid = auth.currentUser?.uid || "guest";
+  return `player_local_notifications_${uid}`;
+}
+
+function getDismissedAnnouncementsKey() {
+  const uid = auth.currentUser?.uid || "guest";
+  return `dismissed_announcements_${uid}`;
+}
+
+function addLocalNotification(title, body) {
+  try {
+    const key = getLocalNotificationsKey();
+    const list = JSON.parse(localStorage.getItem(key) || "[]");
+    const item = {
+      id: "local_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5),
+      title,
+      body,
+      created_at: new Date().toISOString(),
+    };
+    list.unshift(item);
+    localStorage.setItem(key, JSON.stringify(list.slice(0, 30)));
+    renderPlayerNotifications();
+  } catch (err) {
+    console.error("Lỗi thêm thông báo local:", err);
+  }
+}
+
+function renderPlayerNotifications() {
+  if (!notificationList) return;
+
+  const uid = auth.currentUser?.uid;
+  if (!uid) {
+    notificationList.innerHTML = `<div class="notification-empty">Vui lòng đăng nhập để xem thông báo</div>`;
+    notificationCountBadge?.classList.add("hidden");
+    return;
+  }
+
+  let localList = [];
+  try {
+    localList = JSON.parse(localStorage.getItem(getLocalNotificationsKey()) || "[]");
+  } catch (e) {}
+
+  let dismissedIds = [];
+  try {
+    dismissedIds = JSON.parse(localStorage.getItem(getDismissedAnnouncementsKey()) || "[]");
+  } catch (e) {}
+
+  const activeAnnouncements = playerAnnouncements.filter(item => {
+    if (item.type === "fixed") return true;
+    return !dismissedIds.includes(item.id);
+  });
+
+  const fixedItems = activeAnnouncements.filter(item => item.type === "fixed");
+  const tempItems = activeAnnouncements.filter(item => item.type !== "fixed");
+
+  const totalList = [
+    ...fixedItems.map(item => ({ ...item, isAnnouncement: true, isFixed: true })),
+    ...tempItems.map(item => ({ ...item, isAnnouncement: true, isFixed: false })),
+    ...localList.map(item => ({ ...item, isAnnouncement: false, isFixed: false }))
+  ];
+
+  if (!totalList.length) {
+    notificationList.innerHTML = `<div class="notification-empty">Không có thông báo mới</div>`;
+    if (notificationCountBadge) {
+      notificationCountBadge.textContent = "0";
+      notificationCountBadge.classList.add("hidden");
+    }
+    return;
+  }
+
+  notificationList.innerHTML = totalList.map((item) => {
+    const timeStr = formatDateFriendly(item.created_at || item.timestamp);
+    const titleHtml = item.isFixed 
+      ? `<span class="notification-tag-fixed">Ghim</span>${escapeHtml(item.title)}` 
+      : escapeHtml(item.title);
+
+    const closeBtnHtml = item.isFixed 
+      ? "" 
+      : `<button class="notification-dismiss-btn" data-id="${escapeHtml(item.id)}" data-type="${item.isAnnouncement ? 'announcement' : 'local'}" aria-label="Xóa">×</button>`;
+
+    return `
+      <div class="notification-item ${item.isFixed ? 'fixed' : ''}" data-id="${escapeHtml(item.id)}">
+        <div class="notification-item-header">
+          <span class="notification-title">${titleHtml}</span>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span class="notification-time">${timeStr}</span>
+            ${closeBtnHtml}
+          </div>
+        </div>
+        <div class="notification-body">${escapeHtml(item.content || item.body)}</div>
+      </div>
+    `;
+  }).join("");
+
+  notificationList.querySelectorAll(".notification-dismiss-btn").forEach((btn) => {
+    btn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const id = btn.dataset.id;
+      const type = btn.dataset.type;
+      if (type === "announcement") {
+        dismissAnnouncement(id);
+      } else {
+        dismissLocalNotification(id);
+      }
+    });
+  });
+
+  const unreadCount = tempItems.length + localList.length;
+  if (notificationCountBadge) {
+    if (unreadCount > 0) {
+      notificationCountBadge.textContent = unreadCount > 99 ? "99+" : unreadCount;
+      notificationCountBadge.classList.remove("hidden");
+    } else {
+      notificationCountBadge.textContent = "0";
+      notificationCountBadge.classList.add("hidden");
+    }
+  }
+}
+
+function dismissAnnouncement(id) {
+  try {
+    const key = getDismissedAnnouncementsKey();
+    const list = JSON.parse(localStorage.getItem(key) || "[]");
+    if (!list.includes(id)) {
+      list.push(id);
+      localStorage.setItem(key, JSON.stringify(list));
+    }
+    renderPlayerNotifications();
+  } catch (e) {}
+}
+
+function dismissLocalNotification(id) {
+  try {
+    const key = getLocalNotificationsKey();
+    let list = JSON.parse(localStorage.getItem(key) || "[]");
+    list = list.filter(item => item.id !== id);
+    localStorage.setItem(key, JSON.stringify(list));
+    renderPlayerNotifications();
+  } catch (e) {}
+}
+
+function clearAllNotifications() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  try {
+    const keyDismissed = getDismissedAnnouncementsKey();
+    const dismissedList = JSON.parse(localStorage.getItem(keyDismissed) || "[]");
+    playerAnnouncements.forEach(item => {
+      if (item.type !== "fixed" && !dismissedList.includes(item.id)) {
+        dismissedList.push(item.id);
+      }
+    });
+    localStorage.setItem(keyDismissed, JSON.stringify(dismissedList));
+
+    localStorage.setItem(getLocalNotificationsKey(), "[]");
+
+    renderPlayerNotifications();
+  } catch (e) {}
+}
+
+function formatDateFriendly(isoString) {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) return isoString;
+
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+
+  if (diffMins < 1) return "Vừa xong";
+  if (diffMins < 60) return `${diffMins} phút trước`;
+  if (diffHours < 24) return `${diffHours} giờ trước`;
+  
+  return date.toLocaleDateString("vi-VN", { month: "numeric", day: "numeric" });
+}
+
+// ── Dropdown Toggle Events ───────────────────────────────────────────────────
+
+setTimeout(() => {
+  const bell = document.getElementById("notificationBellBtn");
+  const dd = document.getElementById("notificationDropdown");
+  const clearBtn = document.getElementById("clearNotificationsBtn");
+
+  bell?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    dd?.classList.toggle("hidden");
+  });
+
+  clearBtn?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    clearAllNotifications();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (dd && !dd.classList.contains("hidden")) {
+      if (!event.target.closest(".notification-container")) {
+        dd.classList.add("hidden");
+      }
+    }
+  });
+}, 100);
+
 // ── Auth state ────────────────────────────────────────────────────────────────
 
 onAuthStateChanged(auth, async (user) => {
@@ -5343,6 +5607,12 @@ onAuthStateChanged(auth, async (user) => {
     hideAccountStatusPanel();
     hideAiLoading();
     loadWorldCatalog({ force: true });
+    if (pointsInterval) {
+      clearInterval(pointsInterval);
+      pointsInterval = null;
+    }
+    pointsBadge?.classList.add("hidden");
+    if (dynamicGreeting) dynamicGreeting.textContent = "";
     return;
   }
 
@@ -5363,6 +5633,11 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     updateUserUI(user);
+    updateGreeting(user);
+    fetchPlayerProfile();
+    if (!pointsInterval) {
+      pointsInterval = setInterval(fetchPlayerProfile, 60000);
+    }
 
     try {
       const isAuthPageActive = loginPage.classList.contains("active") || 
@@ -6476,7 +6751,8 @@ async function createNovelWorld({
     renderNovelQuestion();
     showPage(novelQuestionPage);
     setActiveNav(null);
-
+    addLocalNotification("Bắt đầu Novel", `Khởi tạo thế giới Novel "${title}" thành công.`);
+    fetchPlayerProfile();
   } catch (err) {
     console.error(err);
     if (!isRetryCancelledError(err)) {
@@ -7838,6 +8114,8 @@ document.getElementById("publishWorldForm")?.addEventListener("submit", async (e
     const modal = document.getElementById("publishWorldModal");
     modal.classList.remove("visible");
     modal.classList.add("hidden");
+    addLocalNotification("Yêu cầu xuất bản", `Đã gửi yêu cầu xuất bản thế giới "${title}" lên cộng đồng. Đang chờ phê duyệt.`);
+    fetchPlayerProfile();
   } catch (err) {
     console.error(err);
     alert(err.message || "Failed to publish.");

@@ -9,6 +9,7 @@ from app.config import get_settings
 from app.domain.models import (
     AIUsageLogEntry,
     AdminUserState,
+    Announcement,
     AppSettingsState,
     AuditLogEntry,
     CommunityWorld,
@@ -615,4 +616,49 @@ class FirebaseStore:
             worlds = [w for w in worlds if w.is_approved]
         worlds.sort(key=lambda w: w.created_at, reverse=True)
         return worlds[:limit]
+
+    async def create_announcement(self, item: Announcement) -> None:
+        if self.db:
+            import asyncio
+            doc_ref = self.db.collection("announcements").document(item.id)
+            await asyncio.to_thread(doc_ref.set, item.model_dump())
+            return
+        import asyncio
+        def _write():
+            data = self._read_admin_state()
+            data.setdefault("announcements", {})
+            data["announcements"][item.id] = item.model_dump()
+            self._write_admin_state(data)
+        await asyncio.to_thread(_write)
+
+    async def list_announcements(self, limit: int = 50) -> list[Announcement]:
+        if self.db:
+            import asyncio
+            def _fetch():
+                docs = self.db.collection("announcements").limit(limit).stream()
+                items = [Announcement(**doc.to_dict()) for doc in docs]
+                items.sort(key=lambda x: x.created_at, reverse=True)
+                return items
+            return await asyncio.to_thread(_fetch)
+        import asyncio
+        def _read():
+            data = self._read_admin_state()
+            items = [Announcement(**item) for item in data.get("announcements", {}).values()]
+            items.sort(key=lambda x: x.created_at, reverse=True)
+            return items[:limit]
+        return await asyncio.to_thread(_read)
+
+    async def delete_announcement(self, item_id: str) -> None:
+        if self.db:
+            import asyncio
+            doc_ref = self.db.collection("announcements").document(item_id)
+            await asyncio.to_thread(doc_ref.delete)
+            return
+        import asyncio
+        def _write():
+            data = self._read_admin_state()
+            if "announcements" in data and item_id in data["announcements"]:
+                del data["announcements"][item_id]
+                self._write_admin_state(data)
+        await asyncio.to_thread(_write)
 
