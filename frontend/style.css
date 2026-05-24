@@ -12240,3 +12240,33 @@ body[data-theme="forest"] #submitBtn {
   color: #08120e !important;
   box-shadow: 0 4px 14px rgba(142, 191, 158, 0.3) !important;
 }
+
+/* ── Forest Tree Framing Overlays ── */
+.forest-tree-frame {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 260px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  filter: drop-shadow(0 0 25px rgba(16, 185, 129, 0.12));
+}
+
+body[data-theme="forest"] .forest-tree-frame {
+  opacity: 0.65;
+}
+
+.forest-tree-frame.left {
+  left: 0;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 800" fill="%2306130e"><path d="M0,800 C30,750 45,650 35,550 C25,450 40,350 65,280 C90,210 80,120 70,0 L0,0 Z" /><path d="M40,560 C75,530 110,500 120,440 C90,470 60,500 37,525 Z" /><path d="M52,380 C95,340 135,320 155,340 C115,320 75,340 48,365 Z" /><path d="M64,220 C100,160 145,150 165,180 C125,150 85,175 60,205 Z" /><circle cx="120" cy="435" r="16" fill="%23059669" opacity="0.2"/><circle cx="120" cy="435" r="10" fill="%2310b981" opacity="0.14"/><circle cx="155" cy="335" r="22" fill="%23059669" opacity="0.2"/><circle cx="155" cy="335" r="14" fill="%2310b981" opacity="0.14"/><circle cx="165" cy="175" r="24" fill="%23059669" opacity="0.2"/><circle cx="165" cy="175" r="16" fill="%2310b981" opacity="0.14"/><circle cx="75" cy="65" r="30" fill="%23059669" opacity="0.2"/><circle cx="75" cy="65" r="20" fill="%2310b981" opacity="0.14"/></svg>') no-repeat center left;
+  background-size: 100% 100%;
+}
+
+.forest-tree-frame.right {
+  right: 0;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 800" fill="%2306130e"><path d="M0,800 C30,750 45,650 35,550 C25,450 40,350 65,280 C90,210 80,120 70,0 L0,0 Z" /><path d="M40,560 C75,530 110,500 120,440 C90,470 60,500 37,525 Z" /><path d="M52,380 C95,340 135,320 155,340 C115,320 75,340 48,365 Z" /><path d="M64,220 C100,160 145,150 165,180 C125,150 85,175 60,205 Z" /><circle cx="120" cy="435" r="16" fill="%23059669" opacity="0.2"/><circle cx="120" cy="435" r="10" fill="%2310b981" opacity="0.14"/><circle cx="155" cy="335" r="22" fill="%23059669" opacity="0.2"/><circle cx="155" cy="335" r="14" fill="%2310b981" opacity="0.14"/><circle cx="165" cy="175" r="24" fill="%23059669" opacity="0.2"/><circle cx="165" cy="175" r="16" fill="%2310b981" opacity="0.14"/><circle cx="75" cy="65" r="30" fill="%23059669" opacity="0.2"/><circle cx="75" cy="65" r="20" fill="%2310b981" opacity="0.14"/></svg>') no-repeat center right;
+  background-size: 100% 100%;
+  transform: scaleX(-1);
+}

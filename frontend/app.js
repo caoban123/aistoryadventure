@@ -1013,65 +1013,6 @@ async function initPortalScene() {
       });
     }
 
-    // Dựng 2 nửa cây cổ thụ hai bên viền màn hình (Left/Right Framing Trees)
-    const trunkMaterial = new THREE.MeshBasicMaterial({
-      color: new THREE.Color("#0c2217"), // dark forest wood
-      transparent: true,
-      opacity: 0.85,
-      depthWrite: false
-    });
-    
-    const foliageMaterial = new THREE.MeshBasicMaterial({
-      color: new THREE.Color("#059669"), // emerald green
-      transparent: true,
-      opacity: 0.16,
-      wireframe: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
-    });
-
-    // Left Tree
-    const leftTrunkGeo = new THREE.CylinderGeometry(0.015, 0.05, 2.2, 8);
-    const leftTrunk = new THREE.Mesh(leftTrunkGeo, trunkMaterial);
-    leftTrunk.position.set(-2.5, -0.8, -1.5);
-    leftTrunk.rotation.z = -Math.PI / 8;
-    forestGroup.add(leftTrunk);
-
-    const leftBranchGeo = new THREE.CylinderGeometry(0.008, 0.02, 0.6, 6);
-    const leftBranch = new THREE.Mesh(leftBranchGeo, trunkMaterial);
-    leftBranch.position.set(-2.2, -0.2, -1.5);
-    leftBranch.rotation.z = -Math.PI / 3;
-    forestGroup.add(leftBranch);
-
-    const leftFoliage1 = new THREE.Mesh(new THREE.SphereGeometry(0.55, 8, 8), foliageMaterial);
-    leftFoliage1.position.set(-2.3, 0.4, -1.5);
-    forestGroup.add(leftFoliage1);
-
-    const leftFoliage2 = new THREE.Mesh(new THREE.SphereGeometry(0.42, 8, 8), foliageMaterial);
-    leftFoliage2.position.set(-1.8, -0.1, -1.5);
-    forestGroup.add(leftFoliage2);
-
-    // Right Tree
-    const rightTrunkGeo = new THREE.CylinderGeometry(0.015, 0.05, 2.2, 8);
-    const rightTrunk = new THREE.Mesh(rightTrunkGeo, trunkMaterial);
-    rightTrunk.position.set(2.5, -0.8, -1.5);
-    rightTrunk.rotation.z = Math.PI / 8;
-    forestGroup.add(rightTrunk);
-
-    const rightBranchGeo = new THREE.CylinderGeometry(0.008, 0.02, 0.6, 6);
-    const rightBranch = new THREE.Mesh(rightBranchGeo, trunkMaterial);
-    rightBranch.position.set(2.2, -0.2, -1.5);
-    rightBranch.rotation.z = Math.PI / 3;
-    forestGroup.add(rightBranch);
-
-    const rightFoliage1 = new THREE.Mesh(new THREE.SphereGeometry(0.55, 8, 8), foliageMaterial);
-    rightFoliage1.position.set(2.3, 0.4, -1.5);
-    forestGroup.add(rightFoliage1);
-
-    const rightFoliage2 = new THREE.Mesh(new THREE.SphereGeometry(0.42, 8, 8), foliageMaterial);
-    rightFoliage2.position.set(1.8, -0.1, -1.5);
-    forestGroup.add(rightFoliage2);
-
     const leaves = [];
     const leafCount = smallScreenQuery.matches ? 6 : 12;
     
