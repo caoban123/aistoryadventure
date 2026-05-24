@@ -832,21 +832,115 @@ async function initPortalScene() {
       });
     }
 
-    // 3. AMOLED Theme (Digital Wireframe Wave)
-    const gridSegments = smallScreenQuery.matches ? 10 : 15;
-    const gridGeo = new THREE.PlaneGeometry(16, 8, gridSegments, gridSegments);
-    const gridMat = new THREE.MeshBasicMaterial({
-      color: new THREE.Color("#00f0ff"),
-      wireframe: true,
-      transparent: true,
-      opacity: 0.38,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
+    // 3. AMOLED Theme (Abyss Smoke & Falling Runes)
+    // Define 5 different Norse rune shapes using line coordinates
+    const runeDefinitions = [
+      // Rune 1: Kenaz (ᚲ)
+      [
+        -0.05, 0.08, 0,
+        0.05, 0, 0,
+        0.05, 0, 0,
+        -0.05, -0.08, 0
+      ],
+      // Rune 2: Isa (ᛁ)
+      [
+        0, 0.09, 0,
+        0, -0.09, 0
+      ],
+      // Rune 3: Laguz (ᛚ)
+      [
+        -0.03, -0.09, 0,
+        -0.03, 0.09, 0,
+        -0.03, 0.09, 0,
+        0.04, 0.03, 0
+      ],
+      // Rune 4: Gebo (ᚷ)
+      [
+        -0.05, -0.07, 0,
+        0.05, 0.07, 0,
+        -0.05, 0.07, 0,
+        0.05, -0.07, 0
+      ],
+      // Rune 5: Teiwaz (ᛏ)
+      [
+        0, -0.09, 0,
+        0, 0.09, 0,
+        0, 0.09, 0,
+        -0.05, 0.03, 0,
+        0, 0.09, 0,
+        0.05, 0.03, 0
+      ]
+    ];
+
+    const runeGeometries = runeDefinitions.map(coords => {
+      const geom = new THREE.BufferGeometry();
+      geom.setAttribute("position", new THREE.Float32BufferAttribute(coords, 3));
+      return geom;
     });
-    const gridMesh = new THREE.Mesh(gridGeo, gridMat);
-    gridMesh.rotation.x = -Math.PI / 2.3;
-    gridMesh.position.set(0, -2.1, -3.5);
-    gridGroup.add(gridMesh);
+
+    const amoledSmokeClouds = [];
+    const amoledSmokeCount = smallScreenQuery.matches ? 3 : 6;
+    for (let i = 0; i < amoledSmokeCount; i++) {
+      const size = 1.8 + Math.random() * 2.2;
+      const geom = new THREE.PlaneGeometry(size, size);
+      const mat = new THREE.MeshBasicMaterial({
+        color: new THREE.Color("#2e0854"), // dark magical violet
+        transparent: true,
+        opacity: 0.04 + Math.random() * 0.03,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+      const mesh = new THREE.Mesh(geom, mat);
+      mesh.position.set(
+        (Math.random() - 0.5) * 5,
+        (Math.random() - 0.5) * 4,
+        -1.5 - Math.random() * 1.5
+      );
+      mesh.rotation.z = Math.random() * Math.PI * 2;
+      gridGroup.add(mesh);
+      amoledSmokeClouds.push({
+        mesh,
+        material: mat,
+        baseOpacity: mat.opacity,
+        speedY: 0.001 + Math.random() * 0.0012,
+        speedRot: (Math.random() - 0.5) * 0.0006
+      });
+    }
+
+    const fallingRunes = [];
+    const runeCount = smallScreenQuery.matches ? 8 : 16;
+    const runeColor = new THREE.Color("#a855f7"); // glowing violet
+
+    for (let i = 0; i < runeCount; i++) {
+      const randomRuneGeo = runeGeometries[Math.floor(Math.random() * runeGeometries.length)];
+      const mat = new THREE.LineBasicMaterial({
+        color: runeColor,
+        transparent: true,
+        opacity: 0.28 + Math.random() * 0.32,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+      const lineMesh = new THREE.LineSegments(randomRuneGeo, mat);
+      lineMesh.position.set(
+        (Math.random() - 0.5) * 6,
+        Math.random() * 5 - 2.5,
+        -0.6 - Math.random() * 1.2
+      );
+      lineMesh.rotation.set(
+        Math.random() * 0.2,
+        Math.random() * 0.2,
+        Math.random() * Math.PI * 2
+      );
+      gridGroup.add(lineMesh);
+      fallingRunes.push({
+        mesh: lineMesh,
+        material: mat,
+        baseOpacity: mat.opacity,
+        speedY: 0.004 + Math.random() * 0.004,
+        rotSpeed: (Math.random() - 0.5) * 0.008,
+        id: i
+      });
+    }
 
     // 4. Forest Theme (Emerald Fog & Leaves)
     const forestMists = [];
@@ -1051,15 +1145,25 @@ async function initPortalScene() {
       }
 
       if (gridGroup.visible) {
-        gridMat.opacity = 0.15 * state.themeOpacity.amoled;
-        const gridPos = gridGeo.attributes.position;
-        for (let i = 0; i < gridPos.count; i++) {
-          const x = gridPos.getX(i);
-          const y = gridPos.getY(i);
-          const z = Math.sin(x * 0.35 + time * 0.42) * Math.cos(y * 0.45 + time * 0.35) * 0.28;
-          gridPos.setZ(i, z);
-        }
-        gridPos.needsUpdate = true;
+        amoledSmokeClouds.forEach(cloud => {
+          cloud.mesh.position.y += cloud.speedY;
+          cloud.mesh.rotation.z += cloud.speedRot;
+          if (cloud.mesh.position.y > 3.5) {
+            cloud.mesh.position.y = -3.5;
+            cloud.mesh.position.x = (Math.random() - 0.5) * 5;
+          }
+          cloud.material.opacity = cloud.baseOpacity * state.themeOpacity.amoled;
+        });
+
+        fallingRunes.forEach(rune => {
+          rune.mesh.position.y -= rune.speedY;
+          rune.mesh.rotation.z += rune.rotSpeed;
+          if (rune.mesh.position.y < -3.5) {
+            rune.mesh.position.y = 3.5;
+            rune.mesh.position.x = (Math.random() - 0.5) * 6;
+          }
+          rune.material.opacity = rune.baseOpacity * state.themeOpacity.amoled;
+        });
       }
 
       if (forestGroup.visible) {
