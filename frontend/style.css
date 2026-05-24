@@ -3291,16 +3291,20 @@ body[data-page="novelCharacterPage"] #particleCanvas {
   margin: 0;
 }
 
-.nav-logo-svg {
-  width: 44px;
-  height: 44px;
+.nav-logo-img {
+  width: 42px;
+  height: 42px;
   display: block;
-  filter: drop-shadow(0 0 6px rgba(224, 173, 82, 0.4));
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  object-fit: cover;
+  box-shadow: 0 0 10px rgba(224, 173, 82, 0.25);
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.nav-logo-btn:hover .nav-logo-svg {
-  transform: rotate(90deg) scale(1.15);
+.nav-logo-btn:hover .nav-logo-img {
+  transform: rotate(360deg) scale(1.15);
+  box-shadow: 0 0 16px var(--accent);
 }
 
 .nav-tab {
