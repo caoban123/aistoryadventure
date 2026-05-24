@@ -12370,23 +12370,29 @@ body[data-theme="sepia"] .preset-detail-hero {
 }
 
 .notification-bell-btn {
-  background: transparent;
-  border: none;
-  color: var(--text);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: var(--text) !important;
   font-size: 1.25rem;
-  padding: 8px;
+  padding: 8px !important;
   cursor: pointer;
-  border-radius: 50%;
+  border-radius: 50% !important;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
   position: relative;
+  width: auto !important;
+  height: auto !important;
+  min-width: 0 !important;
+  transform: none !important;
 }
 
 .notification-bell-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.08) !important;
+  transform: scale(1.05) !important;
 }
 
 .notification-count-badge {
