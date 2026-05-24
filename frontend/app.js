@@ -802,33 +802,76 @@ async function initPortalScene() {
     const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
     constellationGroup.add(lines);
 
-    // 2. Sepia Theme (Vintage Smoke / Ink Drift & Flicker)
-    const smokeClouds = [];
-    const smokeCount = smallScreenQuery.matches ? 3 : 6;
-    for (let i = 0; i < smokeCount; i++) {
-      const size = 1.6 + Math.random() * 2.2;
-      const geom = new THREE.PlaneGeometry(size, size);
+    // 2. Sepia Theme (Watercolor Ink Bleeds & Gliding Parchment Sheets)
+    const inkBleeds = [];
+    const inkCount = smallScreenQuery.matches ? 3 : 5;
+    const inkGeometry = new THREE.CircleGeometry(0.8, 16);
+    
+    for (let i = 0; i < inkCount; i++) {
       const mat = new THREE.MeshBasicMaterial({
-        color: new THREE.Color("#4a3b2c"),
+        color: new THREE.Color("#5c4c37"), // dark warm ink
         transparent: true,
-        opacity: 0.035 + Math.random() * 0.045,
+        opacity: 0,
         blending: THREE.NormalBlending,
         depthWrite: false
       });
-      const mesh = new THREE.Mesh(geom, mat);
+      const mesh = new THREE.Mesh(inkGeometry, mat);
       mesh.position.set(
         (Math.random() - 0.5) * 5,
         (Math.random() - 0.5) * 5,
-        -1.4 - Math.random() * 1.6
+        -1.5 - Math.random() * 1.5
       );
       mesh.rotation.z = Math.random() * Math.PI * 2;
       smokeGroup.add(mesh);
-      smokeClouds.push({
+      inkBleeds.push({
+        mesh,
+        material: mat,
+        maxOpacity: 0.05 + Math.random() * 0.06,
+        scale: 0.1,
+        maxScale: 1.0 + Math.random() * 1.5,
+        state: "fade-in",
+        timer: 0,
+        lifespan: 300 + Math.random() * 400
+      });
+    }
+
+    const parchmentSheets = [];
+    const sheetCount = smallScreenQuery.matches ? 2 : 4;
+    const sheetGeometry = new THREE.PlaneGeometry(0.24, 0.32);
+    const sheetMaterial = new THREE.MeshBasicMaterial({
+      color: new THREE.Color("#ebdcc3"),
+      transparent: true,
+      opacity: 0.38,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+
+    for (let i = 0; i < sheetCount; i++) {
+      const mat = sheetMaterial.clone();
+      const mesh = new THREE.Mesh(sheetGeometry, mat);
+      mesh.position.set(
+        -3.0 - Math.random() * 2, // start off-screen left
+        (Math.random() - 0.5) * 4,
+        -0.8 - Math.random() * 1.2
+      );
+      mesh.rotation.set(
+        Math.random() * Math.PI * 2,
+        Math.random() * Math.PI * 2,
+        Math.random() * Math.PI * 2
+      );
+      smokeGroup.add(mesh);
+      parchmentSheets.push({
         mesh,
         material: mat,
         baseOpacity: mat.opacity,
-        speedY: 0.0012 + Math.random() * 0.0016,
-        speedRot: (Math.random() - 0.5) * 0.0008
+        speedX: 0.003 + Math.random() * 0.004,
+        speedY: (Math.random() - 0.5) * 0.0015,
+        swaySpeed: 1.0 + Math.random() * 1.5,
+        swayAmp: 0.002 + Math.random() * 0.003,
+        rotSpeedX: (Math.random() - 0.5) * 0.008,
+        rotSpeedY: (Math.random() - 0.5) * 0.012,
+        rotSpeedZ: (Math.random() - 0.5) * 0.005,
+        id: i
       });
     }
 
@@ -1133,14 +1176,57 @@ async function initPortalScene() {
 
       if (smokeGroup.visible) {
         const flicker = 1.0 + (Math.sin(time * 8.0) * 0.05 + Math.sin(time * 19.3) * 0.03);
-        smokeClouds.forEach(cloud => {
-          cloud.mesh.position.y += cloud.speedY;
-          cloud.mesh.rotation.z += cloud.speedRot;
-          if (cloud.mesh.position.y > 3.5) {
-            cloud.mesh.position.y = -3.5;
-            cloud.mesh.position.x = (Math.random() - 0.5) * 5;
+        
+        // 1. Animate watercolor ink bleeds
+        inkBleeds.forEach(bleed => {
+          bleed.timer++;
+          if (bleed.state === "fade-in") {
+            bleed.scale += 0.002;
+            bleed.material.opacity += 0.0006;
+            if (bleed.material.opacity >= bleed.maxOpacity) {
+              bleed.state = "hold";
+            }
+          } else if (bleed.state === "hold") {
+            bleed.scale += 0.0003;
+            if (bleed.timer > bleed.lifespan * 0.6) {
+              bleed.state = "fade-out";
+            }
+          } else if (bleed.state === "fade-out") {
+            bleed.scale += 0.0005;
+            bleed.material.opacity -= 0.0008;
+            if (bleed.material.opacity <= 0) {
+              bleed.state = "fade-in";
+              bleed.timer = 0;
+              bleed.scale = 0.1;
+              bleed.mesh.position.set(
+                (Math.random() - 0.5) * 5,
+                (Math.random() - 0.5) * 5,
+                -1.5 - Math.random() * 1.5
+              );
+              bleed.mesh.rotation.z = Math.random() * Math.PI * 2;
+            }
           }
-          cloud.material.opacity = cloud.baseOpacity * state.themeOpacity.sepia * flicker;
+          
+          const currentScale = Math.min(bleed.scale, bleed.maxScale);
+          bleed.mesh.scale.setScalar(currentScale);
+          
+          // Combine with flicker and theme opacity
+          bleed.material.opacity = Math.max(0, Math.min(bleed.material.opacity, bleed.maxOpacity)) * state.themeOpacity.sepia * flicker;
+        });
+
+        // 2. Animate gliding parchment sheets
+        parchmentSheets.forEach(sheet => {
+          sheet.mesh.position.x += sheet.speedX;
+          sheet.mesh.position.y += sheet.speedY + Math.sin(time * sheet.swaySpeed + sheet.id) * sheet.swayAmp;
+          sheet.mesh.rotation.x += sheet.rotSpeedX;
+          sheet.mesh.rotation.y += sheet.rotSpeedY;
+          sheet.mesh.rotation.z += sheet.rotSpeedZ;
+
+          if (sheet.mesh.position.x > 3.5) {
+            sheet.mesh.position.x = -3.5;
+            sheet.mesh.position.y = (Math.random() - 0.5) * 4;
+          }
+          sheet.material.opacity = sheet.baseOpacity * state.themeOpacity.sepia * flicker;
         });
       }
 
