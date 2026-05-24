@@ -11226,11 +11226,11 @@ select:focus-visible {
 }
 
 .about-memory-card.active {
-  background: rgba(155, 108, 255, 0.06);
-  border-color: rgba(155, 108, 255, 0.38);
+  background: var(--accent2-dim) !important;
+  border-color: var(--accent2) !important;
   box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.2),
-    0 0 16px rgba(155, 108, 255, 0.05);
+    0 8px 24px rgba(0, 0, 0, 0.15),
+    0 0 16px var(--accent2-dim);
 }
 
 .about-memory-card::before {
@@ -11245,7 +11245,7 @@ select:focus-visible {
 }
 
 .about-memory-card.active::before {
-  background: #9b6cff;
+  background: var(--accent2) !important;
 }
 
 .memory-card-icon {
@@ -11256,8 +11256,8 @@ select:focus-visible {
 }
 
 .about-memory-card.active .memory-card-icon {
-  color: #b58dfb;
-  text-shadow: 0 0 8px rgba(181, 141, 251, 0.4);
+  color: var(--accent2) !important;
+  text-shadow: 0 0 8px var(--accent2-dim) !important;
 }
 
 .about-memory-card strong {
@@ -11272,7 +11272,7 @@ select:focus-visible {
   margin: 0;
   font-size: 0.84rem;
   line-height: 1.45;
-  color: rgba(244, 238, 255, 0.58);
+  color: var(--muted);
 }
 
 .memory-diagnostics-panel {
@@ -11785,6 +11785,27 @@ body[data-theme="forest"] .ambient {
 
 /* ── 1. Warm Sepia Theme (Kindle/Paper Book Feel) ── */
 body[data-theme="sepia"] {
+  --bg: #f6efe2;
+  --bg2: #ebdcc3;
+  --bg3: #dfcfb2;
+  --text: #3a2f21;
+  --muted: #7d6b58;
+  --subtle: #9c8a77;
+  --border: rgba(92, 76, 55, 0.15);
+  --border-hover: rgba(92, 76, 55, 0.3);
+  --border-accent: rgba(184, 134, 11, 0.4);
+  --accent: #8c6212;
+  --accent-bright: #b8860b;
+  --accent-dim: rgba(140, 98, 18, 0.1);
+  --accent2: #6c46a6;
+  --accent2-dim: rgba(108, 70, 166, 0.08);
+  --accent3: #b05c3c;
+  --panel: rgba(92, 76, 55, 0.04);
+  --panel-hover: rgba(92, 76, 55, 0.08);
+  --panel-strong: rgba(92, 76, 55, 0.12);
+  --font-display: "Lora", Georgia, serif;
+  --font-body: "Lora", Georgia, serif;
+
   background-color: #f6efe2 !important;
   background-image:
     url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.075'/%3E%3C/svg%3E"),
@@ -11951,6 +11972,21 @@ body[data-theme="sepia"] .quest-hud-grid strong {
 
 /* ── 2. AMOLED Black Theme (OLED Friendly Night Mode) ── */
 body[data-theme="amoled"] {
+  --bg: #000000;
+  --bg2: #050505;
+  --bg3: #0a0a0a;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --subtle: #475569;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.2);
+  --border-accent: rgba(224, 173, 82, 0.4);
+  --panel: rgba(255, 255, 255, 0.03);
+  --panel-hover: rgba(255, 255, 255, 0.06);
+  --panel-strong: rgba(255, 255, 255, 0.1);
+  --font-display: "Be Vietnam Pro", system-ui, sans-serif;
+  --font-body: "Be Vietnam Pro", system-ui, sans-serif;
+
   background-color: #000000 !important;
   background-image:
     url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.015'/%3E%3C/svg%3E"),
@@ -12058,6 +12094,27 @@ body[data-theme="amoled"] #pureReadModeBtn.active {
 
 /* ── 3. Deep Forest Theme (Mystic Emerald Green) ── */
 body[data-theme="forest"] {
+  --bg: #06100c;
+  --bg2: #0b1c15;
+  --bg3: #122c21;
+  --text: #c4d6cb;
+  --muted: #8ca695;
+  --subtle: #566d5e;
+  --border: rgba(142, 191, 158, 0.15);
+  --border-hover: rgba(142, 191, 158, 0.3);
+  --border-accent: rgba(142, 191, 158, 0.4);
+  --accent: #8ebf9e;
+  --accent-bright: #aee0bf;
+  --accent-dim: rgba(142, 191, 158, 0.1);
+  --accent2: #a78bfa;
+  --accent2-dim: rgba(167, 139, 250, 0.1);
+  --accent3: #fca5a5;
+  --panel: rgba(142, 191, 158, 0.04);
+  --panel-hover: rgba(142, 191, 158, 0.08);
+  --panel-strong: rgba(142, 191, 158, 0.12);
+  --font-display: "Cinzel", Georgia, serif;
+  --font-body: "Lora", Georgia, serif;
+
   background-color: #06100c !important;
   background-image:
     url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E"),
