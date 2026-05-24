@@ -836,10 +836,10 @@ async function initPortalScene() {
     const gridSegments = smallScreenQuery.matches ? 10 : 15;
     const gridGeo = new THREE.PlaneGeometry(16, 8, gridSegments, gridSegments);
     const gridMat = new THREE.MeshBasicMaterial({
-      color: new THREE.Color("#334155"),
+      color: new THREE.Color("#00f0ff"),
       wireframe: true,
       transparent: true,
-      opacity: 0.15,
+      opacity: 0.38,
       blending: THREE.AdditiveBlending,
       depthWrite: false
     });
@@ -878,18 +878,34 @@ async function initPortalScene() {
 
     const leaves = [];
     const leafCount = smallScreenQuery.matches ? 6 : 12;
-    const leafColor = new THREE.Color("#10b981");
+    
+    // Construct organic leaf shape geometry using curves
+    const leafShape = new THREE.Shape();
+    leafShape.moveTo(0, -0.1);
+    leafShape.bezierCurveTo(0.06, -0.05, 0.08, 0.05, 0, 0.16);
+    leafShape.bezierCurveTo(-0.08, 0.05, -0.06, -0.05, 0, -0.1);
+    const leafGeo = new THREE.ShapeGeometry(leafShape);
+
+    const leafColors = [
+      new THREE.Color("#10b981"), // emerald
+      new THREE.Color("#059669"), // forest green
+      new THREE.Color("#047857"), // deep forest green
+      new THREE.Color("#065f46"), // dark green shadow
+      new THREE.Color("#34d399"), // mint
+      new THREE.Color("#d97706")  // autumn gold/orange accent
+    ];
+
     for (let i = 0; i < leafCount; i++) {
-      const geom = new THREE.PlaneGeometry(0.12, 0.18);
+      const leafColor = leafColors[Math.floor(Math.random() * leafColors.length)];
       const mat = new THREE.MeshBasicMaterial({
         color: leafColor,
         transparent: true,
-        opacity: 0.4 + Math.random() * 0.25,
+        opacity: 0.38 + Math.random() * 0.22,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         side: THREE.DoubleSide
       });
-      const mesh = new THREE.Mesh(geom, mat);
+      const mesh = new THREE.Mesh(leafGeo, mat);
       mesh.position.set(
         (Math.random() - 0.5) * 6,
         Math.random() * 4 - 1.5,

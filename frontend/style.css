@@ -11784,7 +11784,7 @@ body[data-theme="sepia"] #particleCanvas {
 }
 
 body[data-theme="amoled"] #particleCanvas {
-  opacity: 0.28 !important;
+  opacity: 0.65 !important;
   mix-blend-mode: screen !important;
 }
 
