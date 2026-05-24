@@ -3104,6 +3104,10 @@ async function submitAction(actionText) {
       syncAdventureQuestStateFromSession(data.session || {});
     }
 
+    // Tắt loading trước khi in chữ để người chơi nhìn thấy chữ chạy trực quan
+    setTurnLoading(false);
+    removeChoicesLoading();
+
     await addMessage("ai", message, true);
     renderChoicesFromArray(choices);
   } catch (err) {
