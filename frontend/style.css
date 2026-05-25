@@ -3346,17 +3346,31 @@ body[data-page="novelCharacterPage"] #particleCanvas {
   position: relative;
 }
 
-.nav-tab.active::after {
+.nav-tab::after {
   content: '';
   position: absolute;
   bottom: -2px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) scaleX(0);
   width: 60%;
   height: 2px;
   background: var(--accent);
   border-radius: 2px;
   box-shadow: 0 0 10px var(--accent), 0 0 20px rgba(224, 173, 82, 0.5);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+}
+
+.nav-tab.active::after {
+  transform: translateX(-50%) scaleX(1);
+}
+
+.nav-tab:hover::after {
+  transform: translateX(-50%) scaleX(0.8);
+}
+
+.nav-tab.active:hover::after {
+  transform: translateX(-50%) scaleX(1);
 }
 
 .nav-search {
@@ -12696,4 +12710,89 @@ body[data-theme="sepia"] .preset-detail-hero {
     right: -100px;
     width: 300px;
   }
+}
+
+/* --- Premium User Controls & Avatar Dropdown Upgrades --- */
+.nav-user-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dropdown-theme-section {
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dropdown-section-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.avatar-dropdown .navbar-theme-selector {
+  display: flex;
+  gap: 12px;
+  padding: 4px 0;
+  background: transparent !important;
+  border: none !important;
+  margin: 0 !important;
+}
+
+.avatar-dropdown .theme-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.avatar-dropdown .theme-swatch:hover {
+  transform: scale(1.15) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.avatar-dropdown .theme-swatch.active {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 12px var(--accent) !important;
+  transform: scale(1.1) !important;
+}
+
+.avatar-dropdown .theme-swatch::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.avatar-dropdown .theme-swatch.active::after {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.nav-create-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 4px 15px rgba(252, 224, 138, 0.2) !important;
+}
+
+.nav-create-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 25px rgba(252, 224, 138, 0.5), 0 0 10px var(--accent) !important;
+  filter: brightness(1.1);
 }

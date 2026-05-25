@@ -6161,6 +6161,7 @@ savesTabBtn?.addEventListener("click", async () => {
 aboutBtn?.addEventListener("click", async () => {
   await guardUnsavedDraftNavigation(async () => {
     closeGlobalSearch();
+    closeAvatarDropdown();
     showPage(aboutPage);
     setActiveNav(null);
     revealAboutSections();
