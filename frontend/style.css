@@ -1701,7 +1701,7 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 22px;
+  padding: 22px 22px 180px;
   scroll-behavior: smooth;
 }
 
@@ -6827,7 +6827,7 @@ body[data-mode="novel"] .game-reader-shell {
 
 body[data-mode="novel"] .story-log {
   min-height: 55vh;
-  padding: 0;
+  padding: 0 0 180px 0;
   border: none;
   background: transparent;
 }
@@ -7283,7 +7283,7 @@ body[data-mode="adventure"] .adventure-choice-card:hover {
 
 body[data-mode="adventure"] .story-log {
   min-height: 420px;
-  padding: 24px;
+  padding: 24px 24px 180px 24px;
 
   border-radius: 26px;
   border: 1px solid var(--border);
@@ -12420,6 +12420,7 @@ body[data-theme="sepia"] .preset-detail-hero {
   min-width: 40px !important;
   transform: none !important;
   padding: 0 !important;
+  overflow: visible !important;
 }
 
 .notification-bell-btn:hover {
@@ -12454,8 +12455,9 @@ body[data-theme="sepia"] .preset-detail-hero {
 
 .notification-count-badge {
   position: absolute;
-  top: -2px;
-  right: -2px;
+  top: 0px;
+  right: 0px;
+  transform: translate(25%, -25%);
   background: #ff4a4a;
   color: #fff;
   font-size: 0.65rem;

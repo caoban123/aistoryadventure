@@ -5504,7 +5504,22 @@ function renderPlayerNotifications() {
     });
   });
 
-  const unreadCount = tempItems.length + localList.length;
+  const lastReadTime = parseInt(localStorage.getItem("notifications-last-read-time") || "0");
+  const getItemTimestamp = (item) => {
+    const t = item.created_at || item.timestamp;
+    if (!t) return 0;
+    if (typeof t === "number") return t;
+    if (typeof t === "string") {
+      if (/^\d+$/.test(t)) return parseInt(t);
+      return new Date(t).getTime() || 0;
+    }
+    return 0;
+  };
+  const unreadCount = totalList.filter(item => {
+    if (item.isFixed) return false;
+    return getItemTimestamp(item) > lastReadTime;
+  }).length;
+
   if (notificationCountBadge) {
     if (unreadCount > 0) {
       notificationCountBadge.textContent = unreadCount > 99 ? "99+" : unreadCount;
@@ -5584,7 +5599,12 @@ setTimeout(() => {
 
   bell?.addEventListener("click", (event) => {
     event.stopPropagation();
+    const isOpening = dd?.classList.contains("hidden");
     dd?.classList.toggle("hidden");
+    if (isOpening) {
+      localStorage.setItem("notifications-last-read-time", Date.now().toString());
+      renderPlayerNotifications();
+    }
   });
 
   clearBtn?.addEventListener("click", (event) => {
