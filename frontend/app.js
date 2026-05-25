@@ -5466,8 +5466,11 @@ function renderPlayerNotifications() {
     return `
       <div class="notification-item ${item.isFixed ? 'fixed' : ''}" data-id="${escapeHtml(item.id)}">
         <div class="notification-item-header">
-          <span class="notification-title">${titleHtml}</span>
-          <div style="display:flex; align-items:center; gap:6px;">
+          <div class="notification-title-group">
+            <span class="notification-arrow-icon">▶</span>
+            <span class="notification-title">${titleHtml}</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px; flex-shrink: 0;">
             <span class="notification-time">${timeStr}</span>
             ${closeBtnHtml}
           </div>
@@ -5476,6 +5479,17 @@ function renderPlayerNotifications() {
       </div>
     `;
   }).join("");
+
+  // Toggle expand/collapse for notifications (accordion style)
+  notificationList.querySelectorAll(".notification-item").forEach((itemEl) => {
+    itemEl.addEventListener("click", (event) => {
+      // Don't expand/collapse if clicking the dismiss/delete button
+      if (event.target.closest(".notification-dismiss-btn")) {
+        return;
+      }
+      itemEl.classList.toggle("expanded");
+    });
+  });
 
   notificationList.querySelectorAll(".notification-dismiss-btn").forEach((btn) => {
     btn.addEventListener("click", (event) => {
