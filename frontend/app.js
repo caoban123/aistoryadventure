@@ -3104,7 +3104,7 @@ async function addMessage(role, content, animate = false, messageId = null, imag
         </div>` : (messageId ? `
         <div class="message-illustrate-container">
           <button type="button" class="message-illustrate-btn">
-            ✨ Tạo ảnh minh họa
+            ✨ Illustrate
           </button>
         </div>` : "")}
       `;
@@ -3127,7 +3127,7 @@ async function addMessage(role, content, animate = false, messageId = null, imag
         </div>` : (messageId ? `
         <div class="message-illustrate-container">
           <button type="button" class="message-illustrate-btn">
-            ✨ Tạo ảnh minh họa
+            ✨ Illustrate
           </button>
         </div>` : "")}
       </div>
@@ -3240,14 +3240,14 @@ if (illustrateMessageForm) {
           proseOrContent.appendChild(imgSection);
         }
         
-        addLocalNotification("Vẽ ảnh minh họa", "Đã tạo ảnh minh họa thành công cho phân cảnh.");
+        addLocalNotification("Scene Illustrated", "Successfully illustrated the scene.");
         fetchPlayerProfile();
       } else {
-        throw new Error("Không nhận được URL ảnh từ hệ thống.");
+        throw new Error("Did not receive image URL from server.");
       }
     } catch (err) {
       console.error(err);
-      alert("Lỗi khi tạo ảnh: " + err.message);
+      alert("Error illustrating scene: " + err.message);
       if (illustrateBtnContainer) {
         illustrateBtnContainer.innerHTML = originalBtnHtml;
         const newBtn = illustrateBtnContainer.querySelector(".message-illustrate-btn");
@@ -3746,7 +3746,7 @@ async function submitAction(actionText) {
 
     await addMessage("ai", message, true, data.message_id);
     renderChoicesFromArray(choices);
-    addLocalNotification("Lượt chơi mới", `Đã thực hiện lượt hành động: "${action.length > 30 ? action.slice(0, 30) + '...' : action}".`);
+    addLocalNotification("New Turn", `Executed action: "${action.length > 30 ? action.slice(0, 30) + '...' : action}".`);
     fetchPlayerProfile();
   } catch (err) {
     console.error(err);
@@ -4885,7 +4885,7 @@ function renderSavedSessions() {
           type="button"
           class="ghost export-session-btn"
         >
-          Xuất sách (HTML/PDF)
+          Export Book (HTML/PDF)
         </button>
 
         <button
@@ -5525,7 +5525,7 @@ function renderSavePreview(data) {
       </button>
 
       <button type="button" class="ghost preview-export-btn">
-        Xuất sách (HTML/PDF)
+        Export Book (HTML/PDF)
       </button>
 
       <button type="button" class="primary-btn preview-continue-btn">
@@ -8682,7 +8682,7 @@ function renderStoryMap() {
       if (prev && prev.classList.contains("user-message")) {
         precedingChoice = prev.querySelector(".message-content")?.textContent || "";
       }
-      const label = `Cảnh ${index + 1}`;
+      const label = `Scene ${index + 1}`;
       const prose = elem.querySelector(".message-content")?.textContent || "";
       const snippet = prose.trim().slice(0, 100) + (prose.trim().length > 100 ? "..." : "");
 
@@ -8696,7 +8696,7 @@ function renderStoryMap() {
   }
 
   if (nodes.length === 0) {
-    storyMapTree.innerHTML = `<p style="color:var(--muted); font-size:0.86rem; padding:10px 0;">Chưa có phân cảnh nào để hiển thị.</p>`;
+    storyMapTree.innerHTML = `<p style="color:var(--muted); font-size:0.86rem; padding:10px 0;">No scenes to display yet.</p>`;
     return;
   }
 
@@ -8706,9 +8706,9 @@ function renderStoryMap() {
     
     let html = "";
     if (node.choice) {
-      html += `<span class="story-map-node-choice">Hành động: "${escapeHtml(node.choice.trim())}"</span>`;
+      html += `<span class="story-map-node-choice">Action: "${escapeHtml(node.choice.trim())}"</span>`;
     } else {
-      html += `<span class="story-map-node-choice">Khởi đầu câu chuyện</span>`;
+      html += `<span class="story-map-node-choice">Story Beginning</span>`;
     }
     html += `<span class="story-map-node-title">${escapeHtml(node.title)}</span>`;
     html += `<p class="story-map-node-snippet">${escapeHtml(node.snippet)}</p>`;
