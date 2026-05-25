@@ -453,7 +453,7 @@ class StoryService:
         self.safety_filter.validate_input(request.occupation, "Nghề nghiệp")
         self.safety_filter.validate_input(request.personality, "Tính cách")
         for ans in request.answers:
-            self.safety_filter.validate_input(ans.answer, f"Câu trả lời cho câu hỏi '{ans.question_text}'")
+            self.safety_filter.validate_input(ans.answer, f"Câu trả lời cho câu hỏi '{ans.question}'")
 
         session = await self.store.get_session(request.session_id)
 
