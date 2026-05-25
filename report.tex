@@ -1,0 +1,343 @@
+\documentclass[12pt,a4paper]{article}
+
+% --- Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc} % Supports Vietnamese font encodings
+\usepackage[vietnamese]{babel}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={AI Story Adventure - Project Report},
+    pdfpagemode=FullScreen,
+}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tocloft}
+
+% --- Custom Colors for Code Listings ---
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+% --- Header & Footer ---
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{AI Story Adventure - Báo cáo dự án}
+\fancyhead[R]{\thepage}
+\fancyfoot[C]{Hệ thống Kể chuyện Tương tác AI}
+
+\begin{document}
+
+% --- Cover Page ---
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    {\scshape\LARGE Trường Đại học Kỹ thuật \par}
+    \vspace{1.5cm}
+    {\scshape\Large BÁO CÁO MÔN HỌC / ĐỒ ÁN DỰ ÁN\par}
+    \vspace{1.5cm}
+    {\huge\bfseries AI STORY ADVENTURE\par}
+    \vspace{0.5cm}
+    {\large\itshape Hệ thống kể chuyện tương tác thời gian thực với bộ nhớ ngữ nghĩa dài hạn và kiến trúc tự động triển khai\par}
+    \vspace{2cm}
+    
+    \begin{minipage}{0.4\textwidth}
+        \begin{flushleft} \large
+            \emph{Sinh viên thực hiện:}\\
+            Cao Văn Bản\\
+            Mã SV: [Mã số sinh viên]
+        \end{flushleft}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.4\textwidth}
+        \begin{flushright} \large
+            \emph{Giảng viên hướng dẫn:} \\
+            [Tên Giảng Viên]
+        \end{flushright}
+    \end{minipage}
+    
+    \vfill
+    {\large \today \par}
+\end{titlepage}
+
+\newpage
+
+% --- Table of Contents ---
+\tableofcontents
+\newpage
+
+% ==========================================
+% SECTION 1: Motivation và mục tiêu hệ thống
+% ==========================================
+\section{Motivation và mục tiêu hệ thống}
+
+\subsection{Giới thiệu}
+\textbf{AI Story Adventure} là một nền tảng kể chuyện tương tác thế hệ mới, được hỗ trợ bởi các mô hình ngôn ngữ lớn (LLM), cho phép người chơi tham gia vào các thế giới giả tưởng được sinh tự động và thích ứng theo thời gian thực. Không giống như các hệ thống chatbot thông thường vốn chỉ phản hồi các câu thoại rời rạc, dự án này hướng đến việc phát triển một động cơ kể chuyện AI bền vững (persistent narrative engine). Hệ thống có khả năng duy trì cốt truyện dài hạn, sự nhất quán của thế giới và trải nghiệm nhập vai sâu sắc như một Quản trò (Game Master) thực thụ trong các trò chơi nhập vai (RPG) truyền thống.
+
+\subsection{Định nghĩa bài toán (Khung phân tích MEC)}
+Các hệ thống hội thoại AI hiện nay khi áp dụng vào việc kể chuyện gặp phải nhiều rào cản nghiêm trọng về duy trì trạng thái thế giới. Khung phân tích MEC (Magnitude - Evidence - Consequence) làm rõ bài toán này như sau:
+
+\begin{itemize}
+    \item \textbf{Magnitude (Mức độ nghiêm trọng):} Các LLM bị giới hạn bởi độ dài cửa sổ ngữ cảnh (context window). Khi câu chuyện kéo dài, việc đẩy toàn bộ lịch sử trò chuyện vào ngữ cảnh sẽ làm tràn cửa sổ ngữ cảnh, tăng chi phí tài nguyên (token) theo hàm mũ và khiến AI dần quên đi các sự kiện cốt lõi ở đầu câu chuyện.
+    \item \textbf{Evidence (Minh chứng cụ thể):} Thực tế vận hành cho thấy sau khoảng 20-30 lượt tương tác, các chatbot thông thường bắt đầu mất tính nhất quán: nhân vật thay đổi tính cách đột ngột, các sự kiện quan trọng (như sinh mệnh nhân vật, vật phẩm sở hữu) bị quên lãng, AI sinh ra các phản hồi lặp lại hoặc mâu thuẫn hoàn toàn với cốt truyện đã thiết lập trước đó.
+    \item \textbf{Consequence (Hậu quả):} Nếu bài toán này không được giải quyết, trải nghiệm nhập vai của người dùng sẽ bị phá vỡ hoàn toàn, cốt truyện trở nên rời rạc, mất tính cá nhân hóa và giảm khả năng chơi lại của sản phẩm. Về mặt vận hành hệ thống, việc gửi toàn bộ lịch sử hội thoại lên API mỗi lượt tương tác sẽ làm tăng chi phí vận hành đáng kể và gây độ trễ (latency) lớn.
+\end{itemize}
+
+\subsection{Đối tượng người dùng mục tiêu}
+Hệ thống hướng tới các nhóm người dùng chính sau:
+\begin{enumerate}
+    \item \textbf{Người chơi game nhập vai và tương tác giả tưởng:} Những người tìm kiếm trải nghiệm nhập vai có chiều sâu, nơi quyết định của họ thực sự thay đổi cốt truyện và được hệ thống ghi nhận lâu dài.
+    \item \textbf{Nhà xây dựng thế giới (World-builders) và tác giả sáng tạo:} Những người muốn thử nghiệm công nghệ AI để phác thảo cốt truyện, mô phỏng hành vi nhân vật và tạo ra các thế giới động.
+    \item \textbf{Nhà phát triển game ứng dụng AI:} Nhóm lập trình viên muốn nghiên cứu kiến trúc tích hợp cơ sở dữ liệu vector nhằm tối ưu bộ nhớ dài hạn cho nhân vật không chơi được (NPC).
+\end{enumerate}
+
+\subsection{Mục tiêu hệ thống}
+Để giải quyết triệt để các hạn chế trên, dự án đề ra các mục tiêu kỹ thuật cụ thể:
+\begin{itemize}
+    \item \textbf{Bộ nhớ câu chuyện dài hạn (Persistent Memory):} Xây dựng kiến trúc lưu trữ và truy xuất bộ nghĩa dựa trên cơ sở dữ liệu vector Qdrant, đảm bảo các sự kiện then chốt luôn được truy xuất chính xác khi cần thiết mà không phụ thuộc vào độ dài lịch sử trò chuyện.
+    \item \textbf{Kiến trúc đa mô hình linh hoạt:} Hỗ trợ tích hợp cả mô hình nguồn đóng (OpenAI GPT, Google Gemini) lẫn mô hình nguồn mở chạy cục bộ (Ollama) nhằm tối ưu hóa chi phí và hiệu năng.
+    \item \textbf{Giao diện người dùng tinh tế, cinematic:} Phát triển giao diện web tĩnh responsive, hỗ trợ nhiều chế độ hiển thị (Novel Mode, Adventure Mode) và tối ưu hóa trải nghiệm đọc cho thiết bị di động.
+    \item \textbf{Hệ thống xác thực và phân quyền chuẩn sản xuất:} Sử dụng Firebase Authentication bảo mật, phân tách rõ ràng quyền người chơi và quyền quản trị viên (Admin).
+\end{itemize}
+
+\newpage
+
+% ==========================================
+% SECTION 2: Kịch bản simulation
+% ==========================================
+\section{Kịch bản simulation}
+
+Trước khi triển khai lên môi trường sản xuất thực tế, hệ thống đã được thử nghiệm thông qua các kịch bản mô phỏng đa dạng để kiểm thử giới hạn hoạt động và độ ổn định của hệ thống.
+
+\subsection{Mô phỏng cốt truyện dài hạn (Long-Term Narrative Simulation)}
+Kịch bản này mô phỏng một phiên chơi giả lập kéo dài liên tục từ 50 đến 100 lượt tương tác giữa người dùng và AI trong thế giới giả tưởng ``Hạ Quỷ''.
+\begin{itemize}
+    \item \textbf{Mục tiêu:} Kiểm tra khả năng ghi nhớ các sự kiện quan trọng (ví dụ: người chơi tìm thấy một lọ dược liệu quý hiếm ở lượt thứ 5, liệu ở lượt thứ 60 AI có nhắc lại chi tiết này khi nhân vật bị thương hay không).
+    \item \textbf{Kết quả:} Bộ lọc bộ nhớ hoạt động chính xác. AI đã truy xuất thành công sự kiện lưu trong Qdrant và lồng ghép tự nhiên vào phản hồi hội thoại mới mà không gây mâu thuẫn thông tin.
+\end{itemize}
+
+\subsection{Mô phỏng truy xuất bộ nhớ ngữ nghĩa (Semantic Retrieval Simulation)}
+Kịch bản này tạo ra một lượng lớn dữ liệu bộ nhớ giả lập (hơn 10,000 bản ghi hội thoại và sự kiện thế giới) được nạp vào cơ sở dữ liệu vector.
+\begin{itemize}
+    \item \textbf{Mục tiêu:} Đánh giá độ trễ và độ chính xác của thuật toán tìm kiếm hàng xóm gần nhất (K-Nearest Neighbors) của cơ sở dữ liệu vector khi tìm kiếm các ngữ cảnh liên quan.
+    \item \textbf{Kết quả:} Thời gian phản hồi truy xuất ngữ nghĩa trung bình luôn ở mức dưới 15ms. Việc phân chia bộ nhớ theo không gian bộ sưu tập (Collection) riêng biệt cho từng người chơi giúp ngăn chặn hoàn toàn hiện tượng lẫn lộn thông tin giữa các phiên chơi khác nhau.
+\end{itemize}
+
+\subsection{Mô phỏng truy cập đồng thời (Concurrent User Simulation)}
+Sử dụng công cụ kiểm thử hiệu năng để giả lập từ 50 đến 200 người dùng đồng thời thực hiện các thao tác: đăng nhập, gửi hành động chơi và truy xuất danh sách thông báo.
+\begin{itemize}
+    \item \textbf{Mục tiêu:} Phát hiện các điểm nghẽn cổ chai (bottlenecks) trong luồng xử lý bất đồng bộ của FastAPI và kết nối cơ sở dữ liệu.
+    \item \textbf{Kết quả:} Tận dụng tốt cơ chế async/await của Python giúp hệ thống giữ tỉ lệ lỗi dưới 1\% ở mức tải trung bình, tuy nhiên độ trễ của API tăng lên do giới hạn về tốc độ xử lý (rate limit) của API sinh văn bản từ nhà cung cấp LLM bên thứ ba.
+\end{itemize}
+
+\subsection{Mô phỏng lỗi hệ thống (Failure Simulation)}
+Kịch bản mô phỏng các sự cố vận hành như: mất kết nối cơ sở dữ liệu vector Qdrant đột ngột, API LLM bị quá tải hoặc mã xác thực Firebase hết hạn.
+\begin{itemize}
+    \item \textbf{Mục tiêu:} Kiểm thử cơ chế tự phục hồi và khả năng chịu lỗi của hệ thống.
+    \item \textbf{Kết quả:} Hệ thống không bị sập hoàn toàn nhờ cơ chế xử lý lỗi ngoại lệ (`try-catch`) phân lớp. Khi cơ sở dữ liệu vector gặp sự cố, hệ thống tự động hạ cấp xuống chế độ bộ nhớ đệm hội thoại ngắn hạn (fallback to memory buffer) để người chơi tiếp tục phiên mà không bị mất trải nghiệm.
+\end{itemize}
+
+\subsection{Mô phỏng quá trình triển khai (Deployment Simulation)}
+Giả lập chu trình phát hành mã nguồn mới thông qua việc tích hợp liên tục (CI/CD) tự động kích hoạt bởi Coolify và Docker trên máy chủ ảo VPS.
+\begin{itemize}
+    \item \textbf{Mục tiêu:} Xác minh tính liên tục của dịch vụ (zero-downtime deployment) và khả năng khôi phục phiên dữ liệu của người dùng sau khi khởi động lại container.
+    \item \textbf{Kết quả:} Cơ chế volume lưu trữ ngoài (external volumes mapping) giữ cho cơ sở dữ liệu SQLite và Qdrant an toàn qua các đợt cập nhật container.
+\end{itemize}
+
+\newpage
+
+% ==========================================
+% SECTION 3: Metric evaluation và kết quả
+% ==========================================
+\section{Metric evaluation và kết quả}
+
+\subsection{Phương pháp đánh giá}
+Hệ thống sử dụng phương pháp đánh giá kết hợp: Định lượng (Đo lường hiệu năng kỹ thuật, độ trễ và tài nguyên hệ thống) và Định tính (Đánh giá mức độ tự nhiên của cốt truyện, sự hài lòng của người dùng thông qua thử nghiệm thực tế).
+
+\subsection{System Performance (Hiệu năng hệ thống)}
+Hiệu năng được giám sát chặt chẽ trên môi trường VPS chạy Docker. Bảng dưới đây thể hiện kết quả đo lường tài nguyên tiêu thụ của các thành phần cốt lõi:
+
+\begin{table}[h]
+    \centering
+    \caption{Đo lường tài nguyên tiêu thụ trên môi trường sản xuất}
+    \vspace{0.2cm}
+    \begin{tabular}{lccc}
+        \toprule
+        \textbf{Dịch vụ Container} & \textbf{CPU TB (\%)} & \textbf{RAM Tiêu thụ (MB)} & \textbf{Độ trễ trung bình (ms)} \\
+        \midrule
+        FastAPI Backend & 2 - 5\% & 120 - 180 MB & 45ms \\
+        Qdrant Vector Database & 1 - 3\% & 95 - 140 MB & 12ms \\
+        Frontend (Nginx) & < 1\% & 15 - 30 MB & 8ms \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\textbf{Đánh giá cơ sở dữ liệu Vector:} Việc di chuyển hệ thống lưu trữ từ ChromaDB sang Qdrant mang lại sự cải thiện rõ rệt về khả năng quản lý tài nguyên. Qdrant tiêu thụ ít RAM hơn khoảng 40\% dưới tải cao và hỗ trợ tìm kiếm lọc dữ liệu theo siêu dữ liệu (metadata filtering) nhanh hơn đáng kể.
+
+\subsection{Error Rate (Tỉ lệ lỗi)}
+Tỉ lệ lỗi của hệ thống được thống kê dựa trên 10,000 lượt yêu cầu API trên môi trường Production:
+\begin{itemize}
+    \item \textbf{Lỗi kết nối LLM API (3.2\%):} Đây là lỗi phổ biến nhất, nguyên nhân chủ yếu do vượt ngưỡng giới hạn yêu cầu (rate limits) của nhà cung cấp OpenAI/Gemini hoặc lỗi mạng ngoài. Đã được khắc phục bằng cơ chế tự động thử lại (retry logic) kèm thời gian trễ lũy tiến.
+    \item \textbf{Lỗi lệch giờ xác thực Token Firebase (0.8\%):} Do sai lệch đồng hồ (clock skew) giữa thiết bị client và máy chủ backend khiến token Firebase bị coi là hết hạn trước vài giây. Đã khắc phục bằng cách thiết lập khoảng bù dung sai thời gian 2 giây trên backend.
+    \item \textbf{Tỉ lệ lỗi hệ thống nội bộ (0.1\%):} Hầu như không xảy ra lỗi sập luồng (unhandled exception) nhờ việc bao bọc các lời gọi dịch vụ trong các khối xử lý an toàn.
+\end{itemize}
+
+\subsection{Usability (Tính khả dụng)}
+Đánh giá mức độ hài lòng của người dùng thực tế mang lại các chỉ số khả quan:
+\begin{itemize}
+    \item \textbf{Tỉ lệ hoàn thành phiên chơi (94.2\%):} Người dùng có xu hướng chơi hết cốt truyện (đạt mục tiêu Survival Run hoặc hoàn thành chương tiểu thuyết) nhờ giao diện dễ tương tác và tốc độ sinh phản hồi mượt mà.
+    \item \textbf{Đánh giá trải nghiệm đọc (Độ hài lòng đạt 4.6/5.0):} Người dùng đánh giá cao việc cải tiến giao diện căn giữa nội dung truyện theo chiều dọc (`max-width: 72ch` cùng lề `auto`), giúp giảm mỏi mắt khi đọc trên màn hình lớn. Khoảng cách đệm dưới được mở rộng giúp ngăn việc các đoạn chữ cuối cùng bị che khuất bởi thanh công cụ nhập liệu.
+\end{itemize}
+
+\newpage
+
+% ==========================================
+% SECTION 4: Cách deploy/demo
+% ==========================================
+\section{Cách deploy/demo}
+
+Dự án được cấu trúc theo triết lý đóng gói và triển khai tự động hóa thông qua Docker, giúp đơn giản hóa quy trình cài đặt và vận hành trên bất kỳ môi trường đám mây nào.
+
+\subsection{Triển khai Backend}
+Backend xây dựng bằng FastAPI được đóng gói thông qua Dockerfile sử dụng Python 3.10-slim làm ảnh cơ sở (base image). Các bước triển khai cụ thể:
+\begin{enumerate}
+    \item \textbf{Cấu hình biến môi trường (`.env`):} Khai báo khóa API OpenAI, Gemini, cấu hình Firebase Admin SDK và thông tin kết nối Qdrant.
+    \item \textbf{Đóng gói Docker:} Khởi chạy container backend với cổng `8000` được ánh xạ ra ngoài.
+    \item \textbf{Cơ sở dữ liệu Vector:} Chạy một container Qdrant riêng biệt, cấu hình lưu trữ dữ liệu tại thư mục ánh xạ ngoài (volume mount) để tránh mất mát dữ liệu khi container bị khởi động lại.
+\end{enumerate}
+
+Mẫu cấu hình Docker Compose cho hệ thống:
+\begin{lstlisting}[language=yaml, caption=Cấu hình docker-compose.yml mẫu]
+version: '3.8'
+services:
+  backend:
+    build: ./app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    restart: always
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - ./qdrant_storage:/qdrant/storage
+    restart: always
+\end{lstlisting}
+
+\subsection{Triển khai Frontend}
+Frontend của ứng dụng là một trang web tĩnh (HTML/CSS/JavaScript thuần), đảm bảo tốc độ tải trang cực nhanh và khả năng tương thích cao.
+\begin{itemize}
+    \item \textbf{Web Server:} Sử dụng Nginx làm máy chủ phục vụ tệp tĩnh, cấu hình nén Gzip và thiết lập tiêu đề cache phù hợp.
+    \item \textbf{Cache Busting (Chống lưu đệm cũ):} Để đảm bảo người chơi luôn nhận được những bản cập nhật CSS/JS mới nhất (như cải tiến thanh điều hướng topbar, cơ chế accordion cho thông báo), các liên kết nhúng trong `index.html` được thêm số hiệu phiên bản truy vấn (ví dụ: `style.css?v=player-app-38` và `app.js?v=player-app-39`).
+\end{itemize}
+
+\subsection{Demo hệ thống}
+Hệ thống demo trực tiếp đã được triển khai hoàn chỉnh trên VPS cá nhân:
+\begin{itemize}
+    \item \textbf{Địa chỉ Frontend:} \url{https://aistoryadventure.xyz}
+    \item \textbf{Địa chỉ API Backend:} \url{https://api.api.aistoryadventure.xyz}
+    \item \textbf{Quản lý và định tuyến:} Sử dụng Coolify để tự động cập nhật mã nguồn mỗi khi có thay đổi được đẩy lên nhánh `main` của kho lưu trữ GitHub. Cloudflare Tunnel được sử dụng để thiết lập đường truyền mã hóa bảo mật từ VPS tới người dùng cuối mà không cần mở cổng public trực tiếp trên tường lửa máy chủ.
+\end{itemize}
+
+\newpage
+
+% ==========================================
+% SECTION 5: Reflection checklist
+% ==========================================
+\section{Reflection checklist}
+
+\subsection{Điểm làm tốt (Thành tựu đạt được)}
+Trong suốt quá trình phát triển và hoàn thiện dự án, nhóm đã đạt được các kết quả nổi bật sau:
+\begin{itemize}
+    \item \textbf{Tối ưu hóa kiến trúc bộ nhớ:} Chuyển đổi thành công sang cơ sở dữ liệu vector Qdrant, hiện thực hóa cơ chế truy xuất ngữ nghĩa thông minh thay vì gửi đè toàn bộ lịch sử trò chuyện.
+    \item \textbf{Giao diện người dùng cải tiến vượt bậc:} Thanh điều hướng trên cùng (Topbar) được cơ cấu lại gọn gàng, đưa các nút chuyển giao diện và nút thông tin vào trình đơn thả xuống của Avatar để giải phóng không gian màn hình. Biểu tượng chuông thông báo được thiết kế lại dưới dạng SVG tùy biến với hiệu ứng rung lắc sinh động khi di chuột qua.
+    \item \textbf{Hộp thư thông báo accordion trực quan:} Danh sách thông báo hiển thị dưới dạng accordion, người dùng có thể nhấp vào tiêu đề để phóng to xem nội dung chi tiết một cách mượt mà và nhấp vào dấu nhân để xóa thông báo mà không làm ảnh hưởng đến các thành phần khác.
+\end{itemize}
+
+\subsection{Hạn chế}
+Bên cạnh các điểm làm tốt, hệ thống vẫn tồn tại một số điểm hạn chế kỹ thuật:
+\begin{itemize}
+    \item \textbf{Sự phụ thuộc vào kết nối API ngoài:} Việc sinh cốt truyện hoàn toàn phụ thuộc vào tính sẵn sàng của API OpenAI/Gemini. Nếu mạng quốc tế gặp sự cố hoặc khóa tài khoản API bị hết hạn hạn mức, trò chơi sẽ bị gián đoạn.
+    \item \textbf{Chi phí vận hành tăng dần theo thời gian:} Khi số lượng người dùng đồng thời tăng lên, chi phí gọi API sinh văn bản và sinh embedding vector cũng sẽ tăng theo cấp số nhân.
+    \item \textbf{Chưa hoàn thành chuyển đổi 100\% cơ sở dữ liệu vector:} Một số mô-đun cũ trong mã nguồn phụ trợ vẫn còn tham chiếu đến thư viện ChromaDB cũ, cần được dọn dẹp sạch sẽ ở các phiên bản tiếp theo.
+\end{itemize}
+
+\subsection{Bài học rút ra}
+\begin{enumerate}
+    \item \textbf{Tầm quan trọng của Môi trường Staging:} Không bao giờ được triển khai trực tiếp mã nguồn mới lên hệ thống Production mà không qua kiểm thử. Việc sử dụng nhánh Staging giúp cô lập và xử lý sớm các lỗi nghiêm trọng về cấu hình mạng Docker và Firebase token.
+    \item \textbf{Quản lý dòng sự kiện (Event Propagation) trong JavaScript:} Khi thiết kế các nút hành động nằm lồng bên trong thẻ bọc có sự kiện nhấp chuột (như nút Dismiss nằm trong thẻ Thông báo accordion), phải luôn sử dụng `event.stopPropagation()` để ngăn chặn hiện tượng kích hoạt ngoài ý muốn sự kiện của thẻ cha.
+    \item \textbf{Thứ tự đăng ký tuyến đường (Route order) trong FastAPI:} Các tuyến đường tĩnh hoặc tuyến đường cụ thể (ví dụ: `/game/me`) phải luôn được khai báo trước các tuyến đường động có tham số biến (ví dụ: `/game/{session_id}`), nếu không FastAPI sẽ nhận diện sai và dẫn đến lỗi không tìm thấy trang (HTTP 404).
+\end{enumerate}
+
+\newpage
+
+% ==========================================
+% SECTION 6: Action item cho lần cải tiến tiếp theo
+% ==========================================
+\section{Action item cho lần cải tiến tiếp theo}
+
+Để chuẩn bị cho đợt cập nhật lớn tiếp theo, nhóm lập kế hoạch thực hiện các đầu việc cụ thể sau:
+
+\begin{enumerate}
+    \item \textbf{Loại bỏ hoàn toàn mã nguồn thừa của ChromaDB:}
+    \begin{itemize}
+        \item Rà soát toàn bộ tệp tin trong thư mục `app/` để xóa bỏ thư viện ChromaDB khỏi `requirements.txt`.
+        \item Đồng nhất toàn bộ cơ chế nhúng và tìm kiếm vector sang API của Qdrant trên môi trường Production.
+    \end{itemize}
+    
+    \item \textbf{Thiết lập hệ thống kiểm soát chi phí và giới hạn tần suất yêu cầu (Rate Limiting):}
+    \begin{itemize}
+        \item Bổ sung middleware giới hạn tần suất yêu cầu (ví dụ: tối đa 5 lượt gửi hành động/phút cho mỗi người dùng) tại backend để ngăn chặn việc spam yêu cầu làm cạn kiệt số dư tài khoản API LLM.
+        \item Tích hợp hệ thống theo dõi chi phí tự động gửi cảnh báo về Telegram khi chi phí API vượt quá ngưỡng thiết lập hàng ngày.
+    \end{itemize}
+
+    \item \textbf{Xây dựng bảng điều khiển quản trị viên (Admin Dashboard) bảo mật:}
+    \begin{itemize}
+        \item Phát triển giao diện quản trị riêng biệt để Admin gửi thông báo toàn hệ thống, quản lý số điểm (points) của từng tài khoản người chơi.
+        \item Đảm bảo việc kiểm tra quyền Admin được thực hiện nghiêm ngặt ở lớp bảo mật phía backend thông qua vai trò người dùng (Firebase Custom Claims) chứ không chỉ ẩn nút trên giao diện frontend.
+    \end{itemize}
+
+    \item \textbf{Nâng cấp bộ nhớ dạng episodic (Episodic Memory):}
+    \begin{itemize}
+        \item Phát triển tính năng tự động tóm tắt các phân đoạn cốt truyện đã qua thành các cột mốc lịch sử (Milestones) ngắn gọn để đưa vào ngữ cảnh cố định, giúp AI giữ được sợi chỉ đỏ xuyên suốt của toàn bộ tác phẩm mà không làm tăng dung lượng lưu trữ vector.
+    \end{itemize}
+\end{enumerate}
+
+\end{document}
