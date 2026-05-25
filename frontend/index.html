@@ -2426,12 +2426,24 @@
         <button id="readerLineUp" type="button" class="ghost reader-icon-btn" aria-label="Increase line spacing">+</button>
       </div>
 
+      <button id="storyMapToggleBtn" type="button" class="ghost reader-tool-btn" aria-pressed="false">
+        Hành trình
+      </button>
+
       <button id="scrollLatestBtn" type="button" class="primary-btn reader-tool-btn">
         Latest
       </button>
     </section>
 
     <main id="storyLog" class="story-log novel-reader"></main>
+
+    <div id="storyMapContainer" class="story-map-container hidden glass-panel">
+      <div class="story-map-header">
+        <h3>Sơ đồ Hành trình</h3>
+        <p>Bấm vào các chương/cảnh để cuộn nhanh đến nội dung tương ứng.</p>
+      </div>
+      <div id="storyMapTree" class="story-map-tree"></div>
+    </div>
 
     <section id="adventureQuestHud" class="adventure-quest-hud glass-panel" aria-label="Survival run context">
       <div class="quest-hud-title">
@@ -2716,6 +2728,32 @@
     </div>
   </div>
 </div>
+<!-- ILLUSTRATE MESSAGE MODAL -->
+<div id="illustrateMessageModal" class="create-modal hidden">
+  <div class="create-modal-backdrop" id="illustrateModalBackdrop"></div>
+  <div class="create-modal-panel glass-panel">
+    <button id="closeIllustrateModalBtn" class="create-modal-close" type="button">×</button>
+    <p class="eyebrow">Scene Illustration</p>
+    <h2>Vẽ ảnh Minh họa</h2>
+    <p class="create-modal-subtitle">
+      Nhập miêu tả chi tiết để Pollinations AI vẽ tranh minh họa cho phân cảnh này.
+    </p>
+    <form id="illustrateMessageForm" class="publish-form">
+      <input type="hidden" id="illustrateMessageId" />
+      <div style="margin-bottom: 1.5rem; text-align: left;">
+        <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: var(--accent);">
+          Miêu tả hình ảnh (Tiếng Việt hoặc Tiếng Anh)
+        </label>
+        <textarea id="illustratePrompt" placeholder="Ví dụ: Một chiến binh dũng cảm đứng trước lâu đài băng giá dưới bầu trời đầy sao..." required maxlength="500" rows="3" style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-accent); border-radius: 4px; color: white; resize: none;"></textarea>
+        <small style="color: var(--muted); font-size: 0.8rem; margin-top: 0.5rem; display: block;">
+          Phí tạo ảnh: <span id="illustrateCostLabel">10</span> xu. Admin được miễn phí.
+        </small>
+      </div>
+      <button type="submit" class="primary-btn" id="submitIllustrateBtn" style="width: 100%;">Tạo ảnh ngay ✨</button>
+    </form>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 <script src="config.js?v=config-3"></script>

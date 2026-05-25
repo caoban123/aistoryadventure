@@ -34,6 +34,7 @@ class StoryResponse(BaseModel):
     choices: list[str] = Field(default_factory=list)
     foundation_text: str = ""
     session: SessionState
+    message_id: str | None = None
 
 class SessionResponse(BaseModel):
     session: SessionState
@@ -234,6 +235,8 @@ class AdminSettingsUpdateRequest(BaseModel):
     cost_novel_world: int | None = Field(default=None, ge=0, le=100000)
     cost_novel_foundation: int | None = Field(default=None, ge=0, le=100000)
     cost_turn: int | None = Field(default=None, ge=0, le=100000)
+    cost_image_generation: int | None = Field(default=None, ge=0, le=100000)
+    image_enabled: bool | None = None
     rate_limit_enabled: bool | None = None
     daily_turn_limit: int | None = Field(default=None, ge=0, le=100000)
     daily_create_limit: int | None = Field(default=None, ge=0, le=100000)

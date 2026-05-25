@@ -420,6 +420,7 @@ const readerPrefs = {
 };
 
 let pendingOpeningMessage = "";
+let pendingOpeningMessageId = null;
 let pendingChoices = [];
 let sessionId = sessionStorage.getItem("session_id") || "";
 let currentSessionIsSaved = sessionStorage.getItem("session_is_saved") !== "false";
@@ -3067,12 +3068,15 @@ async function startStreamingReveal(element) {
   scrollStoryToLatest("smooth");
 }
 
-async function addMessage(role, content, animate = false) {
+async function addMessage(role, content, animate = false, messageId = null, imageUrl = null) {
   if (!storyLog) return null;
 
   const isNovel = currentSessionMode === "novel";
 
   const item = document.createElement("article");
+  if (messageId) {
+    item.dataset.messageId = messageId;
+  }
 
   if (isNovel) {
     item.className =
@@ -3094,6 +3098,15 @@ async function addMessage(role, content, animate = false) {
         <div class="novel-prose">
           ${formatStoryParagraphs(content)}
         </div>
+        ${imageUrl ? `
+        <div class="message-illustration">
+          <img src="${imageUrl}" alt="Scene Illustration" class="scene-image" />
+        </div>` : (messageId ? `
+        <div class="message-illustrate-container">
+          <button type="button" class="message-illustrate-btn">
+            ✨ Tạo ảnh minh họa
+          </button>
+        </div>` : "")}
       `;
     }
   } else {
@@ -3108,8 +3121,25 @@ async function addMessage(role, content, animate = false) {
       </div>
       <div class="message-content">
         ${formatStoryParagraphs(content)}
+        ${imageUrl ? `
+        <div class="message-illustration">
+          <img src="${imageUrl}" alt="Scene Illustration" class="scene-image" />
+        </div>` : (messageId ? `
+        <div class="message-illustrate-container">
+          <button type="button" class="message-illustrate-btn">
+            ✨ Tạo ảnh minh họa
+          </button>
+        </div>` : "")}
       </div>
     `;
+  }
+
+  // Bind illustrate button click
+  const illustrateBtn = item.querySelector(".message-illustrate-btn");
+  if (illustrateBtn && messageId) {
+    illustrateBtn.addEventListener("click", () => {
+      openIllustrateModal(messageId, content);
+    });
   }
 
   storyLog.appendChild(item);
@@ -3130,6 +3160,106 @@ async function addMessage(role, content, animate = false) {
 
   updateScrollFade();
   return item;
+}
+
+function openIllustrateModal(messageId, sceneContent) {
+  const modal = document.getElementById("illustrateMessageModal");
+  const msgIdInput = document.getElementById("illustrateMessageId");
+  const promptInput = document.getElementById("illustratePrompt");
+  
+  if (!modal || !msgIdInput || !promptInput) return;
+  
+  msgIdInput.value = messageId;
+  
+  // Prefill with a clean, concise snippet of the scene
+  let defaultPrompt = sceneContent
+    .replace(/<[^>]*>/g, "")
+    .replace(/[\r\n]+/g, " ")
+    .trim();
+  
+  if (defaultPrompt.length > 200) {
+    defaultPrompt = defaultPrompt.slice(0, 197) + "...";
+  }
+  
+  promptInput.value = defaultPrompt;
+  modal.classList.remove("hidden");
+}
+
+function closeIllustrateModal() {
+  const modal = document.getElementById("illustrateMessageModal");
+  if (modal) modal.classList.add("hidden");
+}
+
+// Bind illustration modal close actions
+document.getElementById("closeIllustrateModalBtn")?.addEventListener("click", closeIllustrateModal);
+document.getElementById("illustrateModalBackdrop")?.addEventListener("click", closeIllustrateModal);
+
+// Bind illustration form submit
+const illustrateMessageForm = document.getElementById("illustrateMessageForm");
+if (illustrateMessageForm) {
+  illustrateMessageForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    
+    const messageId = document.getElementById("illustrateMessageId")?.value;
+    const prompt = document.getElementById("illustratePrompt")?.value;
+    
+    if (!messageId || !prompt) return;
+    
+    closeIllustrateModal();
+    
+    const msgElement = document.querySelector(`article[data-message-id="${messageId}"]`);
+    let illustrateBtnContainer = null;
+    let originalBtnHtml = "";
+    if (msgElement) {
+      illustrateBtnContainer = msgElement.querySelector(".message-illustrate-container");
+      if (illustrateBtnContainer) {
+        originalBtnHtml = illustrateBtnContainer.innerHTML;
+        illustrateBtnContainer.innerHTML = `<span style="color:var(--accent); font-family:var(--font-mono); font-size:0.8rem;">⌛ Đang vẽ ảnh minh họa...</span>`;
+      }
+    }
+    
+    try {
+      const response = await requestJson(`${API_BASE}/game/${sessionId}/message/${messageId}/illustrate`, {
+        method: "POST",
+        body: JSON.stringify({ prompt: prompt }),
+      });
+      
+      const imageUrl = typeof response === "string" ? response : (response.image_url || response);
+      
+      if (imageUrl) {
+        if (illustrateBtnContainer) {
+          illustrateBtnContainer.remove();
+        }
+        
+        const imgSection = document.createElement("div");
+        imgSection.className = "message-illustration";
+        imgSection.innerHTML = `<img src="${imageUrl}" alt="Scene Illustration" class="scene-image" />`;
+        
+        const proseOrContent = msgElement.querySelector(".novel-prose") || msgElement.querySelector(".message-content");
+        if (proseOrContent) {
+          proseOrContent.appendChild(imgSection);
+        }
+        
+        addLocalNotification("Vẽ ảnh minh họa", "Đã tạo ảnh minh họa thành công cho phân cảnh.");
+        fetchPlayerProfile();
+      } else {
+        throw new Error("Không nhận được URL ảnh từ hệ thống.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi khi tạo ảnh: " + err.message);
+      if (illustrateBtnContainer) {
+        illustrateBtnContainer.innerHTML = originalBtnHtml;
+        const newBtn = illustrateBtnContainer.querySelector(".message-illustrate-btn");
+        if (newBtn) {
+          newBtn.addEventListener("click", () => {
+            const promptVal = msgElement.querySelector(".novel-prose")?.textContent || msgElement.querySelector(".message-content")?.textContent || "";
+            openIllustrateModal(messageId, promptVal);
+          });
+        }
+      }
+    }
+  });
 }
 
 function addChoicesLoading() {
@@ -3614,7 +3744,7 @@ async function submitAction(actionText) {
     setTurnLoading(false);
     removeChoicesLoading();
 
-    await addMessage("ai", message, true);
+    await addMessage("ai", message, true, data.message_id);
     renderChoicesFromArray(choices);
     addLocalNotification("Lượt chơi mới", `Đã thực hiện lượt hành động: "${action.length > 30 ? action.slice(0, 30) + '...' : action}".`);
     fetchPlayerProfile();
@@ -4132,6 +4262,7 @@ createNovelFoundationBtn?.addEventListener("click", async () => {
     if (turnTargetWords) turnTargetWords.value = targetWords;
 
     pendingOpeningMessage = data.message || "";
+    pendingOpeningMessageId = data.message_id || null;
     pendingChoices = data.choices || [];
     renderFoundationContent(
   data.foundation_text || data.session?.foundation_text || ""
@@ -4190,7 +4321,7 @@ beginStoryBtn?.addEventListener("click", async () => {
   applySessionMode(currentSessionMode);
   updateGameplayModeUI();
   showPage(gamePage);
-  await addMessage("ai", pendingOpeningMessage, true);
+  await addMessage("ai", pendingOpeningMessage, true, pendingOpeningMessageId);
   renderChoicesFromArray(pendingChoices);
   pulseAmbient();
 });
@@ -4445,6 +4576,7 @@ async function startAdventureGame() {
     syncAdventureQuestStateFromSession(data.session || {});
 
     pendingOpeningMessage = data.message || "";
+    pendingOpeningMessageId = data.message_id || null;
     pendingChoices = data.choices || [];
 
     if (sessionLabel) {
@@ -4753,7 +4885,7 @@ function renderSavedSessions() {
           type="button"
           class="ghost export-session-btn"
         >
-          Export .md
+          Xuất sách (HTML/PDF)
         </button>
 
         <button
@@ -4913,63 +5045,284 @@ function renderSurvivalPreviewHtml(session = {}) {
   `;
 }
 
-function buildHistoryMarkdown(data) {
+function buildHistoryBookHTML(data) {
   const session = data?.session || {};
   const messages = Array.isArray(data?.messages) ? data.messages : [];
-  const title = session.title || "Untitled Story";
-  const mode = getSessionMode(session);
-  const foundation = normalizeMarkdownText(
-    data?.foundation_text ||
-      session.foundation_text ||
-      session.world_summary ||
-      session.story_summary ||
-      ""
-  );
+  const title = escapeHtml(session.title || "Untitled Story");
+  const mode = session.mode === "novel" ? "Novel" : "Adventure";
+  const createdDate = new Date(session.created_at || Date.now()).toLocaleDateString("vi-VN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const foundation = escapeHtml(data?.foundation_text || session.foundation_text || session.world_summary || "");
 
-  const lines = [
-    `# ${title}`,
-    "",
-    `- Mode: ${mode === "novel" ? "Novel" : "Adventure"}`,
-    `- Session ID: ${session.session_id || "Unknown"}`,
-    `- Created: ${formatSessionDate(session.created_at)}`,
-    `- Updated: ${formatSessionDate(session.updated_at)}`,
-    `- Target words: ${session.target_words || "Default"}`,
-    "",
-    ...buildSurvivalMarkdown(session),
-    "## World Profile",
-    "",
-    foundation || "No world profile is available.",
-    "",
-    "## Story",
-    "",
-  ];
-
-  const storyMessages = messages.filter(
-    (message) => message.role !== "system" && message.content
-  );
-
-  if (!storyMessages.length) {
-    lines.push("No story messages are available yet.");
+  // Survival info if adventure
+  let survivalHTML = "";
+  if (session.mode === "adventure" && session.adventure_profile) {
+    const prof = session.adventure_profile;
+    survivalHTML = `
+      <div class="survival-status">
+        <h3>survival parameters</h3>
+        <p><strong>Region:</strong> ${escapeHtml(prof.region || "Unknown")}</p>
+        <p><strong>Objective:</strong> ${escapeHtml(prof.objective || "Survival")}</p>
+        <p><strong>Danger:</strong> ${prof.danger || 3}/5 | <strong>Supplies:</strong> ${prof.supplies || 3}/5 | <strong>Wounds:</strong> ${prof.wounds || 0}/5</p>
+      </div>
+    `;
   }
 
-  storyMessages.forEach((message, index) => {
-    const label = message.role === "user" ? "You" : "AI";
-    lines.push(`### ${index + 1}. ${label}`);
-    lines.push("");
-    lines.push(normalizeMarkdownText(message.content));
+  // Format messages
+  let chaptersHTML = "";
+  const storyMessages = messages.filter(m => m.role !== "system" && m.content);
+  let chapterCount = 1;
 
-    if (Array.isArray(message.choices) && message.choices.length) {
-      lines.push("");
-      lines.push("Choices:");
-      message.choices.forEach((choice) => {
-        lines.push(`- ${normalizeMarkdownText(choice)}`);
-      });
+  storyMessages.forEach((msg, idx) => {
+    if (msg.role === "ai") {
+      let imgHTML = "";
+      if (msg.image_url) {
+        imgHTML = `
+          <div class="book-illustration">
+            <img src="${msg.image_url}" alt="Illustration for Chapter ${chapterCount}" />
+            <div class="illustration-caption">Scene Illustration</div>
+          </div>
+        `;
+      }
+      chaptersHTML += `
+        <div class="chapter">
+          <h2>Chương ${chapterCount}</h2>
+          ${imgHTML}
+          <div class="chapter-content">${escapeHtml(msg.content).replace(/\n/g, "<br>")}</div>
+        </div>
+      `;
+      chapterCount++;
+    } else if (msg.role === "user") {
+      chaptersHTML += `
+        <div class="user-decision">
+          <strong>Quyết định của bạn:</strong> <em>"${escapeHtml(msg.content)}"</em>
+        </div>
+      `;
     }
-
-    lines.push("");
   });
 
-  return `${lines.join("\n").trim()}\n`;
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>\${title} - AI Story Adventure</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Merriweather', Georgia, serif;
+      background-color: #fcfaf2;
+      color: #2b2b2a;
+      line-height: 1.8;
+      margin: 0;
+      padding: 0;
+    }
+    .book-container {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    .cover-page {
+      text-align: center;
+      padding: 100px 20px 60px 20px;
+      page-break-after: always;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 80vh;
+    }
+    .cover-page h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 3.5rem;
+      margin-bottom: 10px;
+      color: #1a1a1a;
+      font-weight: 700;
+    }
+    .cover-page .subtitle {
+      font-size: 1.2rem;
+      font-style: italic;
+      color: #666;
+      margin-bottom: 50px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .cover-page .author {
+      font-size: 1.1rem;
+      margin-top: 100px;
+      font-weight: bold;
+    }
+    .cover-page .date {
+      font-size: 0.9rem;
+      color: #888;
+      margin-top: 5px;
+    }
+    .divider {
+      width: 80px;
+      height: 3px;
+      background-color: #8c7853;
+      margin: 30px auto;
+    }
+    .section-page {
+      page-break-after: always;
+      padding-top: 40px;
+    }
+    .section-page h2 {
+      font-family: 'Playfair Display', serif;
+      border-bottom: 1px solid #e0dcd3;
+      padding-bottom: 10px;
+      color: #333;
+    }
+    .survival-status {
+      background-color: #f5f2e9;
+      border-left: 4px solid #8c7853;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .survival-status h3 {
+      margin-top: 0;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      color: #8c7853;
+    }
+    .chapter {
+      margin-bottom: 40px;
+      page-break-inside: avoid;
+      padding-top: 20px;
+    }
+    .chapter h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      color: #1a1a1a;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #e0dcd3;
+      padding-bottom: 5px;
+    }
+    .chapter-content {
+      font-size: 1.05rem;
+      text-align: justify;
+    }
+    .chapter-content::first-letter {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem;
+      float: left;
+      line-height: 1;
+      margin-right: 8px;
+      margin-top: 4px;
+      font-weight: bold;
+      color: #8c7853;
+    }
+    .user-decision {
+      font-size: 0.95rem;
+      background-color: #f7f6f0;
+      border: 1px dashed #dcdbd3;
+      padding: 12px 20px;
+      margin: 30px 0;
+      border-radius: 6px;
+      font-style: italic;
+      color: #4a4a49;
+    }
+    .book-illustration {
+      text-align: center;
+      margin: 25px auto;
+      max-width: 90%;
+      border: 1px solid #e2ded5;
+      padding: 10px;
+      background-color: #fff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      border-radius: 4px;
+      page-break-inside: avoid;
+    }
+    .book-illustration img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 2px;
+    }
+    .illustration-caption {
+      font-size: 0.8rem;
+      font-style: italic;
+      color: #888;
+      margin-top: 8px;
+    }
+    .print-button-container {
+      text-align: center;
+      margin-top: 20px;
+      margin-bottom: 40px;
+    }
+    .print-btn {
+      font-family: inherit;
+      background-color: #8c7853;
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      font-size: 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: background-color 0.2s;
+    }
+    .print-btn:hover {
+      background-color: #6e5c3e;
+    }
+
+    @media print {
+      body {
+        background-color: #fff;
+        color: #000;
+        font-size: 11pt;
+      }
+      .book-container {
+        max-width: 100%;
+        padding: 0;
+      }
+      .print-button-container {
+        display: none;
+      }
+      .cover-page {
+        min-height: 95vh;
+      }
+      .user-decision {
+        border-color: #aaa;
+        background-color: #fff;
+      }
+      .book-illustration {
+        box-shadow: none;
+        border: 1px solid #ccc;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="print-button-container">
+    <button class="print-btn" onclick="window.print()">In / Xuất sang PDF</button>
+  </div>
+  <div class="book-container">
+    <div class="cover-page">
+      <h1>\${title}</h1>
+      <div class="subtitle">\${mode} Mode Journey</div>
+      <div class="divider"></div>
+      <div class="author">AI Story Adventure</div>
+      <div class="date">\${createdDate}</div>
+    </div>
+    
+    <div class="section-page">
+      <h2>Hồ sơ thế giới</h2>
+      \${survivalHTML}
+      <div style="white-space: pre-line; text-align: justify; font-size: 1.05rem;">
+        \${foundation || "Không có hồ sơ thế giới nào được lưu."}
+      </div>
+    </div>
+
+    \${chaptersHTML}
+  </div>
+</body>
+</html>
+`;
 }
 
 function downloadTextFile(filename, content, mimeType = "text/markdown;charset=utf-8") {
@@ -5002,9 +5355,9 @@ async function exportHistorySession(targetSessionId, triggerButton = null) {
       `${API_BASE}/game/${encodeURIComponent(targetSessionId)}`
     );
     const title = data?.session?.title || "Untitled Story";
-    const markdown = buildHistoryMarkdown(data);
+    const htmlBook = buildHistoryBookHTML(data);
 
-    downloadTextFile(`${sanitizeFilename(title)}.md`, markdown);
+    downloadTextFile(`${sanitizeFilename(title)}.html`, htmlBook, "text/html;charset=utf-8");
   } catch (err) {
     console.error(err);
     alert(err.message || String(err));
@@ -5172,7 +5525,7 @@ function renderSavePreview(data) {
       </button>
 
       <button type="button" class="ghost preview-export-btn">
-        Export .md
+        Xuất sách (HTML/PDF)
       </button>
 
       <button type="button" class="primary-btn preview-continue-btn">
@@ -5288,7 +5641,10 @@ async function continueSession(targetSessionId) {
 
       await addMessage(
         msg.role === "user" ? "user" : "ai",
-        msg.content
+        msg.content,
+        false,
+        msg.message_id,
+        msg.image_url
       );
     }
 
@@ -8289,4 +8645,118 @@ window.addEventListener("keydown", (e) => {
     }
   }
 });
+
+// ── STORY MAP LOGIC ─────────────────────────────────────────────────────────
+function renderStoryMap() {
+  const storyMapTree = document.getElementById("storyMapTree");
+  if (!storyMapTree) return;
+  storyMapTree.innerHTML = "";
+
+  const isNovel = currentSessionMode === "novel";
+  const nodes = [];
+
+  if (isNovel) {
+    const elements = storyLog.querySelectorAll(".novel-scene");
+    elements.forEach((elem, index) => {
+      let precedingChoice = "";
+      let prev = elem.previousElementSibling;
+      if (prev && prev.classList.contains("novel-user-direction")) {
+        precedingChoice = prev.querySelector("p")?.textContent || "";
+      }
+      const label = elem.querySelector(".novel-scene-label")?.textContent || `Scene ${index + 1}`;
+      const prose = elem.querySelector(".novel-prose")?.textContent || "";
+      const snippet = prose.trim().slice(0, 100) + (prose.trim().length > 100 ? "..." : "");
+
+      nodes.push({
+        element: elem,
+        title: label,
+        choice: precedingChoice,
+        snippet: snippet
+      });
+    });
+  } else {
+    const elements = storyLog.querySelectorAll(".ai-message");
+    elements.forEach((elem, index) => {
+      let precedingChoice = "";
+      let prev = elem.previousElementSibling;
+      if (prev && prev.classList.contains("user-message")) {
+        precedingChoice = prev.querySelector(".message-content")?.textContent || "";
+      }
+      const label = `Cảnh ${index + 1}`;
+      const prose = elem.querySelector(".message-content")?.textContent || "";
+      const snippet = prose.trim().slice(0, 100) + (prose.trim().length > 100 ? "..." : "");
+
+      nodes.push({
+        element: elem,
+        title: label,
+        choice: precedingChoice,
+        snippet: snippet
+      });
+    });
+  }
+
+  if (nodes.length === 0) {
+    storyMapTree.innerHTML = `<p style="color:var(--muted); font-size:0.86rem; padding:10px 0;">Chưa có phân cảnh nào để hiển thị.</p>`;
+    return;
+  }
+
+  nodes.forEach((node) => {
+    const nodeEl = document.createElement("div");
+    nodeEl.className = "story-map-node";
+    
+    let html = "";
+    if (node.choice) {
+      html += `<span class="story-map-node-choice">Hành động: "${escapeHtml(node.choice.trim())}"</span>`;
+    } else {
+      html += `<span class="story-map-node-choice">Khởi đầu câu chuyện</span>`;
+    }
+    html += `<span class="story-map-node-title">${escapeHtml(node.title)}</span>`;
+    html += `<p class="story-map-node-snippet">${escapeHtml(node.snippet)}</p>`;
+    
+    nodeEl.innerHTML = html;
+
+    nodeEl.addEventListener("click", () => {
+      document.querySelectorAll(".story-map-node").forEach(n => n.classList.remove("active-node"));
+      nodeEl.classList.add("active-node");
+
+      const storyMapToggleBtn = document.getElementById("storyMapToggleBtn");
+      const storyMapContainer = document.getElementById("storyMapContainer");
+      storyMapToggleBtn.setAttribute("aria-pressed", "false");
+      storyMapToggleBtn.classList.remove("active");
+      storyMapContainer.classList.add("hidden");
+      storyLog.classList.remove("hidden");
+
+      node.element.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      node.element.classList.add("glow-highlight");
+      setTimeout(() => {
+        node.element.classList.remove("glow-highlight");
+      }, 1500);
+    });
+
+    storyMapTree.appendChild(nodeEl);
+  });
+}
+
+const storyMapToggleBtn = document.getElementById("storyMapToggleBtn");
+const storyMapContainer = document.getElementById("storyMapContainer");
+
+if (storyMapToggleBtn && storyMapContainer) {
+  storyMapToggleBtn.addEventListener("click", () => {
+    const isPressed = storyMapToggleBtn.getAttribute("aria-pressed") === "true";
+    if (isPressed) {
+      storyMapToggleBtn.setAttribute("aria-pressed", "false");
+      storyMapToggleBtn.classList.remove("active");
+      storyMapContainer.classList.add("hidden");
+      storyLog.classList.remove("hidden");
+    } else {
+      renderStoryMap();
+      storyMapToggleBtn.setAttribute("aria-pressed", "true");
+      storyMapToggleBtn.classList.add("active");
+      storyMapContainer.classList.remove("hidden");
+      storyLog.classList.add("hidden");
+    }
+  });
+}
+
 

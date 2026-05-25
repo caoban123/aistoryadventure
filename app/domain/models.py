@@ -16,6 +16,7 @@ class Message(BaseModel):
     role: Role
     content: str
     choices: list[str] = Field(default_factory=list)
+    image_url: str | None = None
     created_at: str = Field(default_factory=utc_now_iso)
 
 class SessionState(BaseModel):
@@ -110,6 +111,8 @@ class AppSettingsState(BaseModel):
     cost_novel_world: int = 5
     cost_novel_foundation: int = 15
     cost_turn: int = 3
+    cost_image_generation: int = 10
+    image_enabled: bool = True
     rate_limit_enabled: bool = True
     daily_turn_limit: int = 20
     daily_create_limit: int = 5

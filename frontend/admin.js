@@ -76,10 +76,12 @@ const auditOutput = $("adminOutput");
 const maintenanceToggle = $("adminMaintenanceToggle");
 const maintenanceMessage = $("adminMaintenanceMessage");
 const pointsToggle = $("adminPointsToggle");
+const imageEnabledToggle = $("adminImageEnabledToggle");
 const costAdventure = $("adminCostAdventure");
 const costNovelWorld = $("adminCostNovelWorld");
 const costNovelFoundation = $("adminCostNovelFoundation");
 const costTurn = $("adminCostTurn");
+const costImageGeneration = $("adminCostImageGeneration");
 const rateLimitToggle = $("adminRateLimitToggle");
 const dailyTurnLimit = $("adminDailyTurnLimit");
 const dailyCreateLimit = $("adminDailyCreateLimit");
@@ -401,10 +403,12 @@ function renderSettings(settings = {}) {
       "Hệ thống AI Story Adventure đang được bảo trì. Vui lòng quay lại sau.";
   }
   if (pointsToggle) pointsToggle.checked = Boolean(settings.points_enabled);
+  if (imageEnabledToggle) imageEnabledToggle.checked = Boolean(settings.image_enabled);
   if (costAdventure) costAdventure.value = settings.cost_start_adventure ?? 10;
   if (costNovelWorld) costNovelWorld.value = settings.cost_novel_world ?? 5;
   if (costNovelFoundation) costNovelFoundation.value = settings.cost_novel_foundation ?? 15;
   if (costTurn) costTurn.value = settings.cost_turn ?? 3;
+  if (costImageGeneration) costImageGeneration.value = settings.cost_image_generation ?? 10;
   if (rateLimitToggle) rateLimitToggle.checked = Boolean(settings.rate_limit_enabled);
   if (dailyTurnLimit) dailyTurnLimit.value = settings.daily_turn_limit ?? 20;
   if (dailyCreateLimit) dailyCreateLimit.value = settings.daily_create_limit ?? 5;
@@ -603,6 +607,7 @@ async function saveSettings() {
   const oldSettings = currentOverview?.settings || {};
   const newMaintenance = Boolean(maintenanceToggle?.checked);
   const newPoints = Boolean(pointsToggle?.checked);
+  const newImageEnabled = Boolean(imageEnabledToggle?.checked);
   const newRateLimit = Boolean(rateLimitToggle?.checked);
 
   if (newMaintenance && !oldSettings.maintenance_enabled) {
@@ -632,10 +637,12 @@ async function saveSettings() {
           maintenanceMessage?.value?.trim() ||
           "Hệ thống AI Story Adventure đang được bảo trì. Vui lòng quay lại sau.",
         points_enabled: newPoints,
+        image_enabled: newImageEnabled,
         cost_start_adventure: numberValue(costAdventure, 10),
         cost_novel_world: numberValue(costNovelWorld, 5),
         cost_novel_foundation: numberValue(costNovelFoundation, 15),
         cost_turn: numberValue(costTurn, 3),
+        cost_image_generation: numberValue(costImageGeneration, 10),
         rate_limit_enabled: newRateLimit,
         daily_turn_limit: numberValue(dailyTurnLimit, 20),
         daily_create_limit: numberValue(dailyCreateLimit, 5),

@@ -702,6 +702,34 @@ async def delete_published_world(
     return {"message": "Đã xóa thế giới đã xuất bản thành công."}
 
 
+class IllustrateRequest(BaseModel):
+    prompt: str = Field(..., min_length=1, max_length=1000)
+
+
+@router.post("/{session_id}/message/{message_id}/illustrate")
+async def generate_scene_illustration(
+    session_id: str,
+    message_id: str,
+    request: IllustrateRequest,
+    user=Depends(get_current_user),
+):
+    await enforce_player_or_http(user)
+    try:
+        image_url = await service.illustrate_message(
+            session_id=session_id,
+            message_id=message_id,
+            prompt=request.prompt,
+            user=user,
+        )
+        return {"image_url": image_url}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
 
 
 

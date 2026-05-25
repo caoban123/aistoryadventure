@@ -136,7 +136,14 @@ class FirebaseStore:
             return
         session = await self.get_session(message.session_id)
         messages = await self.get_messages(message.session_id, limit=9999)
-        messages.append(message)
+        exists = False
+        for idx, m in enumerate(messages):
+            if m.message_id == message.message_id:
+                messages[idx] = message
+                exists = True
+                break
+        if not exists:
+            messages.append(message)
         if session:
             import asyncio
             await asyncio.to_thread(self._write_local, session, messages)

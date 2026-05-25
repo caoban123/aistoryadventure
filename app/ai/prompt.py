@@ -204,6 +204,7 @@ def build_turn_prompt(
     relevant_memories: list[MemoryChunk],
     player_input: str,
     target_words: int = 600,
+    critical_instruction: str = "",
 ) -> str:
     recent_text = "\n".join(
         [f"{m.role.upper()}: {m.content}" for m in recent_messages]
@@ -258,6 +259,9 @@ Thế giới có thể diễn biến bất ngờ, nhưng phải có logic nội 
 Choices phải là hành động hoặc quyết định có thể xảy ra ngay trong khoảnh khắc hiện tại.
 In Adventure Mode, this is a Survival Run. Choices should feel like immediate survival moves: scout, push forward, conserve supplies, negotiate, take a risk, retreat, tend wounds, or spend resources.
 """.strip()
+
+    if critical_instruction:
+        writing_guidance += f"\n\nCRITICAL CONTEXT INSTRUCTION:\n{critical_instruction}"
 
     novel_section = f"""
 === HỒ SƠ TIỂU THUYẾT ===

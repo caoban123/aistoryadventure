@@ -246,6 +246,7 @@ class StoryService:
             choices=choices,
             foundation_text=session.foundation_text,
             session=session,
+            message_id=ai_message.message_id,
         )
 
     async def continue_story(self, request: TurnRequest, user_id: str, ) -> StoryResponse:
@@ -267,12 +268,34 @@ class StoryService:
         query = f"{request.player_input}\n{session.foundation_text}\n{session.story_summary}\n{session.character_summary}"
         relevant = await self.memory.relevant_memories(request.session_id, query)
 
+        critical_instruction = ""
+        if session.mode == "adventure" and session.adventure_profile:
+            wounds = int(session.adventure_profile.get("wounds") or 0)
+            supplies = int(session.adventure_profile.get("supplies") or 3)
+            
+            if wounds >= 5:
+                critical_instruction = (
+                    "The player is severely wounded and collapsed. "
+                    "You must narrate them losing consciousness or being defeated, and then being rescued or recovering in a safe place (such as a medical tent, shelter, or saved by a kind stranger). "
+                    "You MUST adjust their wounds down to 3 in the survival_update to represent this recovery, and possibly deduct some supplies or tools to reflect the cost of rescue. "
+                    "Make sure this rescue makes narrative sense."
+                )
+            elif supplies <= 0:
+                critical_instruction = (
+                    "The player has run out of supplies (starvation). "
+                    "You must narrate their extreme hunger, fatigue, and desperation. "
+                    "The choices provided must force them into highly risky scenarios to obtain food/supplies. "
+                    "You MUST increase their danger level or wounds in the survival_update to represent the physical toll, "
+                    "but give them a way to find at least 1 supply in the choices or outcome if they choose the desperate path."
+                )
+
         prompt = build_turn_prompt(
                 session,
                 recent,
                 relevant,
                 request.player_input,
                 target_words=request.target_words,
+                critical_instruction=critical_instruction,
             )
         raw = await self._generate_text_logged(
             prompt,
@@ -310,6 +333,7 @@ class StoryService:
             choices=choices,
             foundation_text=session.foundation_text,
             session=session,
+            message_id=ai_message.message_id,
         )
 
     async def get_session(self, session_id: str, user_id: str,):
@@ -540,7 +564,84 @@ class StoryService:
             choices=choices,
             foundation_text=session.foundation_text,
             session=session,
+            message_id=ai_message.message_id,
         )
+
+    async def translate_prompt_to_english(self, prompt: str) -> str:
+        translation_prompt = (
+            f"You are a translation assistant. Translate the following image generation prompt from Vietnamese to English. "
+            f"Provide only the translation, no extra comments, explanations or formatting.\n"
+            f"Vietnamese Prompt: {prompt}"
+        )
+        try:
+            english = await self.provider.generate_text(translation_prompt)
+            english = english.strip()
+            if english.startswith('"') and english.endswith('"'):
+                english = english[1:-1].strip()
+            if english.startswith("'") and english.endswith("'"):
+                english = english[1:-1].strip()
+            return english
+        except Exception:
+            return prompt
+
+    async def illustrate_message(
+        self,
+        session_id: str,
+        message_id: str,
+        prompt: str,
+        user: dict,
+    ) -> str:
+        app_settings = await self.admin_control.store.get_app_settings()
+        if not app_settings.image_enabled:
+            raise ValueError("Tính năng sinh ảnh hiện đang bị khóa bởi Admin.")
+
+        user_state = await self.admin_control.store.get_admin_user_state(user["uid"])
+        if not user_state:
+            user_state = await self.admin_control.ensure_user_state(user)
+
+        cost = app_settings.cost_image_generation
+        is_admin = bool(user.get("admin"))
+
+        if app_settings.points_enabled and not is_admin:
+            if user_state.points_balance < cost:
+                raise ValueError(
+                    f"Không đủ xu để tạo ảnh. Cần {cost} xu, bạn hiện có {user_state.points_balance} xu."
+                )
+
+        messages = await self.store.get_messages(session_id, limit=200)
+        target_message = None
+        for m in messages:
+            if m.message_id == message_id:
+                target_message = m
+                break
+
+        if not target_message:
+            raise ValueError("Không tìm thấy tin nhắn chỉ định trong cuộc hội thoại.")
+
+        self.safety_filter.validate_input(prompt, "Mô tả ảnh")
+
+        if app_settings.points_enabled and not is_admin:
+            await self.admin_control.adjust_points(
+                target_uid=user["uid"],
+                delta=-cost,
+                reason=f"Tạo ảnh minh họa cho lượt chơi {message_id}",
+                action="image.generation",
+                actor=user,
+                session_id=session_id,
+            )
+
+        english_prompt = await self.translate_prompt_to_english(prompt)
+
+        import urllib.parse
+        import random
+        encoded_prompt = urllib.parse.quote(english_prompt)
+        seed = random.randint(1, 999999)
+        image_url = f"https://image.pollinations.ai/p/{encoded_prompt}?width=1024&height=1024&nologo=true&seed={seed}"
+
+        target_message.image_url = image_url
+        await self.store.add_message(target_message)
+
+        return image_url
 
 
 def estimate_token_count(value: str) -> int:
