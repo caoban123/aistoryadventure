@@ -6842,6 +6842,10 @@ body[data-mode="novel"] .story-log {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
   animation: novelSceneIn 0.35s ease;
+
+  max-width: 72ch;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 @keyframes novelSceneIn {
@@ -6886,13 +6890,15 @@ body[data-mode="novel"] .story-log {
 }
 
 .novel-user-direction {
-  margin: 28px 0;
+  margin: 28px auto;
   padding: 18px 22px;
 
   border-left: 3px solid rgba(224, 173, 82, 0.5);
   border-radius: 16px;
 
   background: rgba(224, 173, 82, 0.06);
+
+  max-width: 72ch;
 }
 
 .novel-direction-label {
