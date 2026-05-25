@@ -1,0 +1,24 @@
+[Unit]
+Description=AI Story Adventure API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ai-story
+Group=ai-story
+WorkingDirectory=/opt/ai-story
+EnvironmentFile=/etc/ai-story/ai-story.env
+ExecStart=/opt/ai-story/venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+KillSignal=SIGINT
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/opt/ai-story /var/lib/ai-story /var/backups/ai-story
+
+[Install]
+WantedBy=multi-user.target

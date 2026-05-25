@@ -1,0 +1,11 @@
+[Unit]
+Description=AI Story Adventure local runtime backup
+After=ai-story-api.service
+
+[Service]
+Type=oneshot
+User=ai-story
+Group=ai-story
+WorkingDirectory=/opt/ai-story
+EnvironmentFile=/etc/ai-story/ai-story.env
+ExecStart=/opt/ai-story/venv/bin/python scripts/backup_local.py --output-dir /var/backups/ai-story
