@@ -60,7 +60,7 @@ class AdminUserState(BaseModel):
     email: str | None = None
     name: str | None = None
     provider: str | None = None
-    points_balance: int = 0
+    points_balance: int = 50
     is_banned: bool = False
     ban_reason: str = ""
     banned_at: str | None = None
