@@ -191,6 +191,17 @@ async def start_game(
         return result
     except HTTPException:
         raise
+    except ValueError as exc:
+        await log_ai_flow(
+            user=user,
+            action="start_adventure",
+            operation="game.start",
+            status="error",
+            started_at=started_at,
+            estimated_input_tokens=estimated_input_tokens,
+            error=exc,
+        )
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         await log_ai_flow(
             user=user,
@@ -248,7 +259,8 @@ async def continue_story(
             estimated_input_tokens=estimated_input_tokens,
             error=exc,
         )
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+        status_code = 404 if "not found" in str(exc).lower() else 400
+        raise HTTPException(status_code=status_code, detail=str(exc)) from exc
     except PermissionError as exc:
         await log_ai_flow(
             user=user,
@@ -527,6 +539,17 @@ async def start_novel_world(
         return result
     except HTTPException:
         raise
+    except ValueError as exc:
+        await log_ai_flow(
+            user=user,
+            action="novel_world",
+            operation="game.novel_world",
+            status="error",
+            started_at=started_at,
+            estimated_input_tokens=estimated_input_tokens,
+            error=exc,
+        )
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         await log_ai_flow(
             user=user,
@@ -587,7 +610,8 @@ async def create_novel_foundation(
             estimated_input_tokens=estimated_input_tokens,
             error=exc,
         )
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+        status_code = 404 if "not found" in str(exc).lower() else 400
+        raise HTTPException(status_code=status_code, detail=str(exc)) from exc
     except PermissionError as exc:
         await log_ai_flow(
             user=user,

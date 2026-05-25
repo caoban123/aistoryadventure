@@ -24,6 +24,7 @@ from app.memory.firebase_store import FirebaseStore
 from app.memory.memory_service import MemoryService
 from app.memory.vector_store import VectorStore
 from app.services.admin_service import AdminControlService
+from app.services.safety_service import SafetyFilterService
 import json 
 
 DRAFT_TTL_HOURS = 24
@@ -99,6 +100,7 @@ class StoryService:
         self.vector_store = VectorStore()
         self.admin_control = AdminControlService()
         self.memory = MemoryService(self.store, self.vector_store, self.provider)
+        self.safety_filter = SafetyFilterService()
 
     async def _generate_text_logged(
         self,
@@ -161,7 +163,14 @@ class StoryService:
 
     async def start_game(self, request: StartGameRequest, user_id: str,) -> StoryResponse:
         await self.cleanup_old_drafts(user_id)
+        
+        # Validate inputs
+        self.safety_filter.validate_input(request.player_name, "Tên người chơi")
+        self.safety_filter.validate_input(request.character_hint, "Mô tả nhân vật")
+        self.safety_filter.validate_input(request.world_hint, "Mô tả thế giới")
         adventure_profile = build_adventure_profile(request)
+        for key in ["starting_condition", "region", "objective", "threat", "loadout"]:
+            self.safety_filter.validate_input(adventure_profile.get(key), f"Hồ sơ phiêu lưu ({key})")
 
         session = SessionState(
             session_id=str(uuid4()),
@@ -191,9 +200,9 @@ class StoryService:
         )
         parsed = parse_story_output(raw)
 
-        foundation_text = parsed["foundation"]
-        ai_text = parsed["story"]
-        choices = parsed["choices"]
+        foundation_text = self.safety_filter.censor_output(parsed["foundation"])
+        ai_text = self.safety_filter.censor_output(parsed["story"])
+        choices = [self.safety_filter.censor_output(c) for c in parsed["choices"]]
         session.adventure_profile = merge_survival_update(
             session.adventure_profile,
             parsed.get("survival_update"),
@@ -240,6 +249,7 @@ class StoryService:
         )
 
     async def continue_story(self, request: TurnRequest, user_id: str, ) -> StoryResponse:
+        self.safety_filter.validate_input(request.player_input, "Hành động của người chơi")
         session = await self.store.get_session(request.session_id)
         if session is None:
             raise ValueError("Session not found")
@@ -272,8 +282,8 @@ class StoryService:
         )
         parsed = parse_story_output(raw)
 
-        ai_text = parsed["story"]
-        choices = parsed["choices"]
+        ai_text = self.safety_filter.censor_output(parsed["story"])
+        choices = [self.safety_filter.censor_output(c) for c in parsed["choices"]]
         if session.mode == "adventure":
             session.adventure_profile = merge_survival_update(
                 session.adventure_profile,
@@ -391,6 +401,8 @@ class StoryService:
         user_id: str,
     ) -> NovelWorldResponse:
         await self.cleanup_old_drafts(user_id)
+        self.safety_filter.validate_input(request.title, "Tiêu đề tiểu thuyết")
+        self.safety_filter.validate_input(request.world_seed, "Bối cảnh thế giới")
 
         session = SessionState(
             session_id=str(uuid4()),
@@ -413,8 +425,8 @@ class StoryService:
         )
         data = self._parse_json(raw)
 
-        world_draft = data.get("world_draft", "")
-        questions = data.get("questions", [])
+        world_draft = self.safety_filter.censor_output(data.get("world_draft", ""))
+        questions = [self.safety_filter.censor_output(q) for q in data.get("questions", [])]
 
         session.world_summary = world_draft
         session.world_questions = questions
@@ -437,6 +449,12 @@ class StoryService:
         request: NovelFoundationRequest,
         user_id: str,
     ) -> StoryResponse:
+        self.safety_filter.validate_input(request.player_name, "Tên nhân vật")
+        self.safety_filter.validate_input(request.occupation, "Nghề nghiệp")
+        self.safety_filter.validate_input(request.personality, "Tính cách")
+        for ans in request.answers:
+            self.safety_filter.validate_input(ans.answer, f"Câu trả lời cho câu hỏi '{ans.question_text}'")
+
         session = await self.store.get_session(request.session_id)
 
         if session is None:
@@ -469,10 +487,20 @@ class StoryService:
         )
         data = self._parse_json(raw)
 
-        foundation_text = data.get("foundation", "")
+        foundation_text = self.safety_filter.censor_output(data.get("foundation", ""))
         novel_profile = data.get("novel_profile", {})
-        ai_text = data.get("story", "")
-        choices = data.get("choices", [])
+        if isinstance(novel_profile, dict):
+            if "protagonist" in novel_profile and isinstance(novel_profile["protagonist"], dict):
+                for k, v in novel_profile["protagonist"].items():
+                    if isinstance(v, str):
+                        novel_profile["protagonist"][k] = self.safety_filter.censor_output(v)
+            if "world" in novel_profile and isinstance(novel_profile["world"], dict):
+                for k, v in novel_profile["world"].items():
+                    if isinstance(v, str):
+                        novel_profile["world"][k] = self.safety_filter.censor_output(v)
+
+        ai_text = self.safety_filter.censor_output(data.get("story", ""))
+        choices = [self.safety_filter.censor_output(c) for c in data.get("choices", [])]
 
         session.foundation_text = foundation_text
         session.novel_profile = novel_profile
