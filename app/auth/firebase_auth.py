@@ -37,7 +37,17 @@ async def get_current_user(
     token = credentials_header.credentials
 
     try:
-        decoded_token = auth.verify_id_token(token)
+        try:
+            decoded_token = auth.verify_id_token(token)
+        except Exception as exc:
+            if "Token used too early" in str(exc):
+                import asyncio
+                import logging
+                logging.getLogger("ai_story.auth").warning("Token used too early due to clock skew. Retrying in 1s...")
+                await asyncio.sleep(1.0)
+                decoded_token = auth.verify_id_token(token)
+            else:
+                raise
 
         return {
             "uid": decoded_token["uid"],

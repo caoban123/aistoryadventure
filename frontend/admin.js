@@ -137,7 +137,7 @@ async function requestJson(url, options = {}) {
   const user = auth.currentUser;
   if (!user) throw new Error("Yêu cầu đăng nhập tài khoản quản trị.");
 
-  const token = await user.getIdToken(true);
+  let token = await user.getIdToken(true);
   const headers = {
     "Content-Type": "application/json",
     ...(options.headers || {}),
@@ -145,22 +145,37 @@ async function requestJson(url, options = {}) {
   };
 
   let response;
-  try {
-    response = await fetch(url, { ...options, headers });
-  } catch (err) {
-    throw new Error(err?.message || "Không thể gửi yêu cầu mạng.");
+  let retries = 1;
+
+  while (true) {
+    try {
+      response = await fetch(url, { ...options, headers });
+    } catch (err) {
+      throw new Error(err?.message || "Không thể gửi yêu cầu mạng.");
+    }
+
+    const contentType = response.headers.get("content-type") || "";
+    const data = contentType.includes("application/json")
+      ? await response.json().catch(() => null)
+      : await response.text().catch(() => "");
+
+    if (!response.ok) {
+      const errMsg = getApiErrorMessage(data, response.status);
+      if (retries > 0 && errMsg && errMsg.includes("Token used too early")) {
+        console.warn("Token used too early (clock skew). Retrying in 2s...");
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        if (auth.currentUser) {
+          const newToken = await auth.currentUser.getIdToken(true);
+          headers.Authorization = `Bearer ${newToken}`;
+        }
+        retries--;
+        continue;
+      }
+      throw new Error(errMsg);
+    }
+
+    return data;
   }
-
-  const contentType = response.headers.get("content-type") || "";
-  const data = contentType.includes("application/json")
-    ? await response.json().catch(() => null)
-    : await response.text().catch(() => "");
-
-  if (!response.ok) {
-    throw new Error(getApiErrorMessage(data, response.status));
-  }
-
-  return data;
 }
 
 function getApiErrorMessage(data, status) {

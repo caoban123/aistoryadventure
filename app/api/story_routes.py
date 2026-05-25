@@ -444,6 +444,23 @@ async def like_discover_world(
         return {"liked": True, "likes": item.likes}
 
 
+@router.get("/me")
+async def get_player_profile(user=Depends(get_current_user)):
+    await enforce_player_or_http(user)
+    state = await admin_control.store.get_admin_user_state(user["uid"])
+    if not state:
+        state = await admin_control.ensure_user_state(user)
+    announcements = await admin_control.store.list_announcements(limit=50)
+    return {
+        "uid": user["uid"],
+        "email": user.get("email"),
+        "name": user.get("name"),
+        "points_balance": state.points_balance if state else 0,
+        "is_banned": state.is_banned if state else False,
+        "announcements": announcements,
+    }
+
+
 @router.get("/{session_id}", response_model=SessionResponse)
 async def get_session(
     session_id: str,
@@ -661,21 +678,7 @@ async def delete_published_world(
     return {"message": "Đã xóa thế giới đã xuất bản thành công."}
 
 
-@router.get("/me")
-async def get_player_profile(user=Depends(get_current_user)):
-    await enforce_player_or_http(user)
-    state = await admin_control.store.get_admin_user_state(user["uid"])
-    if not state:
-        state = await admin_control.ensure_user_state(user)
-    announcements = await admin_control.store.list_announcements(limit=50)
-    return {
-        "uid": user["uid"],
-        "email": user.get("email"),
-        "name": user.get("name"),
-        "points_balance": state.points_balance if state else 0,
-        "is_banned": state.is_banned if state else False,
-        "announcements": announcements,
-    }
+
 
 
 
