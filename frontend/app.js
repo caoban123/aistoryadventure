@@ -3099,8 +3099,8 @@ async function addMessage(role, content, animate = false, messageId = null, imag
           ${formatStoryParagraphs(content)}
         </div>
         ${imageUrl ? `
-        <div class="message-illustration">
-          <img src="${imageUrl}" alt="Scene Illustration" class="scene-image" />
+        <div class="message-illustration loading">
+          <img src="${imageUrl}" alt="Scene Illustration" class="scene-image" onload="this.parentElement.classList.remove('loading')" onerror="this.parentElement.classList.remove('loading')" />
         </div>` : (messageId ? `
         <div class="message-illustrate-container">
           <button type="button" class="message-illustrate-btn">
@@ -3122,8 +3122,8 @@ async function addMessage(role, content, animate = false, messageId = null, imag
       <div class="message-content">
         ${formatStoryParagraphs(content)}
         ${imageUrl ? `
-        <div class="message-illustration">
-          <img src="${imageUrl}" alt="Scene Illustration" class="scene-image" />
+        <div class="message-illustration loading">
+          <img src="${imageUrl}" alt="Scene Illustration" class="scene-image" onload="this.parentElement.classList.remove('loading')" onerror="this.parentElement.classList.remove('loading')" />
         </div>` : (messageId ? `
         <div class="message-illustrate-container">
           <button type="button" class="message-illustrate-btn">
@@ -3232,8 +3232,8 @@ if (illustrateMessageForm) {
         }
         
         const imgSection = document.createElement("div");
-        imgSection.className = "message-illustration";
-        imgSection.innerHTML = `<img src="${imageUrl}" alt="Scene Illustration" class="scene-image" />`;
+        imgSection.className = "message-illustration loading";
+        imgSection.innerHTML = `<img src="${imageUrl}" alt="Scene Illustration" class="scene-image" onload="this.parentElement.classList.remove('loading')" onerror="this.parentElement.classList.remove('loading')" />`;
         
         const proseOrContent = msgElement.querySelector(".novel-prose") || msgElement.querySelector(".message-content");
         if (proseOrContent) {

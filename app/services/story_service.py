@@ -574,14 +574,22 @@ class StoryService:
             f"Vietnamese Prompt: {prompt}"
         )
         try:
-            english = await self.provider.generate_text(translation_prompt)
+            import asyncio
+            english = await asyncio.wait_for(
+                self.provider.generate_text(translation_prompt),
+                timeout=3.0
+            )
             english = english.strip()
             if english.startswith('"') and english.endswith('"'):
                 english = english[1:-1].strip()
             if english.startswith("'") and english.endswith("'"):
                 english = english[1:-1].strip()
             return english
-        except Exception:
+        except Exception as exc:
+            import logging
+            logging.getLogger("ai_story.translate").warning(
+                "Failed to translate illustration prompt to English (falling back to raw prompt): %s", exc
+            )
             return prompt
 
     async def illustrate_message(
