@@ -3101,12 +3101,7 @@ async function addMessage(role, content, animate = false, messageId = null, imag
         ${imageUrl ? `
         <div class="message-illustration loading">
           <img src="${imageUrl}" alt="Scene Illustration" class="scene-image" onload="this.parentElement.classList.remove('loading')" onerror="this.parentElement.classList.remove('loading')" />
-        </div>` : (messageId ? `
-        <div class="message-illustrate-container">
-          <button type="button" class="message-illustrate-btn">
-            ✨ Illustrate
-          </button>
-        </div>` : "")}
+        </div>` : ""}
       `;
     }
   } else {
@@ -3124,23 +3119,12 @@ async function addMessage(role, content, animate = false, messageId = null, imag
         ${imageUrl ? `
         <div class="message-illustration loading">
           <img src="${imageUrl}" alt="Scene Illustration" class="scene-image" onload="this.parentElement.classList.remove('loading')" onerror="this.parentElement.classList.remove('loading')" />
-        </div>` : (messageId ? `
-        <div class="message-illustrate-container">
-          <button type="button" class="message-illustrate-btn">
-            ✨ Illustrate
-          </button>
-        </div>` : "")}
+        </div>` : ""}
       </div>
     `;
   }
 
-  // Bind illustrate button click
-  const illustrateBtn = item.querySelector(".message-illustrate-btn");
-  if (illustrateBtn && messageId) {
-    illustrateBtn.addEventListener("click", () => {
-      openIllustrateModal(messageId, content);
-    });
-  }
+
 
   storyLog.appendChild(item);
   pulsePortal(role === "ai" ? 0.95 : 0.5);
@@ -3162,105 +3146,7 @@ async function addMessage(role, content, animate = false, messageId = null, imag
   return item;
 }
 
-function openIllustrateModal(messageId, sceneContent) {
-  const modal = document.getElementById("illustrateMessageModal");
-  const msgIdInput = document.getElementById("illustrateMessageId");
-  const promptInput = document.getElementById("illustratePrompt");
-  
-  if (!modal || !msgIdInput || !promptInput) return;
-  
-  msgIdInput.value = messageId;
-  
-  // Prefill with a clean, concise snippet of the scene
-  let defaultPrompt = sceneContent
-    .replace(/<[^>]*>/g, "")
-    .replace(/[\r\n]+/g, " ")
-    .trim();
-  
-  if (defaultPrompt.length > 200) {
-    defaultPrompt = defaultPrompt.slice(0, 197) + "...";
-  }
-  
-  promptInput.value = defaultPrompt;
-  modal.classList.remove("hidden");
-}
 
-function closeIllustrateModal() {
-  const modal = document.getElementById("illustrateMessageModal");
-  if (modal) modal.classList.add("hidden");
-}
-
-// Bind illustration modal close actions
-document.getElementById("closeIllustrateModalBtn")?.addEventListener("click", closeIllustrateModal);
-document.getElementById("illustrateModalBackdrop")?.addEventListener("click", closeIllustrateModal);
-
-// Bind illustration form submit
-const illustrateMessageForm = document.getElementById("illustrateMessageForm");
-if (illustrateMessageForm) {
-  illustrateMessageForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    
-    const messageId = document.getElementById("illustrateMessageId")?.value;
-    const prompt = document.getElementById("illustratePrompt")?.value;
-    
-    if (!messageId || !prompt) return;
-    
-    closeIllustrateModal();
-    
-    const msgElement = document.querySelector(`article[data-message-id="${messageId}"]`);
-    let illustrateBtnContainer = null;
-    let originalBtnHtml = "";
-    if (msgElement) {
-      illustrateBtnContainer = msgElement.querySelector(".message-illustrate-container");
-      if (illustrateBtnContainer) {
-        originalBtnHtml = illustrateBtnContainer.innerHTML;
-        illustrateBtnContainer.innerHTML = `<span style="color:var(--accent); font-family:var(--font-mono); font-size:0.8rem;">⌛ Generating illustration...</span>`;
-      }
-    }
-    
-    try {
-      const response = await requestJson(`${API_BASE}/game/${sessionId}/message/${messageId}/illustrate`, {
-        method: "POST",
-        body: JSON.stringify({ prompt: prompt }),
-      });
-      
-      const imageUrl = typeof response === "string" ? response : (response.image_url || response);
-      
-      if (imageUrl) {
-        if (illustrateBtnContainer) {
-          illustrateBtnContainer.remove();
-        }
-        
-        const imgSection = document.createElement("div");
-        imgSection.className = "message-illustration loading";
-        imgSection.innerHTML = `<img src="${imageUrl}" alt="Scene Illustration" class="scene-image" onload="this.parentElement.classList.remove('loading')" onerror="this.parentElement.classList.remove('loading')" />`;
-        
-        const proseOrContent = msgElement.querySelector(".novel-prose") || msgElement.querySelector(".message-content");
-        if (proseOrContent) {
-          proseOrContent.appendChild(imgSection);
-        }
-        
-        addLocalNotification("Scene Illustrated", "Successfully illustrated the scene.");
-        fetchPlayerProfile();
-      } else {
-        throw new Error("Did not receive image URL from server.");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error illustrating scene: " + err.message);
-      if (illustrateBtnContainer) {
-        illustrateBtnContainer.innerHTML = originalBtnHtml;
-        const newBtn = illustrateBtnContainer.querySelector(".message-illustrate-btn");
-        if (newBtn) {
-          newBtn.addEventListener("click", () => {
-            const promptVal = msgElement.querySelector(".novel-prose")?.textContent || msgElement.querySelector(".message-content")?.textContent || "";
-            openIllustrateModal(messageId, promptVal);
-          });
-        }
-      }
-    }
-  });
-}
 
 function addChoicesLoading() {
   choicesBox.innerHTML = "";
@@ -5108,7 +4994,7 @@ function buildHistoryBookHTML(data) {
 <html>
 <head>
   <meta charset="utf-8">
-  <title>\${title} - AI Story Adventure</title>
+  <title>${title} - AI Story Adventure</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -5303,22 +5189,22 @@ function buildHistoryBookHTML(data) {
   </div>
   <div class="book-container">
     <div class="cover-page">
-      <h1>\${title}</h1>
-      <div class="subtitle">\${mode} Mode Journey</div>
+      <h1>${title}</h1>
+      <div class="subtitle">${mode} Mode Journey</div>
       <div class="divider"></div>
       <div class="author">AI Story Adventure</div>
-      <div class="date">\${createdDate}</div>
+      <div class="date">${createdDate}</div>
     </div>
     
     <div class="section-page">
       <h2>Hồ sơ thế giới</h2>
-      \${survivalHTML}
+      ${survivalHTML}
       <div style="white-space: pre-line; text-align: justify; font-size: 1.05rem;">
-        \${foundation || "Không có hồ sơ thế giới nào được lưu."}
+        ${foundation || "No world foundation profile saved."}
       </div>
     </div>
 
-    \${chaptersHTML}
+    ${chaptersHTML}
   </div>
 </body>
 </html>
