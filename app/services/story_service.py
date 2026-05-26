@@ -593,7 +593,7 @@ class StoryService:
     ) -> str:
         app_settings = await self.admin_control.store.get_app_settings()
         if not app_settings.image_enabled:
-            raise ValueError("Tính năng sinh ảnh hiện đang bị khóa bởi Admin.")
+            raise ValueError("Image generation feature is currently disabled by Admin.")
 
         user_state = await self.admin_control.store.get_admin_user_state(user["uid"])
         if not user_state:
@@ -605,7 +605,7 @@ class StoryService:
         if app_settings.points_enabled and not is_admin:
             if user_state.points_balance < cost:
                 raise ValueError(
-                    f"Không đủ xu để tạo ảnh. Cần {cost} xu, bạn hiện có {user_state.points_balance} xu."
+                    f"Insufficient coins. Cost is {cost} coins, but you only have {user_state.points_balance} coins."
                 )
 
         messages = await self.store.get_messages(session_id, limit=200)
@@ -616,7 +616,7 @@ class StoryService:
                 break
 
         if not target_message:
-            raise ValueError("Không tìm thấy tin nhắn chỉ định trong cuộc hội thoại.")
+            raise ValueError("Target message not found in session history.")
 
         self.safety_filter.validate_input(prompt, "Mô tả ảnh")
 
@@ -624,7 +624,7 @@ class StoryService:
             await self.admin_control.adjust_points(
                 target_uid=user["uid"],
                 delta=-cost,
-                reason=f"Tạo ảnh minh họa cho lượt chơi {message_id}",
+                reason=f"Generated scene illustration for message {message_id}",
                 action="image.generation",
                 actor=user,
                 session_id=session_id,

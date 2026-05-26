@@ -3214,7 +3214,7 @@ if (illustrateMessageForm) {
       illustrateBtnContainer = msgElement.querySelector(".message-illustrate-container");
       if (illustrateBtnContainer) {
         originalBtnHtml = illustrateBtnContainer.innerHTML;
-        illustrateBtnContainer.innerHTML = `<span style="color:var(--accent); font-family:var(--font-mono); font-size:0.8rem;">⌛ Đang vẽ ảnh minh họa...</span>`;
+        illustrateBtnContainer.innerHTML = `<span style="color:var(--accent); font-family:var(--font-mono); font-size:0.8rem;">⌛ Generating illustration...</span>`;
       }
     }
     
