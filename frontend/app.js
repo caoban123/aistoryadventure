@@ -4999,7 +4999,7 @@ function buildHistoryBookHTML(data) {
   const session = data?.session || {};
   const messages = Array.isArray(data?.messages) ? data.messages : [];
   const title = escapeHtml(session.title || "Untitled Story");
-  const mode = session.mode === "novel" ? "Novel" : "Adventure";
+  const mode = session.mode === "novel" ? "Novel" : (session.mode === "rpg" ? "RPG" : "Adventure");
   const createdDate = new Date(session.created_at || Date.now()).toLocaleDateString("vi-VN", {
     year: "numeric",
     month: "long",
@@ -5017,6 +5017,72 @@ function buildHistoryBookHTML(data) {
         <p><strong>Region:</strong> ${escapeHtml(prof.region || "Unknown")}</p>
         <p><strong>Objective:</strong> ${escapeHtml(prof.objective || "Survival")}</p>
         <p><strong>Danger:</strong> ${prof.danger || 3}/5 | <strong>Supplies:</strong> ${prof.supplies || 3}/5 | <strong>Wounds:</strong> ${prof.wounds || 0}/5</p>
+      </div>
+    `;
+  }
+
+  // RPG info if RPG mode
+  let rpgHTML = "";
+  if (session.mode === "rpg" && session.rpg_state) {
+    const rState = session.rpg_state;
+    const inv = rState.inventory || {};
+    const party = rState.party || {};
+    const activeMembers = Array.isArray(party.active) ? party.active : [];
+    const reserveMembers = Array.isArray(party.reserve) ? party.reserve : [];
+    const invItems = Array.isArray(inv.items) ? inv.items : [];
+
+    let activeHTML = "";
+    activeMembers.forEach(c => {
+      const stats = c.stats || {};
+      const equip = c.equipment || {};
+      const weapon = equip.weapon ? `[Vũ khí: ${escapeHtml(equip.weapon.name || "Không")}]` : "";
+      const armor = equip.armor ? `[Giáp: ${escapeHtml(equip.armor.name || "Không")}]` : "";
+      const acc = equip.accessory ? `[Phụ kiện: ${escapeHtml(equip.accessory.name || "Không")}]` : "";
+      const equipText = [weapon, armor, acc].filter(Boolean).join(" ");
+      activeHTML += `
+        <div class="rpg-char-card">
+          <strong>[${escapeHtml(c.char_class || "Hero")}] ${escapeHtml(c.name)}</strong> (Lv.${c.level || 1})<br>
+          HP: ${stats.hp || 0}/${stats.max_hp || 0} | ATK: ${stats.atk || 0} | DEF: ${stats.defense || 0}% | SPD: ${stats.atk_spd || 0}<br>
+          <em>${equipText || "Không có trang bị"}</em>
+        </div>
+      `;
+    });
+
+    let reserveHTML = "";
+    reserveMembers.forEach(c => {
+      const stats = c.stats || {};
+      const equip = c.equipment || {};
+      const weapon = equip.weapon ? `[Vũ khí: ${escapeHtml(equip.weapon.name || "Không")}]` : "";
+      const armor = equip.armor ? `[Giáp: ${escapeHtml(equip.armor.name || "Không")}]` : "";
+      const acc = equip.accessory ? `[Phụ kiện: ${escapeHtml(equip.accessory.name || "Không")}]` : "";
+      const equipText = [weapon, armor, acc].filter(Boolean).join(" ");
+      reserveHTML += `
+        <div class="rpg-char-card">
+          <strong>[${escapeHtml(c.char_class || "Hero")}] ${escapeHtml(c.name)}</strong> (Lv.${c.level || 1})<br>
+          HP: ${stats.hp || 0}/${stats.max_hp || 0} | ATK: ${stats.atk || 0} | DEF: ${stats.defense || 0}% | SPD: ${stats.atk_spd || 0}<br>
+          <em>${equipText || "Không có trang bị"}</em>
+        </div>
+      `;
+    });
+
+    let itemsHTML = invItems.map(item => `[${escapeHtml(item.name)}]`).join(", ") || "Trống";
+
+    rpgHTML = `
+      <div class="survival-status">
+        <h3>Thông số RPG</h3>
+        <p><strong>Vùng đất:</strong> ${escapeHtml(rState.region || "Chưa rõ")}</p>
+        <p><strong>Nhiệm vụ:</strong> ${escapeHtml(rState.objective || "Chưa có")}</p>
+        <p><strong>Tài sản:</strong> ${inv.gold || 0} vàng | <strong>Hành trang:</strong> ${itemsHTML}</p>
+        
+        <h4>Đội hình chính thức</h4>
+        <div class="rpg-party-grid">
+          ${activeHTML || "<p>Không có thành viên nào.</p>"}
+        </div>
+        
+        <h4>Đội hình dự bị</h4>
+        <div class="rpg-party-grid">
+          ${reserveHTML || "<p>Không có thành viên nào.</p>"}
+        </div>
       </div>
     `;
   }
@@ -5139,6 +5205,28 @@ function buildHistoryBookHTML(data) {
       font-size: 0.85rem;
       letter-spacing: 1px;
       color: #8c7853;
+    }
+    .survival-status h4 {
+      margin-top: 15px;
+      margin-bottom: 5px;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #5a4b33;
+    }
+    .rpg-party-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .rpg-char-card {
+      background-color: #faf8f2;
+      border: 1px solid #e8e4da;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      line-height: 1.5;
     }
     .chapter {
       margin-bottom: 40px;
@@ -5263,6 +5351,7 @@ function buildHistoryBookHTML(data) {
     <div class="section-page">
       <h2>Hồ sơ thế giới</h2>
       ${survivalHTML}
+      ${rpgHTML}
       <div style="white-space: pre-line; text-align: justify; font-size: 1.05rem;">
         ${foundation || "No world foundation profile saved."}
       </div>
@@ -7314,14 +7403,6 @@ createNovelBtn?.addEventListener("click", () => {
   closeCreateModal();
 
   showPage(novelWorldPage);
-  setActiveNav(null);
-});
-createRpgBtn?.addEventListener("click", () => {
-  closeCreateModal();
-  if (typeof window.resetRpgSetupWizard === "function") {
-    window.resetRpgSetupWizard();
-  }
-  showPage(document.getElementById("rpgSetupPage"));
   setActiveNav(null);
 });
 

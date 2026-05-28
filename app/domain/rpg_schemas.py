@@ -69,6 +69,8 @@ class RPGCombatResponse(BaseModel):
     combat_state: dict[str, Any]
     is_combat_over: bool = False
     result: str | None = None  # "win" / "lose" / None
+    story: str | None = None
+    rpg_state: dict[str, Any] | None = None
 
 class RPGShopResponse(BaseModel):
     session_id: str

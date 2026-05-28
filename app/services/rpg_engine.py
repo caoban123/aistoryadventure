@@ -686,8 +686,6 @@ class CombatEngine:
 
         return logs
 
-        return logs
-
     @classmethod
     def check_and_trigger_death(cls, character: RPGCharacter, combat_state: RPGCombatState, logs: list[str]) -> bool:
         """Checks if a character has died and handles revival passives (Angel and Hoshiguma) or death logs."""
@@ -822,6 +820,10 @@ class CombatEngine:
             # Player attacks back (if still alive and not stunned by enemy attack)
             if attacker.stats.hp > 0 and not any(d.name in ["Choáng", "Sợ hãi"] for d in attacker.debuffs):
                 cls.execute_action(attacker, skill_name, target_id, combat_state, logs, acted_or_hit_ids)
+                if enemy.stats.hp <= 0:
+                    logs.append(f"🎉 Chiến thắng! Đã tiêu diệt {enemy.name}!")
+                    combat_state.is_active = False
+                    return logs, True, "win"
             else:
                 logs.append(f"💤 {attacker.name} không thể tấn công vì bị choáng hoặc tử trận.")
 

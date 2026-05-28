@@ -1251,6 +1251,7 @@ class RPGService:
                     # Revive them with 10% hp
                     enemy.stats.hp = int(enemy.stats.max_hp * 0.10)
                     enemy.debuffs = []
+                    enemy.buffs = []
                     
                     if len(rpg_state.party.active) < 4:
                         rpg_state.party.active.append(enemy)
@@ -1260,6 +1261,7 @@ class RPGService:
                         joined_msg = "đội hình chính thức"
                     else:
                         rpg_state.party.reserve.append(enemy)
+                        RPGEngine.sync_character_stats(enemy, 1)
                         joined_msg = "đội hình dự bị"
                         
                     prompt = f"Viết bằng tiếng Việt (dưới 90 từ) miêu tả cảnh người chơi đưa tay kéo {enemy.name} dậy, tha thứ cho đụng độ và trao họ lòng tin gia nhập đội."

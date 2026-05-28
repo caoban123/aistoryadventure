@@ -698,7 +698,7 @@ function initRpgSetupWizard() {
 
       // Populate Step 8 Summary
       const nameInput = document.getElementById("rpgPlayerName");
-      document.getElementById("summaryPlayerName").textContent = nameInput.value.trim() || "Người lữ hành";
+      document.getElementById("rpgSummaryPlayerName").textContent = nameInput.value.trim() || "Người lữ hành";
       document.getElementById("summaryPlayerGender").textContent =
         selectedGender === "Female" ? "Nữ (Female)" : (selectedGender === "Male" ? "Nam (Male)" : "Ẩn danh (No mention)");
       document.getElementById("summaryPlayerRegion").textContent = selectedRegion;
@@ -2060,7 +2060,10 @@ function showCombatOverlay(combatState) {
     const debuffs = enemy.debuffs || [];
     const debuffText = document.getElementById("rpgCombatEnemyDebuffs");
     if (debuffs.length > 0) {
-      debuffText.innerHTML = "Trạng thái phụ: " + debuffs.map(d => `<span class="rpg-badge" style="background:#e74c3c;color:#fff;">${d.name} (${d.duration}t)</span>`).join(" ");
+      debuffText.innerHTML = "Trạng thái phụ: " + debuffs.map(d => {
+        const dur = (d.duration === null || d.duration === undefined || d.duration === "None" || d.duration === "null") ? "∞" : `${d.duration}t`;
+        return `<span class="rpg-badge" style="background:#e74c3c;color:#fff;">${d.name} (${dur})</span>`;
+      }).join(" ");
     } else {
       debuffText.innerHTML = "";
     }
@@ -2136,10 +2139,14 @@ function showCombatOverlay(combatState) {
   let firstEnabledAttacker = null;
   aliveMembers.forEach(c => {
     const hasStunOrFear = c.debuffs && c.debuffs.some(d => (d.name === "Choáng" || d.name === "Sợ hãi") && d.duration > 0);
+    const isAutoFiring = c.special_skills && c.special_skills.skill_1_activating;
     const opt = document.createElement("option");
     opt.value = c.character_id;
     if (hasStunOrFear) {
       opt.textContent = `❌ ${c.name} (${c.char_class}) [Bị khống chế]`;
+      opt.disabled = true;
+    } else if (isAutoFiring) {
+      opt.textContent = `❌ ${c.name} (${c.char_class}) [Đang Tự Động Bắn]`;
       opt.disabled = true;
     } else {
       opt.textContent = `${c.name} (${c.char_class})`;
@@ -2239,13 +2246,25 @@ function showCombatOverlay(combatState) {
     if (skillsObj.skill_1) {
       const opt = document.createElement("option");
       opt.value = "skill_1";
-      opt.textContent = `Chiêu 1: ${skillsObj.skill_1}`;
+      const cooldown = skillsObj.skill_1_countdown || 0;
+      if (cooldown > 0) {
+        opt.textContent = `Chiêu 1: ${skillsObj.skill_1} [Hồi chiêu: ${cooldown}t]`;
+        opt.disabled = true;
+      } else {
+        opt.textContent = `Chiêu 1: ${skillsObj.skill_1}`;
+      }
       skillSelect.appendChild(opt);
     }
     if (skillsObj.skill_2) {
       const opt = document.createElement("option");
       opt.value = "skill_2";
-      opt.textContent = `Tuyệt Kỹ: ${skillsObj.skill_2}`;
+      const cooldown = skillsObj.skill_2_countdown || 0;
+      if (cooldown > 0) {
+        opt.textContent = `Tuyệt Kỹ: ${skillsObj.skill_2} [Hồi chiêu: ${cooldown}t]`;
+        opt.disabled = true;
+      } else {
+        opt.textContent = `Tuyệt Kỹ: ${skillsObj.skill_2}`;
+      }
       skillSelect.appendChild(opt);
     }
   };
