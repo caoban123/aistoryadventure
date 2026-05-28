@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     strict_startup_checks: bool = False
     api_prefix: str = ""
     cors_origins: str = "*"
+    kaggle_backend_url: str = "https://onion-vertical-squash.ngrok-free.dev"
 
     text_provider: str = "openai"  
     text_model: str = "gpt-4o-mini"

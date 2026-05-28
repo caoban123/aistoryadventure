@@ -36,7 +36,8 @@ class SessionState(BaseModel):
     updated_at: str = Field(default_factory=utc_now_iso)
     is_saved: bool = True
     
-    mode: Literal["adventure", "novel"] = "adventure"
+    mode: Literal["adventure", "novel", "rpg"] = "adventure"
+    rpg_state: dict[str, Any] = Field(default_factory=dict)
 
     world_seed: str = ""
     world_questions: list[dict[str, Any]] = Field(default_factory=list)

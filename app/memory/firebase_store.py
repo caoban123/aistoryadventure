@@ -117,7 +117,7 @@ class FirebaseStore:
         if self.db:
             import asyncio
             doc_ref = self.db.collection("sessions").document(session.session_id)
-            await asyncio.to_thread(doc_ref.set, session.model_dump(), merge=True)
+            await asyncio.to_thread(doc_ref.set, session.model_dump())
             return
         messages = await self.get_messages(session.session_id, limit=9999)
         import asyncio
@@ -147,6 +147,12 @@ class FirebaseStore:
         if session:
             import asyncio
             await asyncio.to_thread(self._write_local, session, messages)
+
+    async def create_message(self, message: Message) -> None:
+        await self.add_message(message)
+
+    async def list_messages(self, session_id: str, limit: int = 100) -> list[Message]:
+        return await self.get_messages(session_id, limit=limit)
 
     async def get_messages(self, session_id: str, limit: int = 20) -> list[Message]:
         if self.db:

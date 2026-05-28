@@ -303,6 +303,9 @@ const createAdventureBtn =
 const createNovelBtn =
   document.getElementById("createNovelBtn");
 
+const createRpgBtn =
+  document.getElementById("createRpgBtn");
+
 const aboutCreateBtn = document.getElementById("aboutCreateBtn");
 const aboutHomeBtn = document.getElementById("aboutHomeBtn");
 const aboutFinalCreateBtn = document.getElementById("aboutFinalCreateBtn");
@@ -1422,6 +1425,11 @@ const ALL_PAGES = [
   gamePage,
   continuePage,
 ].filter(Boolean);
+
+window.ALL_PAGES = ALL_PAGES;
+window.showPage = showPage;
+window.setPortalPage = setPortalPage;
+window.API_BASE = API_BASE;
 
 const reducedMotionMedia = window.matchMedia(
   "(prefers-reduced-motion: reduce)"
@@ -3959,8 +3967,47 @@ guestBtn?.addEventListener("click", async () => {
   clearAuthError(loginError);
   guestBtn.disabled = true;
   showAuthLoading();
+
+  if (window.AI_STORY_CONFIG?.BYPASS_FIREBASE) {
+    try {
+      isGuest = true;
+      localStorage.setItem("guest_mode", "true");
+      const mockGuestUser = {
+        uid: "guest",
+        email: "guest@example.com",
+        displayName: "Guest Player",
+        photoURL: null,
+        isAnonymous: true,
+        providerData: [],
+        emailVerified: true,
+        getIdToken: async () => "guest"
+      };
+
+      Object.defineProperty(auth, 'currentUser', {
+        get: () => mockGuestUser,
+        configurable: true
+      });
+
+      await sleep(600);
+
+      if (capturedAuthListener) {
+        await capturedAuthListener(mockGuestUser);
+      }
+    } catch (err) {
+      console.error(err);
+      isGuest = false;
+      localStorage.removeItem("guest_mode");
+      showAuthError(loginError, "Could not start Guest mode: " + err.message);
+    } finally {
+      guestBtn.disabled = false;
+      hideAuthLoading();
+    }
+    return;
+  }
+
   try {
     isGuest = true;
+    localStorage.setItem("guest_mode", "true");
     await Promise.all([
       signInAnonymously(auth),
       sleep(1200),
@@ -3968,6 +4015,7 @@ guestBtn?.addEventListener("click", async () => {
   } catch (err) {
     console.error(err);
     isGuest = false;
+    localStorage.removeItem("guest_mode");
     showAuthError(loginError, "Could not start Guest mode. Please check your internet connection.");
   } finally {
     guestBtn.disabled = false;
@@ -3975,9 +4023,25 @@ guestBtn?.addEventListener("click", async () => {
   }
 });
 
+async function handleSignOut() {
+  localStorage.removeItem("guest_mode");
+  if (window.AI_STORY_CONFIG?.BYPASS_FIREBASE && auth.currentUser?.uid === "guest") {
+    Object.defineProperty(auth, 'currentUser', {
+      get: () => null,
+      configurable: true
+    });
+    isGuest = false;
+    if (capturedAuthListener) {
+      await capturedAuthListener(null);
+    }
+    return;
+  }
+  await signOut(auth);
+}
+
 async function performLogout() {
   try {
-    await signOut(auth);
+    await handleSignOut();
     isGuest = false;
     clearCurrentSessionReference();
     if (storyLog) storyLog.innerHTML = "";
@@ -4008,7 +4072,7 @@ logoutBtn?.addEventListener("click", async () => {
   const confirmed = await confirmDialog("Đăng xuất? Bạn sẽ trở về màn hình đăng nhập.");
   if (!confirmed) return;
   try {
-    await signOut(auth);
+    await handleSignOut();
     isGuest = false;
     sessionId = "";
     sessionStorage.removeItem("session_id");
@@ -4026,7 +4090,7 @@ logoutBtn?.addEventListener("click", async () => {
 accountStatusLogoutBtn?.addEventListener("click", async () => {
   try {
     hideAccountStatusPanel();
-    await signOut(auth);
+    await handleSignOut();
   } catch (err) {
     console.error(err);
     showAuthError(loginError, getFriendlyAuthError(err));
@@ -5513,6 +5577,15 @@ async function continueSession(targetSessionId) {
     );
     updateFoundationSidebar();
 
+    if (currentSessionMode === "rpg") {
+      showPage(document.getElementById("rpgPage"));
+      if (window.RPGApp && window.RPGApp.resumeSession) {
+        await window.RPGApp.resumeSession(sessionId, data);
+      }
+      pulseAmbient();
+      return;
+    }
+
     showPage(gamePage);
 
     if (customAction) {
@@ -5865,9 +5938,25 @@ setTimeout(() => {
 
 // ── Auth state ────────────────────────────────────────────────────────────────
 
-onAuthStateChanged(auth, async (user) => {
+let capturedAuthListener = null;
+
+const authCallback = async (user) => {
   const checkId = ++authStatusCheckId;
   hideAuthLoading();
+
+  if (window.AI_STORY_CONFIG?.BYPASS_FIREBASE && localStorage.getItem("guest_mode") === "true") {
+    isGuest = true;
+    user = auth.currentUser || {
+      uid: "guest",
+      email: "guest@example.com",
+      displayName: "Guest Player",
+      photoURL: null,
+      isAnonymous: true,
+      providerData: [],
+      emailVerified: true,
+      getIdToken: async () => "guest"
+    };
+  }
 
   if (loginGoogleBtn) {
     loginGoogleBtn.disabled = false;
@@ -5961,7 +6050,30 @@ onAuthStateChanged(auth, async (user) => {
       hideAiLoading();
     }
   }
-});
+};
+
+capturedAuthListener = authCallback;
+
+if (window.AI_STORY_CONFIG?.BYPASS_FIREBASE && localStorage.getItem("guest_mode") === "true") {
+  isGuest = true;
+  const mockGuestUser = {
+    uid: "guest",
+    email: "guest@example.com",
+    displayName: "Guest Player",
+    photoURL: null,
+    isAnonymous: true,
+    providerData: [],
+    emailVerified: true,
+    getIdToken: async () => "guest"
+  };
+
+  Object.defineProperty(auth, 'currentUser', {
+    get: () => mockGuestUser,
+    configurable: true
+  });
+}
+
+onAuthStateChanged(auth, authCallback);
 
 // Initial state: show login until Firebase resolves
 loadWorldCatalog();
@@ -6169,7 +6281,7 @@ resendVerifyEmailBtn?.addEventListener("click", async () => {
 verifyEmailLogoutBtn?.addEventListener("click", async () => {
   try {
     showAuthLoading();
-    await signOut(auth);
+    await handleSignOut();
     isGuest = false;
     resetAuthPages();
     showPage(loginPage);
@@ -6953,6 +7065,14 @@ backToHomeFromPreset?.addEventListener("click", () => {
   showPage(landingPage);
   setActiveNav(homeTabBtn);
 });
+createRpgBtn?.addEventListener("click", () => {
+  closeCreateModal();
+  if (typeof window.resetRpgSetupWizard === "function") {
+    window.resetRpgSetupWizard();
+  }
+  showPage(document.getElementById("rpgSetupPage"));
+  setActiveNav(null);
+});
 previewPresetSeedBtn?.addEventListener("click", () => {
   document
     .querySelector(".preset-lore-section")
@@ -7194,6 +7314,14 @@ createNovelBtn?.addEventListener("click", () => {
   closeCreateModal();
 
   showPage(novelWorldPage);
+  setActiveNav(null);
+});
+createRpgBtn?.addEventListener("click", () => {
+  closeCreateModal();
+  if (typeof window.resetRpgSetupWizard === "function") {
+    window.resetRpgSetupWizard();
+  }
+  showPage(document.getElementById("rpgSetupPage"));
   setActiveNav(null);
 });
 

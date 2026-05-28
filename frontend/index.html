@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css?v=player-app-38" />
+  <link rel="stylesheet" href="rpg_style.css?v=1" />
   <!-- Primary Meta Tags -->
   <meta name="title" content="AI Story Adventure" />
   <meta name="description" content="Forge your own legend in a living AI fantasy world." />
@@ -2552,6 +2553,387 @@
   </div>
 </section>
 
+    <!-- ════════════════════════════════ PAGE: RPG SETUP ══ -->
+    <section id="rpgSetupPage" class="page rpg-setup-page">
+      <div class="rpg-setup-shell glass-panel">
+        <header class="rpg-setup-header">
+          <button id="backToLandingFromRpgSetup" type="button" class="ghost rpg-setup-back">
+            ← Quay lại
+          </button>
+          <div class="rpg-setup-title">
+            <p class="eyebrow">Chế độ RPG</p>
+            <h1>Khởi Tạo Nhân Vật</h1>
+          </div>
+        </header>
+        
+        <!-- RPG 7-Step Setup Wizard Progress Indicator -->
+        <div class="rpg-wizard-progress">
+          <div class="progress-line">
+            <div class="progress-line-fill" id="rpgWizardProgressFill" style="width: 0%;"></div>
+          </div>
+          <div class="progress-steps" id="rpgWizardStepsContainer">
+            <div class="progress-step active" data-step="1"><span>1</span><label>Tên</label></div>
+            <div class="progress-step" data-step="2"><span>2</span><label>Giới tính</label></div>
+            <div class="progress-step" data-step="3"><span>3</span><label>Khu vực</label></div>
+            <div class="progress-step" data-step="4"><span>4</span><label>Vàng</label></div>
+            <div class="progress-step" data-step="5"><span>5</span><label>Trang bị</label></div>
+            <div class="progress-step" data-step="6"><span>6</span><label>Mục tiêu</label></div>
+            <div class="progress-step" data-step="7"><span>7</span><label>Ngoại hình</label></div>
+            <div class="progress-step" data-step="8"><span>8</span><label>Tóm tắt</label></div>
+          </div>
+        </div>
+
+        <!-- Step 1: Input Name -->
+        <div id="rpgStep1" class="rpg-setup-step active">
+          <div class="rpg-form-group">
+            <label for="rpgPlayerName">Tên Anh Hùng</label>
+            <div class="rpg-input-with-action">
+              <input id="rpgPlayerName" type="text" class="rpg-big-input" placeholder="Nhập tên người hùng..." autocomplete="off" />
+              <button id="rpgSuggestNameBtn" type="button" class="action-chip-btn">🪄 Gợi ý tên AI</button>
+            </div>
+            <div id="rpgNameSuggestions" class="rpg-suggestions-chips hidden">
+              <!-- Name suggestion chips will be populated here -->
+            </div>
+          </div>
+          <div class="wizard-navigation">
+            <div></div> <!-- Spacer -->
+            <button id="rpgStep1Next" type="button" class="primary-btn wizard-next-btn">
+              Tiếp theo →
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 2: Choose Gender -->
+        <div id="rpgStep2" class="rpg-setup-step">
+          <div class="rpg-form-group">
+            <label>Chọn Giới Tính</label>
+            <p class="step-desc">Giới tính sẽ ảnh hưởng đến đại từ xưng hô trong lịch sử của bạn.</p>
+            <div class="rpg-gender-selector">
+              <button type="button" class="rpg-gender-btn active" data-gender="Male">
+                <span class="gender-icon">♂</span> Nam (Male)
+              </button>
+              <button type="button" class="rpg-gender-btn" data-gender="Female">
+                <span class="gender-icon">♀</span> Nữ (Female)
+              </button>
+              <button type="button" class="rpg-gender-btn" data-gender="No mention">
+                <span class="gender-icon">⚦</span> Ẩn danh (No mention)
+              </button>
+            </div>
+          </div>
+          <div class="wizard-navigation">
+            <button id="rpgStep2Back" type="button" class="ghost wizard-back-btn">← Quay lại</button>
+            <button id="rpgStep2Next" type="button" class="primary-btn wizard-next-btn">Tiếp theo →</button>
+          </div>
+        </div>
+
+        <!-- Step 3: Choose Region -->
+        <div id="rpgStep3" class="rpg-setup-step">
+          <div class="rpg-form-group">
+            <label for="rpgRegionInput">Khu Vực Khởi Hành</label>
+            <p class="step-desc">Nơi câu chuyện của bạn bắt đầu. Chọn một vùng đất hoặc tự viết bối cảnh riêng.</p>
+            <div class="rpg-preset-chips" id="rpgRegionPresets">
+              <button type="button" class="rpg-preset-chip active" data-value="Vương Quốc VinaVictoria">🏰 Vương Quốc VinaVictoria</button>
+              <button type="button" class="rpg-preset-chip" data-value="Khu Rừng Đom Đóm">🌲 Khu Rừng Đom Đóm</button>
+              <button type="button" class="rpg-preset-chip" data-value="Thung Lũng Hắc Ám">💀 Thung Lũng Hắc Ám</button>
+              <button type="button" class="rpg-preset-chip" data-value="Biên Cương Băng Giá">❄️ Biên Cương Băng Giá</button>
+            </div>
+            <input id="rpgRegionInput" type="text" class="rpg-big-input" placeholder="Tự nhập vùng đất khởi hành..." value="Vương Quốc VinaVictoria" autocomplete="off" />
+          </div>
+          <div class="wizard-navigation">
+            <button id="rpgStep3Back" type="button" class="ghost wizard-back-btn">← Quay lại</button>
+            <button id="rpgStep3Next" type="button" class="primary-btn wizard-next-btn">Tạo Nhân Vật ⚔</button>
+          </div>
+        </div>
+
+        <!-- Step 4: Gold Dice Roll -->
+        <div id="rpgStep4" class="rpg-setup-step">
+          <div class="rpg-form-group align-center">
+            <label>Tung Xúc Xắc Vàng</label>
+            <p class="step-desc text-center">Đổ xúc xắc để nhận ngẫu nhiên từ 1 đến 100 Vàng ban đầu.</p>
+            
+            <div class="dice-roll-box-centered" id="diceRollGoldBox">
+              <div class="dice-graphic-container">
+                <div class="dice-graphic" id="goldDiceGraphic">🎲</div>
+              </div>
+              <button id="rpgRollGoldBtn" type="button" class="primary-btn roll-btn gold-glow">Tung xúc xắc Vàng 💰</button>
+              <p id="goldRollResult" class="roll-result-text"></p>
+            </div>
+          </div>
+          <div class="wizard-navigation">
+            <button id="rpgStep4Back" type="button" class="ghost wizard-back-btn" disabled>← Quay lại</button>
+            <button id="rpgStep4Next" type="button" class="primary-btn wizard-next-btn disabled" disabled>Tiếp theo →</button>
+          </div>
+        </div>
+
+        <!-- Step 5: Equipment Dice Roll -->
+        <div id="rpgStep5" class="rpg-setup-step">
+          <div class="rpg-form-group align-center">
+            <label>Tung Xúc Xắc Trang Bị</label>
+            <p class="step-desc text-center">Tung xúc xắc để nhận trang bị khởi đầu ngẫu nhiên.</p>
+            
+            <div class="dice-roll-box-centered" id="diceRollEquipBox">
+              <div class="dice-graphic-container">
+                <div class="dice-graphic" id="equipDiceGraphic">🎲</div>
+              </div>
+              <button id="rpgRollEquipBtn" type="button" class="primary-btn roll-btn equip-glow" disabled>Tung xúc xắc Trang Bị ⚔️</button>
+              <p id="equipRollResult" class="roll-result-text"></p>
+            </div>
+          </div>
+          <div class="wizard-navigation">
+            <button id="rpgStep5Back" type="button" class="ghost wizard-back-btn" disabled>← Quay lại</button>
+            <button id="rpgStep5Next" type="button" class="primary-btn wizard-next-btn disabled" disabled>Tiếp theo →</button>
+          </div>
+        </div>
+
+        <!-- Step 6: Objective Selection -->
+        <div id="rpgStep6" class="rpg-setup-step">
+          <div class="rpg-form-group">
+            <label for="rpgObjectiveInput">Mục Tiêu Khởi Đầu</label>
+            <p class="step-desc">Mục tiêu chính cho cuộc phiêu lưu giả tưởng của bạn.</p>
+            <div class="rpg-input-with-action">
+              <input id="rpgObjectiveInput" type="text" class="rpg-big-input" placeholder="Nhập mục tiêu hành trình..." value="Tiêu diệt Ma Vương cứu thế giới" autocomplete="off" />
+              <button id="rpgSuggestObjectiveBtn" type="button" class="action-chip-btn">🪄 Gợi ý mục tiêu AI</button>
+            </div>
+            <div id="rpgObjectiveSuggestions" class="rpg-suggestions-chips hidden">
+              <!-- Objective suggestion chips populated here -->
+            </div>
+            <div class="rpg-preset-chips" id="rpgObjectivePresets">
+              <button type="button" class="rpg-preset-chip active" data-value="Tiêu diệt Ma Vương cứu thế giới">😈 Tiêu diệt Ma Vương</button>
+              <button type="button" class="rpg-preset-chip" data-value="Giải thoát Linh hồn Cây Cổ Thụ">🌳 Giải cứu Cây Cổ Thụ</button>
+              <button type="button" class="rpg-preset-chip" data-value="Tìm kiếm thanh kiếm thánh thất lạc">🗡️ Tìm Thánh Kiếm</button>
+              <button type="button" class="rpg-preset-chip" data-value="Trở thành thương nhân giàu nhất lục địa">💰 Trở thành Triệu Phú</button>
+            </div>
+          </div>
+          <div class="wizard-navigation">
+            <button id="rpgStep6Back" type="button" class="ghost wizard-back-btn" disabled>← Quay lại</button>
+            <button id="rpgStep6Next" type="button" class="primary-btn wizard-next-btn">Tiếp theo →</button>
+          </div>
+        </div>
+
+        <!-- Step 7: Appearance Description -->
+        <div id="rpgStep7" class="rpg-setup-step">
+          <div class="rpg-form-group">
+            <label for="rpgAppearanceInput">Mô tả vẻ bề ngoài nhân vật muốn trở thành</label>
+            <p class="step-desc">Mô tả ngoại hình nhân vật chính (có thể dùng Tiếng Việt). Hoặc bấm nút gợi ý từ AI.</p>
+            <div class="rpg-input-with-action">
+              <textarea id="rpgAppearanceInput" class="rpg-big-input" rows="3" placeholder="Ví dụ: Một chiến binh dũng mãnh tóc đỏ, mặc giáp thép sáng loáng, cầm thanh đại đao rực lửa..." autocomplete="off" style="width: 100%; min-height: 80px; padding: 10px; border-radius: 6px; border: 1px solid var(--rpg-border-glass); background: rgba(0,0,0,0.3); color: white; resize: vertical;"></textarea>
+              <button id="rpgSuggestAppearanceBtn" type="button" class="action-chip-btn" style="white-space: nowrap;">🪄 Gợi ý ngoại hình AI</button>
+            </div>
+          </div>
+          <div class="wizard-navigation">
+            <button id="rpgStep7Back" type="button" class="ghost wizard-back-btn">← Quay lại</button>
+            <button id="rpgStep7Next" type="button" class="primary-btn wizard-next-btn">Tiếp theo →</button>
+          </div>
+        </div>
+
+        <!-- Step 8: Summary & Start -->
+        <div id="rpgStep8" class="rpg-setup-step">
+          <div class="rpg-form-group">
+            <label>Thông Tin Tóm Tắt</label>
+            <p class="step-desc">Xem lại thông số anh hùng và thế giới trước khi khởi hành.</p>
+            
+            <div class="rpg-summary-card">
+              <div class="summary-row">
+                <span>Tên Anh Hùng:</span>
+                <strong id="summaryPlayerName">-</strong>
+              </div>
+              <div class="summary-row">
+                <span>Giới Tính:</span>
+                <strong id="summaryPlayerGender">-</strong>
+              </div>
+              <div class="summary-row">
+                <span>Khu Vực Bắt Đầu:</span>
+                <strong id="summaryPlayerRegion">-</strong>
+              </div>
+              <div class="summary-row">
+                <span>Mục Tiêu Khởi Đầu:</span>
+                <strong id="summaryPlayerObjective">-</strong>
+              </div>
+              <div class="summary-row">
+                <span>Ngoại hình:</span>
+                <strong id="summaryPlayerAppearance" style="font-weight: normal; font-style: italic; max-width: 70%; text-align: right; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">-</strong>
+              </div>
+              <div class="summary-row">
+                <span>Vàng Ban Đầu:</span>
+                <strong id="summaryPlayerGold">-</strong>
+              </div>
+              <div class="summary-row">
+                <span>Trang Bị Khởi Đầu:</span>
+                <strong id="summaryPlayerEquip">-</strong>
+              </div>
+            </div>
+          </div>
+          <div class="wizard-navigation">
+            <button id="rpgStep8Back" type="button" class="ghost wizard-back-btn">← Quay lại</button>
+            <button id="rpgStartAdventureBtn" type="button" class="primary-btn big-btn start-adventure-btn-glow" disabled>
+              Bắt Đầu Hành Trình ▷
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════ PAGE: RPG MAIN ══ -->
+    <section id="rpgPage" class="page rpg-page">
+      <div class="rpg-grid-container">
+        
+        <!-- LEFT SIDEBAR: NPC INFO PANEL -->
+        <aside class="rpg-left-sidebar glass-panel" id="rpgNpcPanel">
+          <div class="panel-header">
+            <p class="eyebrow">NPC Thông Tin</p>
+            <h3 style="display: flex; align-items: center; gap: 8px; margin: 0;">
+              <span id="rpgNpcIcon"></span>
+              <span id="rpgNpcName">Chưa Gặp Gỡ</span>
+            </h3>
+          </div>
+          <div class="panel-body">
+            <div class="rpg-npc-avatar" id="rpgNpcAvatarContainer" style="position: relative;">
+              <span id="rpgNpcAvatarDefault">❔</span>
+              <img id="rpgNpcAvatarImg" src="" alt="NPC Avatar" style="width: 100%; height: 100%; object-fit: cover; display: none;" />
+              <div id="rpgNpcAvatarLoading" class="avatar-loading-spinner hidden" style="position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #fff;">🪄</div>
+              
+              <!-- Floating control buttons in the bottom-right corner -->
+              <div class="avatar-overlay-controls" style="position: absolute; bottom: 8px; right: 8px; display: flex; gap: 6px; z-index: 10;">
+                <button id="rpgNpcRefreshBtn" type="button" class="action-chip-btn" style="padding: 4px; font-size: 0.8rem; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; cursor: pointer; color: white;" title="Tạo lại hình ảnh">🔄</button>
+                <button id="rpgNpcToggleBtn" type="button" class="action-chip-btn" style="padding: 4px; font-size: 0.8rem; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; cursor: pointer; color: white;" title="Bật/Tắt hiển thị ảnh">👁️</button>
+              </div>
+            </div>
+            <div class="rpg-npc-badge-row">
+              <span class="rpg-badge rarity" id="rpgNpcRarity">-</span>
+              <span class="rpg-badge race" id="rpgNpcRace">-</span>
+              <span class="rpg-badge class" id="rpgNpcClass">-</span>
+            </div>
+            <p class="rpg-npc-desc" id="rpgNpcDescription">
+              Không có thông tin thực thể hiện tại.
+            </p>
+            <div class="rpg-npc-stats-list">
+              <div class="stat-row"><span>HP</span><strong id="rpgNpcStatHp">-/-</strong></div>
+              <div class="stat-row"><span>ATK</span><strong id="rpgNpcStatAtk">-</strong></div>
+              <div class="stat-row"><span>RES</span><strong id="rpgNpcStatRes">-</strong></div>
+              <div class="stat-row"><span>DEF %</span><strong id="rpgNpcStatDef">-</strong></div>
+              <div class="stat-row"><span>M.DEF %</span><strong id="rpgNpcStatMdef">-</strong></div>
+              <div class="stat-row"><span>SPD</span><strong id="rpgNpcStatSpd">-</strong></div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- CENTER PANEL: CHAT / STORY / CHOICES -->
+        <main class="rpg-center-panel glass-panel">
+          <header class="rpg-topbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+              <div>
+                <p class="eyebrow">Chế Độ RPG</p>
+                <strong id="rpgSessionLabel">Phiên RPG Mới</strong>
+              </div>
+              <button id="rpgSeeWorldBtn" type="button" class="rpg-premium-eye-btn" title="Quan sát thế giới (Sinh hình ảnh AI)">
+                <span class="eye-glow"></span>
+                <span class="eye-icon">👁️‍🗨️</span>
+              </button>
+            </div>
+            <div class="rpg-topbar-right">
+              <button id="rpgSavesNavBtn" type="button" class="ghost small-btn">Danh sách lưu</button>
+            </div>
+          </header>
+          
+          <div class="rpg-story-log" id="rpgStoryLog">
+            <!-- Story text paragraphs and NPC descriptors go here -->
+          </div>
+          
+          <!-- Option choices panel -->
+          <section class="rpg-choice-panel">
+            <div class="choice-panel-heading">
+              <p class="eyebrow">Quyết Định Tiếp Theo</p>
+            </div>
+            <div id="rpgChoicesBox" class="rpg-choices-box">
+              <!-- Choice buttons dynamically added here -->
+            </div>
+          </section>
+
+          <!-- Custom text entry composer -->
+          <section class="rpg-input-panel" id="rpgComposerPanel">
+            <div class="rpg-input-row">
+              <textarea id="rpgCustomAction" rows="2" placeholder="Tự nhập hành động theo ý bạn..." autocomplete="off"></textarea>
+              <label class="turn-words-control">
+                <span>Từ</span>
+                <input id="rpgTurnTargetWords" type="number" min="100" max="2000" step="100" value="600" />
+              </label>
+            </div>
+            <button id="rpgSubmitBtn" type="button" class="primary-btn send-action-btn">
+              <span>▷</span> Gửi
+            </button>
+          </section>
+        </main>
+
+        <!-- RIGHT SIDEBAR: PLAYER INFO & PARTY -->
+        <aside class="rpg-right-sidebar">
+          
+          <!-- Character Details -->
+          <div class="rpg-char-card glass-panel" id="rpgPlayerCard">
+            <div class="panel-header">
+              <p class="eyebrow">Người Chơi Chính</p>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <h3 id="rpgPlayerNameDisplay" style="margin:0;">Người lữ hành</h3>
+                <button id="rpgPlayerDetailsBtn" type="button" class="ghost-btn" style="padding:0; font-size:0.7rem; border-radius:50%; width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; border-color:rgba(255,255,255,0.2); color:rgba(255,255,255,0.6); cursor:pointer;" title="Xem chi tiết chỉ số">?</button>
+              </div>
+              <span class="rpg-char-level" id="rpgPlayerLevel">Cấp 1</span>
+            </div>
+            <div class="rpg-char-body">
+              <!-- HP Bar -->
+              <div class="rpg-hp-container">
+                <div class="rpg-hp-label"><span>HP</span><span id="rpgPlayerHpText">100/100</span></div>
+                <div class="hp-bar-container"><div class="hp-bar" id="rpgPlayerHpBar" style="width: 100%;"></div></div>
+              </div>
+              <!-- Stats grid -->
+              <div class="rpg-stats-grid">
+                <div><span>⚔ ATK:</span> <strong id="rpgPlayerAtk">21</strong></div>
+                <div><span>🛡 DEF:</span> <strong id="rpgPlayerDef">21%</strong></div>
+                <div><span>🔮 RES:</span> <strong id="rpgPlayerRes">21</strong></div>
+                <div><span>☄ M.DEF:</span> <strong id="rpgPlayerMdef">19%</strong></div>
+                <div><span>⚡ SPD:</span> <strong id="rpgPlayerSpd">26</strong></div>
+                <div><span>📈 EXP:</span> <strong id="rpgPlayerExp">0/1</strong></div>
+              </div>
+              <!-- Equipment -->
+              <div class="rpg-equip-section">
+                <p class="section-title">Trang Bị</p>
+                <div class="rpg-equip-slots">
+                  <div class="equip-slot" id="rpgEquipWeapon" data-slot="Weapon"><span>🗡 Vũ khí:</span> <strong class="equip-name">Trống</strong></div>
+                  <div class="equip-slot" id="rpgEquipArmor" data-slot="Armor"><span>🛡 Giáp:</span> <strong class="equip-name">Trống</strong></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Party members -->
+          <div class="rpg-party-card glass-panel">
+            <div class="panel-header">
+              <p class="eyebrow">Đồng Hành (Party)</p>
+              <button id="rpgManagePartyBtn" type="button" class="ghost-btn-xs">Quản lý 👥</button>
+            </div>
+            <div class="rpg-party-list" id="rpgPartyList">
+              <!-- Active party cards here -->
+            </div>
+          </div>
+
+          <!-- Inventory summary -->
+          <div class="rpg-inventory-card glass-panel">
+            <div class="panel-header">
+              <p class="eyebrow">Hành Trang</p>
+              <div class="gold-summary">💰 <span id="rpgGoldText">0</span> Vàng</div>
+            </div>
+            <div class="rpg-inventory-grid" id="rpgInventoryGrid">
+              <!-- Item icons/cards here -->
+            </div>
+          </div>
+
+        </aside>
+
+      </div>
+
+
+
+
+    </section>
+
     <!-- ════════════════════════════════ PAGE: ADMIN ══ -->
   </main>
 
@@ -2642,7 +3024,7 @@
     </h2>
 
     <p class="create-modal-subtitle">
-      Start a fast interactive adventure, or write a long-form AI novel with choices.
+      Start a fast interactive adventure, co-write a novel, or enter our tactical turn-based RPG mode.
     </p>
 
     <div class="create-mode-grid">
@@ -2669,6 +3051,18 @@
         </p>
 
         <small>Deep Prose Co-Creation</small>
+      </button>
+
+      <button id="createRpgBtn" class="create-mode-card rpg-mode-card" type="button">
+        <span class="create-mode-icon">🧙</span>
+
+        <strong>RPG Mode</strong>
+
+        <p>
+          Turn-based combat, party management, shops, item drops, and rich fantasy narrative.
+        </p>
+
+        <small>Tactical Text RPG</small>
       </button>
     </div>
   </div>
@@ -2730,9 +3124,287 @@
 </div>
 
 
+<!-- SHOP POPUP MODAL -->
+<div id="rpgShopModal" class="rpg-modal hidden">
+  <div class="rpg-modal-backdrop" id="rpgShopBackdrop"></div>
+  <div class="rpg-modal-panel glass-panel">
+    <button id="rpgCloseShopBtn" class="rpg-modal-close" type="button">×</button>
+    <p class="eyebrow">Cửa Hàng Thương Nhân</p>
+    <div class="rpg-shop-header-row">
+      <h2>Tiệm Tạp Hóa Lang Thang</h2>
+      <div class="shop-level-badge">Shop Cấp <span id="rpgShopLevel">1</span></div>
+    </div>
+    <p class="rpg-modal-subtitle">Giao dịch trang bị, lính đánh thuê và nâng cấp quầy hàng.</p>
+    
+    <div class="rpg-shop-layout">
+      <!-- Item rows -->
+      <div class="rpg-shop-section">
+        <h3>Vật Phẩm Bày Bán</h3>
+        <div class="shop-grid" id="rpgShopItemsGrid"></div>
+      </div>
+      <!-- Mercenary rows -->
+      <div class="rpg-shop-section">
+        <h3>Lính Đánh Thuê Tuyển Dụng</h3>
+        <div class="shop-grid" id="rpgShopMercsGrid"></div>
+      </div>
+      <!-- Player inventory to sell -->
+      <div class="rpg-shop-section player-sell-section">
+        <h3>Hành Trang Của Bạn (Nhấp BÁN lấy Vàng)</h3>
+        <div class="shop-grid" id="rpgShopSellGrid"></div>
+      </div>
+    </div>
+
+    <div class="rpg-shop-footer">
+      <div class="sell-area-box" id="rpgSellDropArea">
+        📥 Nhấp vật phẩm từ hành trang để BÁN lấy Vàng
+      </div>
+      <div class="shop-action-buttons">
+        <button id="rpgUpgradeShopBtn" type="button" class="ghost-btn">Nâng cấp Shop (<span id="rpgUpgradeCost">25</span> vàng) 🛠</button>
+        <button id="rpgRefreshShopBtn" type="button" class="ghost-btn">Làm mới hàng (5 vàng) 🔄</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SELL ITEM MODAL (Dedicated Pop-up inside shop) -->
+<div id="rpgSellModal" class="rpg-modal hidden" style="z-index: 1100;">
+  <div class="rpg-modal-backdrop" id="rpgSellBackdrop"></div>
+  <div class="rpg-modal-panel glass-panel" style="max-width: 550px; border: 1px solid rgba(231, 76, 60, 0.3); box-shadow: 0 0 30px rgba(231, 76, 60, 0.15);">
+    <button id="rpgCloseSellBtn" class="rpg-modal-close" type="button">×</button>
+    <p class="eyebrow" style="color: #e74c3c;">Bán Vật Phẩm</p>
+    <h2>Hành Trang Của Bạn</h2>
+    <p class="rpg-modal-subtitle">Chọn vật phẩm bạn muốn thanh lý để lấy Vàng từ thương nhân.</p>
+    
+    <div class="rpg-sell-list" id="rpgSellListGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 20px 0; max-height: 50vh; overflow-y: auto; padding-right: 5px;">
+      <!-- JavaScript will populate items here -->
+    </div>
+    
+    <div style="text-align: center; margin-top: 10px;">
+      <button id="rpgSellModalCloseBtn" type="button" class="ghost-btn" style="border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.7);">Quay lại Cửa Hàng ↩</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHARACTER DETAILED INFO MODAL -->
+<div id="rpgCharDetailsModal" class="rpg-modal hidden" style="z-index: 1200;">
+  <div class="rpg-modal-backdrop" id="rpgCharDetailsBackdrop"></div>
+  <div class="rpg-modal-panel glass-panel" style="max-width: 720px; border: 1px solid var(--rpg-border-active); box-shadow: 0 0 35px rgba(162, 115, 255, 0.25);">
+    <button id="rpgCloseCharDetailsBtn" class="rpg-modal-close" type="button">×</button>
+    <p class="eyebrow" id="rpgDetailsCharRarity">Thông Tin Nhân Vật</p>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span id="rpgDetailsCharIcon" style="font-size: 1.5rem;">❔</span>
+      <h2 id="rpgDetailsCharName" style="margin: 0;">Tên Nhân Vật</h2>
+    </div>
+    <p class="rpg-modal-subtitle" id="rpgDetailsCharSub">Level & Class Description</p>
+    
+    <div style="display: grid; grid-template-columns: 160px 1fr 1.1fr; gap: 20px; margin-top: 15px;">
+      <!-- Column 0: Avatar Image -->
+      <div style="display: flex; flex-direction: column; gap: 10px; align-items: center;">
+        <div class="rpg-char-detail-avatar-container" style="width: 160px; height: 160px; background: rgba(255,255,255,0.02); border: 1px solid var(--rpg-border-glass); border-radius: 8px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 15px rgba(0,0,0,0.5);">
+          <span id="rpgDetailsCharAvatarDefault" style="font-size: 3.5rem;">❔</span>
+          <img id="rpgDetailsCharAvatarImg" src="" alt="avatar" style="width: 100%; height: 100%; object-fit: cover; display: none;" />
+          <div class="avatar-loading-spinner hidden" id="rpgDetailsCharAvatarLoading" style="position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #fff;">🪄</div>
+        </div>
+        <div style="display: flex; gap: 10px; width: 100%; justify-content: center;">
+          <button id="rpgDetailsCharRefreshBtn" class="primary-btn small-btn" style="flex: 1; padding: 4px 8px; font-size: 0.75rem;" title="Tạo lại hình ảnh">🔄 Làm mới</button>
+          <button id="rpgDetailsCharToggleBtn" class="ghost-btn small-btn" style="flex: 1; padding: 4px 8px; font-size: 0.75rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;" title="Bật/Tắt hiển thị ảnh">👁️ Hiện ảnh</button>
+        </div>
+      </div>
+      <!-- Column 1: Basic Stats -->
+      <div>
+        <h3 style="font-size:0.9rem; color:rgba(255,255,255,0.6); border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:4px; margin-bottom:8px;">Chỉ Số Cơ Bản</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+          <tr style="height: 26px; border-bottom: 1px solid rgba(255,255,255,0.03);">
+            <td style="color:rgba(255,255,255,0.5)">Trạng Thái:</td>
+            <td id="rpgDetailsStatCondition" style="text-align: right; font-weight: bold;">Bình thường</td>
+          </tr>
+          <tr style="height: 26px; border-bottom: 1px solid rgba(255,255,255,0.03);">
+            <td style="color:rgba(255,255,255,0.5)">HP (Sinh Mệnh):</td>
+            <td id="rpgDetailsStatHp" style="text-align: right; font-weight: bold; color: #2ecc71;">100/100</td>
+          </tr>
+          <tr style="height: 26px; border-bottom: 1px solid rgba(255,255,255,0.03);">
+            <td style="color:rgba(255,255,255,0.5)">ATK (Tấn Công):</td>
+            <td id="rpgDetailsStatAtk" style="text-align: right; font-weight: bold; color: #f1c40f;">20</td>
+          </tr>
+          <tr style="height: 26px; border-bottom: 1px solid rgba(255,255,255,0.03);">
+            <td style="color:rgba(255,255,255,0.5)">DEF (Phòng Thủ Vật Lý):</td>
+            <td id="rpgDetailsStatDef" style="text-align: right; font-weight: bold; color: #3498db;">20%</td>
+          </tr>
+          <tr style="height: 26px; border-bottom: 1px solid rgba(255,255,255,0.03);">
+            <td style="color:rgba(255,255,255,0.5)">RES (Kháng Phép):</td>
+            <td id="rpgDetailsStatRes" style="text-align: right; font-weight: bold; color: #9b59b6;">15</td>
+          </tr>
+          <tr style="height: 26px; border-bottom: 1px solid rgba(255,255,255,0.03);">
+            <td style="color:rgba(255,255,255,0.5)">Res_DEF (Kháng Sát Thương Phép):</td>
+            <td id="rpgDetailsStatResDef" style="text-align: right; font-weight: bold; color: #e67e22;">10%</td>
+          </tr>
+          <tr style="height: 26px;">
+            <td style="color:rgba(255,255,255,0.5)">Atk_SPD (Tốc Độ Hành Động):</td>
+            <td id="rpgDetailsStatAtkSpd" style="text-align: right; font-weight: bold; color: #1abc9c;">30</td>
+          </tr>
+        </table>
+        
+        <h3 style="font-size:0.9rem; color:rgba(255,255,255,0.6); border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:4px; margin-top:15px; margin-bottom:8px;">Trang Bị Kích Hoạt</h3>
+        <div style="font-size:0.8rem; display:flex; flex-direction:column; gap:6px;">
+          <div style="background:rgba(255,255,255,0.02); padding:6px 10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05);">
+            <span style="color:rgba(255,255,255,0.4)">Vũ khí:</span> <strong id="rpgDetailsEquipWeapon" class="rpg-text-Common">Trống</strong>
+          </div>
+          <div style="background:rgba(255,255,255,0.02); padding:6px 10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05);">
+            <span style="color:rgba(255,255,255,0.4)">Giáp trụ:</span> <strong id="rpgDetailsEquipArmor" class="rpg-text-Common">Trống</strong>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Column 2: Skills and Buffs -->
+      <div>
+        <h3 style="font-size:0.9rem; color:rgba(255,255,255,0.6); border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:4px; margin-bottom:8px;">Kỹ Năng & Chiêu Thức</h3>
+        <div style="display:flex; flex-direction:column; gap:10px; font-size:0.8rem; max-height: 280px; overflow-y: auto; padding-right:5px;">
+          <div id="rpgDetailsSkillPassive" style="background:rgba(255,255,255,0.02); padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.05);">
+            <span style="color:#f1c40f; font-weight:bold;">Nội Tại:</span> <span class="skill-name">Chưa mở</span>
+            <p class="skill-desc" style="margin:4px 0 0 0; color:rgba(255,255,255,0.5); font-size:0.75rem; line-height:1.3;"></p>
+          </div>
+          <div id="rpgDetailsSkill1" style="background:rgba(255,255,255,0.02); padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.05);">
+            <span style="color:#3498db; font-weight:bold;">Kỹ Năng 1:</span> <span class="skill-name">Chưa mở</span>
+            <p class="skill-desc" style="margin:4px 0 0 0; color:rgba(255,255,255,0.5); font-size:0.75rem; line-height:1.3;"></p>
+          </div>
+          <div id="rpgDetailsSkill2" style="background:rgba(255,255,255,0.02); padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.05);">
+            <span style="color:#e74c3c; font-weight:bold;">Tuyệt Kỹ:</span> <span class="skill-name">Chưa mở</span>
+            <p class="skill-desc" style="margin:4px 0 0 0; color:rgba(255,255,255,0.5); font-size:0.75rem; line-height:1.3;"></p>
+          </div>
+        </div>
+        
+        <div id="rpgDetailsActiveBuffsSection" style="margin-top: 15px;">
+          <h3 style="font-size:0.9rem; color:rgba(255,255,255,0.6); border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:4px; margin-bottom:8px;">Trạng Thái Hỗ Trợ/Bất Lợi</h3>
+          <div id="rpgDetailsActiveEffects" style="display:flex; flex-wrap:wrap; gap:6px;">
+            <!-- Javascript will append spans -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WORLD NARRATIVE IMAGE PREVIEW MODAL -->
+<div id="rpgWorldImgModal" class="rpg-modal hidden" style="z-index: 1300;">
+  <div class="rpg-modal-backdrop" id="rpgWorldImgBackdrop"></div>
+  <div class="rpg-modal-panel glass-panel" style="max-width: 800px; padding: 15px; border: 1px solid var(--rpg-border-active); box-shadow: 0 0 35px rgba(162, 115, 255, 0.25);">
+    <button id="rpgCloseWorldImgBtn" class="rpg-modal-close" type="button">×</button>
+    <p class="eyebrow">Quan Sát Thế Giới</p>
+    <h3 id="rpgWorldImgTitle" style="margin-top: 5px; margin-bottom: 10px;">Cảnh Quan Lượt Hiện Tại</h3>
+    <div class="world-img-container" style="width: 100%; aspect-ratio: 16/9; background: rgba(0,0,0,0.4); border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.05); position: relative;">
+      <img id="rpgWorldImgView" src="" alt="World Landscape" style="width: 100%; height: 100%; object-fit: cover; display: none;" />
+      <div id="rpgWorldImgSpinner" class="avatar-loading-spinner" style="display: flex; flex-direction: column; align-items: center; gap: 10px; color: rgba(255,255,255,0.7); text-align: center; padding: 20px;">
+        <span style="font-size: 3rem; display: inline-block; animation: spin 2s linear infinite;">⏳</span>
+        <span id="rpgWorldImgSpinnerText">Đang kết nối backend sinh hình ảnh thế giới...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PARTY MANAGEMENT POPUP -->
+<div id="rpgPartyModal" class="rpg-modal hidden">
+  <div class="rpg-modal-backdrop" id="rpgPartyBackdrop"></div>
+  <div class="rpg-modal-panel glass-panel">
+    <button id="rpgClosePartyBtn" class="rpg-modal-close" type="button">×</button>
+    <p class="eyebrow">Quản Lý Đội Ngũ</p>
+    <h2>Bố Trí Đội Hình</h2>
+    <p class="rpg-modal-subtitle">Hoán đổi thành viên giữa Đội chính thức (Tối đa 4) và Đội dự bị (Tối đa 5).</p>
+    
+    <div class="rpg-party-modal-layout">
+      <div class="party-modal-section">
+        <h3>Đội Hình Chính Thức (Active)</h3>
+        <div class="party-slot-container active-slots" id="rpgActiveSlotsModal"></div>
+      </div>
+      <div class="party-modal-section">
+        <h3>Đội Hình Dự Bị (Reserve)</h3>
+        <div class="party-slot-container reserve-slots" id="rpgReserveSlotsModal"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMBAT OVERLAY -->
+<div id="rpgCombatOverlay" class="rpg-combat-overlay hidden">
+  <div class="combat-grid">
+    <!-- Enemy Side -->
+    <div class="combat-side enemy-side">
+      <div class="combat-enemy-container">
+        <div class="enemy-card glass-panel" id="rpgCombatEnemyCard">
+          <p class="eyebrow">Kẻ Đối Đầu</p>
+          <h2 id="rpgCombatEnemyName">Kẻ Thù Dữ Tợn</h2>
+          <span class="rpg-badge rarity" id="rpgCombatEnemyRarity">Epic</span>
+          
+          <div class="rpg-hp-container">
+            <div class="rpg-hp-label"><span>HP</span><span id="rpgCombatEnemyHpText">100/100</span></div>
+            <div class="hp-bar-container"><div class="hp-bar" id="rpgCombatEnemyHpBar" style="width: 100%;"></div></div>
+          </div>
+          <p class="enemy-debuffs" id="rpgCombatEnemyDebuffs"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Combat Log (Center) -->
+    <div class="combat-center-log glass-panel">
+      <div class="panel-header"><h3>Diễn Biến Giao Tranh</h3></div>
+      <div class="combat-log-body" id="rpgCombatLog"></div>
+    </div>
+
+    <!-- Player Party Side -->
+    <div class="combat-side party-side">
+      <div class="combat-party-container" id="rpgCombatPartyContainer">
+        <!-- Dynamic active party cards for combat -->
+      </div>
+    </div>
+
+    <!-- Combat Controls Footer -->
+    <div class="combat-controls-footer glass-panel" id="rpgCombatControls">
+      <div class="controls-row">
+        <div class="control-group">
+          <label for="rpgAttackerSelect">Người Hành Động</label>
+          <select id="rpgAttackerSelect" class="rpg-select"></select>
+        </div>
+        <div class="control-group">
+          <label for="rpgSkillSelect">Hành Động / Kỹ Năng</label>
+          <select id="rpgSkillSelect" class="rpg-select">
+            <option value="basic_attack">Tấn Công Thường / Trị Thương</option>
+            <option value="skill_1">Kỹ Năng 1</option>
+            <option value="skill_2">Kỹ Năng 2 (Nộ)</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="rpgTargetSelect">Mục Tiêu</label>
+          <select id="rpgTargetSelect" class="rpg-select"></select>
+        </div>
+        <div class="control-group">
+          <label for="rpgDefenderSelect">Đỡ Đòn Hộ (Nếu Bị Đánh)</label>
+          <select id="rpgDefenderSelect" class="rpg-select">
+            <option value="">Không cử ai</option>
+          </select>
+        </div>
+      </div>
+      <div class="controls-actions">
+        <button id="rpgCombatExecuteBtn" type="button" class="primary-btn big-btn roll-btn">Thực Thi Hành Động ⚔</button>
+      </div>
+    </div>
+
+    <!-- Combat End Post-Victory Overlay -->
+    <div class="combat-end-overlay hidden glass-panel" id="rpgCombatEndOverlay">
+      <h2>Chiến Thắng Giao Tranh!</h2>
+      <p>Quyết định số phận của kẻ địch bại trận:</p>
+      <div class="combat-end-actions">
+        <button class="primary-btn big-btn end-action-btn" data-action="loot">Kết Liễu & Cướp Đoạt ☠</button>
+        <button class="primary-btn big-btn end-action-btn" data-action="recruit">Thu Phục (80% Thành công) 🤝</button>
+        <button class="ghost big-btn end-action-btn" data-action="leave">Tha Bổng (Nhận EXP) 🕊</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 <script src="config.js?v=config-3"></script>
 <script type="module" src="app.js?v=player-app-43"></script>
+<script type="module" src="rpg_app.js?v=1"></script>
 </body>
 </html>

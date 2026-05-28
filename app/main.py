@@ -6,6 +6,7 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.admin_routes import router as admin_router
 from app.api.story_routes import router as story_router
+from app.api.rpg_routes import router as rpg_router
 from app.auth.firebase_auth import get_current_user
 from app.config import get_settings
 from app.domain.models import AppSettingsState
@@ -29,6 +30,7 @@ app.add_middleware(
 )
 
 app.include_router(story_router)
+app.include_router(rpg_router)
 app.include_router(admin_router)
 
 
