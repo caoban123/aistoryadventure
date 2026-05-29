@@ -48,7 +48,9 @@ class FirebaseStore:
                 self.db = firestore.client()
             elif not self.settings.use_local_store_if_firebase_missing:
                 raise RuntimeError("Missing Firebase credentials")
-        except Exception:
+        except Exception as exc:
+            import logging
+            logging.getLogger("ai_story.firebase").warning("Firestore initialization failed: %s", exc)
             if not self.settings.use_local_store_if_firebase_missing:
                 raise
             self.db = None
