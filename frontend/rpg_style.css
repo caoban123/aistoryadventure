@@ -1774,3 +1774,267 @@ body.rpg-shop-open .rpg-right-sidebar {
   font-size: 0.85rem;
   font-family: var(--rpg-font-outfit);
 }
+
+/* --- Ambient Atmosphere & Weather Effects --- */
+.rpg-ambient-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* Snow */
+.snowflake {
+  position: absolute;
+  top: -10px;
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: 50%;
+  animation: fall linear infinite;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+}
+
+@keyframes fall {
+  0% {
+    transform: translateY(0) translateX(0);
+  }
+  50% {
+    transform: translateY(50vh) translateX(20px);
+  }
+  100% {
+    transform: translateY(100vh) translateX(-20px);
+  }
+}
+
+/* Fireflies */
+.firefly {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #2ecc71;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #2ecc71, 0 0 20px #2ecc71;
+  animation: float-around linear infinite;
+}
+
+@keyframes float-around {
+  0% {
+    transform: translateY(0) translateX(0) scale(0.8);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px) translateX(50px) scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* Fog Drift */
+.fog-weather {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.fog-layer {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 80%);
+  filter: blur(40px);
+  mix-blend-mode: overlay;
+}
+
+.fog-layer-1 {
+  animation: fog-drift-left 60s linear infinite;
+}
+
+.fog-layer-2 {
+  animation: fog-drift-right 40s linear infinite;
+}
+
+@keyframes fog-drift-left {
+  0% { transform: translateX(-100%) translateY(0); }
+  50% { transform: translateX(0) translateY(20px); }
+  100% { transform: translateX(100%) translateY(0); }
+}
+
+@keyframes fog-drift-right {
+  0% { transform: translateX(100%) translateY(0); }
+  50% { transform: translateX(0) translateY(-20px); }
+  100% { transform: translateX(-100%) translateY(0); }
+}
+
+/* Sunrays */
+.sunray {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.04) 0%, transparent 60%);
+  animation: rays-flicker 8s infinite alternate;
+}
+
+@keyframes rays-flicker {
+  0% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+/* Damage flash & shake animations */
+@keyframes shake {
+  0% { transform: translate(1px, 1px) rotate(0deg); }
+  10% { transform: translate(-1px, -2px) rotate(-1deg); }
+  20% { transform: translate(-3px, 0px) rotate(1deg); }
+  30% { transform: translate(0px, 2px) rotate(0deg); }
+  40% { transform: translate(1px, -1px) rotate(1deg); }
+  50% { transform: translate(-1px, 2px) rotate(-1deg); }
+  60% { transform: translate(-3px, 1px) rotate(0deg); }
+  70% { transform: translate(2px, 1px) rotate(-1deg); }
+  80% { transform: translate(-1px, -1px) rotate(1deg); }
+  90% { transform: translate(2px, 2px) rotate(0deg); }
+  100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+
+.damage-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+.party-damage-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+.damage-flash {
+  box-shadow: 0 0 30px rgba(231, 76, 60, 0.8) !important;
+  border-color: rgba(231, 76, 60, 0.8) !important;
+  background: rgba(231, 76, 60, 0.15) !important;
+}
+
+.screen-flash-red {
+  position: relative;
+}
+
+.screen-flash-red::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(231, 76, 60, 0.25);
+  z-index: 9999;
+  pointer-events: none;
+  animation: fade-out-flash 0.5s ease-out forwards;
+}
+
+@keyframes fade-out-flash {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Custom Tooltip Styles */
+.rpg-item-tooltip {
+  position: absolute;
+  z-index: 10000;
+  display: none;
+  pointer-events: none;
+  min-width: 220px;
+  max-width: 280px;
+  background: rgba(10, 8, 20, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8), 0 0 15px rgba(162, 115, 255, 0.1);
+  font-family: var(--rpg-font-inter);
+}
+
+.rpg-item-tooltip .tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.rpg-item-tooltip .tooltip-type {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 8px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.rpg-item-tooltip .tooltip-stats {
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+  padding: 6px 0;
+  margin-bottom: 8px;
+}
+
+.rpg-item-tooltip .tooltip-stat-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.rpg-item-tooltip .tooltip-desc {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+/* Valkyrie Specialized Class Indicators */
+.special-skill-indicators-wrapper {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.valk-special-indicators {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.valk-chess-orb {
+  font-size: 0.8rem;
+  color: #fff;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+  animation: orb-pulse 1.5s infinite alternate;
+}
+
+@keyframes orb-pulse {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  100% { transform: scale(1.1); opacity: 1; }
+}
+
+.valk-bullet {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  font-size: 0.65rem;
+  line-height: 12px;
+  text-align: center;
+  color: #ff4fa8;
+  text-shadow: 0 0 5px #ff4fa8;
+}
+
+.valk-bullet.empty {
+  border: 1px solid rgba(255, 79, 168, 0.4);
+  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+}
+
+.valk-hoshiguma-revive {
+  background: rgba(162, 115, 255, 0.2);
+  border: 1px solid rgba(162, 115, 255, 0.4);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  color: #a273ff;
+  font-weight: bold;
+}

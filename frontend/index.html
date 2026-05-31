@@ -2761,6 +2761,35 @@
                 <span>Trang Bị Khởi Đầu:</span>
                 <strong id="summaryPlayerEquip">-</strong>
               </div>
+              <div class="rpg-summary-stats-box" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--rpg-border-glass);">
+                <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 8px; font-weight: bold; font-family: var(--rpg-font-outfit);">Chỉ số ban đầu (Class: Specialist)</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 15px;">
+                  <div class="summary-stat-item" style="display:flex; justify-content:space-between; font-size:0.8rem;">
+                    <span style="color:rgba(255,255,255,0.5);">HP:</span>
+                    <strong id="summaryStatHp" style="color:#2ecc71;">-</strong>
+                  </div>
+                  <div class="summary-stat-item" style="display:flex; justify-content:space-between; font-size:0.8rem;">
+                    <span style="color:rgba(255,255,255,0.5);">ATK:</span>
+                    <strong id="summaryStatAtk" style="color:#e74c3c;">-</strong>
+                  </div>
+                  <div class="summary-stat-item" style="display:flex; justify-content:space-between; font-size:0.8rem;">
+                    <span style="color:rgba(255,255,255,0.5);">DEF:</span>
+                    <strong id="summaryStatDef" style="color:#3498db;">-</strong>
+                  </div>
+                  <div class="summary-stat-item" style="display:flex; justify-content:space-between; font-size:0.8rem;">
+                    <span style="color:rgba(255,255,255,0.5);">RES:</span>
+                    <strong id="summaryStatRes" style="color:#9b59b6;">-</strong>
+                  </div>
+                  <div class="summary-stat-item" style="display:flex; justify-content:space-between; font-size:0.8rem;">
+                    <span style="color:rgba(255,255,255,0.5);">M.DEF:</span>
+                    <strong id="summaryStatResDef" style="color:#1abc9c;">-</strong>
+                  </div>
+                  <div class="summary-stat-item" style="display:flex; justify-content:space-between; font-size:0.8rem;">
+                    <span style="color:rgba(255,255,255,0.5);">SPD:</span>
+                    <strong id="summaryStatSpd" style="color:#f1c40f;">-</strong>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="wizard-navigation">
@@ -2775,6 +2804,7 @@
 
     <!-- ════════════════════════════════ PAGE: RPG MAIN ══ -->
     <section id="rpgPage" class="page rpg-page">
+      <div id="rpgAmbientOverlay" class="rpg-ambient-overlay"></div>
       <div class="rpg-grid-container">
         
         <!-- LEFT SIDEBAR: NPC INFO PANEL -->
@@ -3196,6 +3226,7 @@
       <h2 id="rpgDetailsCharName" style="margin: 0;">Tên Nhân Vật</h2>
     </div>
     <p class="rpg-modal-subtitle" id="rpgDetailsCharSub">Level & Class Description</p>
+    <div id="rpgDetailsSpecialIndicators" style="margin-top: 5px;"></div>
     
     <div style="display: grid; grid-template-columns: 160px 1fr 1.1fr; gap: 20px; margin-top: 15px;">
       <!-- Column 0: Avatar Image -->
@@ -3326,6 +3357,19 @@
 <!-- COMBAT OVERLAY -->
 <div id="rpgCombatOverlay" class="rpg-combat-overlay hidden">
   <div class="combat-grid">
+    <!-- Player Party Side -->
+    <div class="combat-side party-side">
+      <div class="combat-party-container" id="rpgCombatPartyContainer">
+        <!-- Dynamic active party cards for combat -->
+      </div>
+    </div>
+
+    <!-- Combat Log (Center) -->
+    <div class="combat-center-log glass-panel">
+      <div class="panel-header"><h3>Diễn Biến Giao Tranh</h3></div>
+      <div class="combat-log-body" id="rpgCombatLog"></div>
+    </div>
+
     <!-- Enemy Side -->
     <div class="combat-side enemy-side">
       <div class="combat-enemy-container">
@@ -3340,19 +3384,6 @@
           </div>
           <p class="enemy-debuffs" id="rpgCombatEnemyDebuffs"></p>
         </div>
-      </div>
-    </div>
-
-    <!-- Combat Log (Center) -->
-    <div class="combat-center-log glass-panel">
-      <div class="panel-header"><h3>Diễn Biến Giao Tranh</h3></div>
-      <div class="combat-log-body" id="rpgCombatLog"></div>
-    </div>
-
-    <!-- Player Party Side -->
-    <div class="combat-side party-side">
-      <div class="combat-party-container" id="rpgCombatPartyContainer">
-        <!-- Dynamic active party cards for combat -->
       </div>
     </div>
 

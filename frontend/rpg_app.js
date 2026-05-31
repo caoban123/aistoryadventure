@@ -70,6 +70,98 @@ function getClassEmoji(charClass) {
   }
 }
 
+function renderSpecialSkillsIndicators(char) {
+  const skills = char.special_skills;
+  if (!skills) return "";
+  
+  let indicatorsHtml = "";
+  
+  // 1. Wang (Caster) Chess Pieces
+  if (char.race === "Valkyrie" && char.char_class === "Caster" && skills.quan_co_count !== undefined && skills.quan_co_count > 0) {
+    let chessOrbs = "";
+    for (let i = 0; i < skills.quan_co_count; i++) {
+      chessOrbs += `<span class="valk-chess-orb" title="Quân cờ ${i+1}">⚫</span>`;
+    }
+    indicatorsHtml += `<div class="valk-special-indicators valk-wang-chess" title="Số quân cờ đang vây hãm">${chessOrbs}</div>`;
+  }
+  
+  // 2. Lemuen (Sniper) Bullet Slots
+  if (char.race === "Valkyrie" && char.char_class === "Sniper" && skills.bullet_count !== undefined) {
+    let bullets = "";
+    for (let i = 0; i < 5; i++) {
+      if (i < skills.bullet_count) {
+        bullets += `<span class="valk-bullet loaded" title="Đạn nạp sẵn: ${i+1}">⚡</span>`;
+      } else {
+        bullets += `<span class="valk-bullet empty"></span>`;
+      }
+    }
+    indicatorsHtml += `<div class="valk-special-indicators valk-lemuen-bullets" title="Đạn khóa mục tiêu (Lemuen)">${bullets}</div>`;
+  }
+  
+  // 3. Hoshiguma (Defender) Revival countdown
+  if (char.race === "Valkyrie" && char.char_class === "Defender" && skills.hoshi_passive_countdown !== undefined && skills.hoshi_passive_countdown > 0) {
+    indicatorsHtml += `
+      <div class="valk-special-indicators valk-hoshiguma-revive" title="Lượt hồi sinh Ma thần bất diệt">
+        🌀 <span class="revive-count">${skills.hoshi_passive_countdown}t</span>
+      </div>
+    `;
+  }
+  
+  return indicatorsHtml ? `<div class="special-skill-indicators-wrapper">${indicatorsHtml}</div>` : "";
+}
+
+function updateWeatherEffect(region) {
+  const overlay = document.getElementById("rpgAmbientOverlay");
+  if (!overlay) return;
+
+  // Clear current classes
+  overlay.className = "rpg-ambient-overlay";
+  overlay.innerHTML = ""; 
+
+  if (!region) return;
+
+  if (region === "Biên Cương Băng Giá") {
+    overlay.classList.add("snow-weather");
+    // Generate snow particles
+    for (let i = 0; i < 40; i++) {
+      const particle = document.createElement("div");
+      particle.className = "snowflake";
+      particle.style.left = `${Math.random() * 100}%`;
+      particle.style.animationDelay = `${Math.random() * 5}s`;
+      particle.style.animationDuration = `${Math.random() * 5 + 5}s`;
+      particle.style.opacity = Math.random();
+      particle.style.transform = `scale(${Math.random() * 0.5 + 0.5})`;
+      overlay.appendChild(particle);
+    }
+  } else if (region === "Khu Rừng Đom Đóm") {
+    overlay.classList.add("fireflies-weather");
+    // Generate fireflies particles
+    for (let i = 0; i < 25; i++) {
+      const particle = document.createElement("div");
+      particle.className = "firefly";
+      particle.style.left = `${Math.random() * 100}%`;
+      particle.style.top = `${Math.random() * 100}%`;
+      particle.style.animationDelay = `${Math.random() * 8}s`;
+      particle.style.animationDuration = `${Math.random() * 10 + 10}s`;
+      overlay.appendChild(particle);
+    }
+  } else if (region === "Thung Lũng Hắc Ám") {
+    overlay.classList.add("fog-weather");
+    // Create fog layers
+    const fog1 = document.createElement("div");
+    fog1.className = "fog-layer fog-layer-1";
+    const fog2 = document.createElement("div");
+    fog2.className = "fog-layer fog-layer-2";
+    overlay.appendChild(fog1);
+    overlay.appendChild(fog2);
+  } else if (region === "Vương Quốc VinaVictoria") {
+    overlay.classList.add("sunrays-weather");
+    const ray = document.createElement("div");
+    ray.className = "sunray";
+    overlay.appendChild(ray);
+  }
+}
+
 function getItemEmoji(itemType) {
   switch (itemType) {
     case "Weapon": return "🗡️";
@@ -88,6 +180,76 @@ function getRarityLabel(rarity) {
     case "Uncommon": return "Thường";
     case "Common": return "Cơ Bản";
     default: return rarity;
+  }
+}
+
+function showItemTooltip(item, event) {
+  let tooltip = document.getElementById("rpgItemTooltip");
+  if (!tooltip) {
+    tooltip = document.createElement("div");
+    tooltip.id = "rpgItemTooltip";
+    tooltip.className = "rpg-item-tooltip glass-panel";
+    document.body.appendChild(tooltip);
+  }
+  
+  let statsHtml = "";
+  if (item.stats_bonus) {
+    for (const [stat, bonus] of Object.entries(item.stats_bonus)) {
+      if (bonus !== 0) {
+        let statLabel = stat.toUpperCase();
+        if (stat === "max_hp") statLabel = "HP";
+        if (stat === "atk") statLabel = "ATK";
+        if (stat === "defense") statLabel = "DEF";
+        if (stat === "res_def") statLabel = "M.DEF";
+        if (stat === "res") statLabel = "RES";
+        if (stat === "atk_spd") statLabel = "SPD";
+        const sign = bonus > 0 ? "+" : "";
+        statsHtml += `<div class="tooltip-stat-row"><span>${statLabel}:</span> <strong>${sign}${bonus}%</strong></div>`;
+      }
+    }
+  }
+
+  let typeLabel = "Vật phẩm";
+  if (item.item_type === "Weapon") typeLabel = "Vũ khí";
+  if (item.item_type === "Armor") typeLabel = "Giáp trụ";
+  if (item.item_type === "Consume") typeLabel = "Tiêu dùng";
+
+  tooltip.innerHTML = `
+    <div class="tooltip-header">
+      <h4 class="rpg-text-${item.rarity}" style="margin:0; font-size:0.9rem;">${item.name}</h4>
+      <span class="rpg-badge rarity rpg-text-${item.rarity}" style="font-size:0.6rem; padding: 2px 6px;">${getRarityLabel(item.rarity)}</span>
+    </div>
+    <div class="tooltip-type">${typeLabel}</div>
+    ${statsHtml ? `<div class="tooltip-stats">${statsHtml}</div>` : ""}
+    <div class="tooltip-desc">${item.description || ""}</div>
+  `;
+  
+  tooltip.style.display = "block";
+  updateItemTooltipPosition(event);
+}
+
+function updateItemTooltipPosition(event) {
+  const tooltip = document.getElementById("rpgItemTooltip");
+  if (!tooltip) return;
+  const padding = 15;
+  let left = event.pageX + padding;
+  let top = event.pageY + padding;
+  
+  if (left + tooltip.offsetWidth > window.innerWidth) {
+    left = event.pageX - tooltip.offsetWidth - padding;
+  }
+  if (top + tooltip.offsetHeight > window.innerHeight) {
+    top = event.pageY - tooltip.offsetHeight - padding;
+  }
+  
+  tooltip.style.left = `${left}px`;
+  tooltip.style.top = `${top}px`;
+}
+
+function hideItemTooltip() {
+  const tooltip = document.getElementById("rpgItemTooltip");
+  if (tooltip) {
+    tooltip.style.display = "none";
   }
 }
 
@@ -719,6 +881,17 @@ function initRpgSetupWizard() {
         ? `<span class="rpg-text-${rolledEquipment.rarity}">${rolledEquipment.name}</span> (${getRarityLabel(rolledEquipment.rarity)})`
         : "-";
 
+      // Populate starting stats preview dynamically from gameState
+      if (gameState && gameState.player_character && gameState.player_character.stats) {
+        const stats = gameState.player_character.stats;
+        document.getElementById("summaryStatHp").textContent = `${stats.hp}/${stats.max_hp}`;
+        document.getElementById("summaryStatAtk").textContent = stats.atk;
+        document.getElementById("summaryStatDef").textContent = `${stats.defense}%`;
+        document.getElementById("summaryStatRes").textContent = stats.res;
+        document.getElementById("summaryStatResDef").textContent = `${stats.res_def}%`;
+        document.getElementById("summaryStatSpd").textContent = stats.atk_spd;
+      }
+
       // Enable Start Adventure Button
       const startAdventureBtn = document.getElementById("rpgStartAdventureBtn");
       if (startAdventureBtn) {
@@ -902,6 +1075,11 @@ function showCharacterDetails(char, isCombat) {
   document.getElementById("rpgDetailsCharRarity").className = `eyebrow rpg-text-${char.rarity}`;
   document.getElementById("rpgDetailsCharName").textContent = char.name;
   document.getElementById("rpgDetailsCharSub").textContent = `Lv.${char.level} - Tộc: ${char.race} - Lớp: ${char.char_class}`;
+
+  const specEl = document.getElementById("rpgDetailsSpecialIndicators");
+  if (specEl) {
+    specEl.innerHTML = renderSpecialSkillsIndicators(char);
+  }
 
   const imgElement = document.getElementById("rpgDetailsCharAvatarImg");
   const defaultSpan = document.getElementById("rpgDetailsCharAvatarDefault");
@@ -1179,6 +1357,7 @@ function renderState(rpgState) {
             <button class="ghost-btn rpg-companion-details-btn" data-id="${c.character_id}" type="button" style="padding:0; font-size:0.65rem; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; border-color:rgba(255,255,255,0.15); color:rgba(255,255,255,0.5); cursor:pointer; flex-shrink:0;" title="Xem chi tiết chỉ số">?</button>
           </div>
           <p style="margin:2px 0 0 0;">Lv.${c.level} - ${c.char_class}</p>
+          ${renderSpecialSkillsIndicators(c)}
         </div>
         <div class="party-hp-compact">
           <div class="rpg-hp-label" style="font-size: 0.65rem; margin-bottom: 2px;">
@@ -1219,10 +1398,14 @@ function renderState(rpgState) {
         ${getItemEmoji(item.item_type)}
         ${item.quantity > 1 ? `<span class="item-qty">${item.quantity}</span>` : ""}
       `;
-      slot.title = `${item.name} (${getRarityLabel(item.rarity)})\n${item.description || ""}`;
-
-      // Interactive Item Clicks
-      slot.addEventListener("click", () => handleInventoryItemClick(item, i));
+      // Interactive Item Hover & Clicks
+      slot.addEventListener("mouseenter", (e) => showItemTooltip(item, e));
+      slot.addEventListener("mousemove", (e) => updateItemTooltipPosition(e));
+      slot.addEventListener("mouseleave", () => hideItemTooltip());
+      slot.addEventListener("click", () => {
+        hideItemTooltip();
+        handleInventoryItemClick(item, i);
+      });
     } else {
       slot.className = "inventory-slot-box";
       slot.innerHTML = "";
@@ -1244,11 +1427,18 @@ function renderState(rpgState) {
   if (player && player.stats.hp <= 0) {
     triggerGameOver();
   }
+
+  // 7. Update ambient weather overlay
+  updateWeatherEffect(rpgState.region);
 }
 
 function renderEquipSlot(elementId, item, slotType, characterId) {
-  const container = document.getElementById(elementId);
-  if (!container) return;
+  let oldContainer = document.getElementById(elementId);
+  if (!oldContainer) return;
+
+  // Clone to clean previous listeners
+  const container = oldContainer.cloneNode(true);
+  oldContainer.parentNode.replaceChild(container, oldContainer);
 
   const titleNode = container.querySelector("span");
   const nameNode = container.querySelector(".equip-name");
@@ -1256,11 +1446,16 @@ function renderEquipSlot(elementId, item, slotType, characterId) {
   if (item) {
     nameNode.textContent = item.name;
     nameNode.className = `equip-name rpg-text-${item.rarity}`;
-    container.title = `Rarity: ${getRarityLabel(item.rarity)}\n${item.description || "Nhấp để tháo trang bị"}`;
+
+    // Add custom tooltip hover listeners
+    container.addEventListener("mouseenter", (e) => showItemTooltip(item, e));
+    container.addEventListener("mousemove", (e) => updateItemTooltipPosition(e));
+    container.addEventListener("mouseleave", () => hideItemTooltip());
 
     // Unequip on click with confirmation prompt
     container.onclick = async (e) => {
       e.preventDefault();
+      hideItemTooltip();
       if (confirm(`Bạn có muốn cởi trang bị ${item.name} không?`)) {
         try {
           const url = `${getApiBase()}/game/rpg/party/unequip?session_id=${encodeURIComponent(currentSessionId)}&character_id=${encodeURIComponent(characterId)}&slot=${slotType}`;
@@ -2054,6 +2249,7 @@ function showCombatOverlay(combatState) {
   if (!overlay) return;
 
   overlay.classList.remove("hidden");
+  overlay.combatState = combatState;
 
   // 1. Enemy Card Details
   const enemy = combatState.enemy;
@@ -2130,10 +2326,11 @@ function showCombatOverlay(combatState) {
           <div class="hp-bar" style="width: ${hpPercent}%;"></div>
         </div>
       </div>
-      <div class="buffs-indicators" style="display:flex;flex-wrap:wrap;gap:4px;font-size:0.65rem;">
+      <div class="buffs-indicators" style="display:flex;flex-wrap:wrap;gap:4px;font-size:0.65rem;margin-bottom:4px;">
         ${buffs.map(b => `<span style="background:#2ecc71;color:#fff;padding:1px 4px;border-radius:3px;">${b.name}</span>`).join("")}
         ${debuffs.map(d => `<span style="background:#e74c3c;color:#fff;padding:1px 4px;border-radius:3px;">${d.name}</span>`).join("")}
       </div>
+      ${renderSpecialSkillsIndicators(c)}
     `;
     const detailsBtn = card.querySelector(".rpg-combat-char-details-btn");
     if (detailsBtn) {
@@ -2304,6 +2501,16 @@ function showCombatOverlay(combatState) {
     executeBtn.disabled = true;
     executeBtn.textContent = "Đang giao đấu...";
 
+    const overlay = document.getElementById("rpgCombatOverlay");
+    const lastCombatState = overlay ? overlay.combatState : null;
+    const oldEnemyHp = lastCombatState?.enemy?.stats?.hp || 0;
+    const oldPartyHps = {};
+    if (lastCombatState?.combat_party) {
+      lastCombatState.combat_party.forEach(c => {
+        oldPartyHps[c.character_id] = c.stats.hp;
+      });
+    }
+
     try {
       const res = await rpgFetch(`${getApiBase()}/game/rpg/combat/action`, {
         method: "POST",
@@ -2318,6 +2525,37 @@ function showCombatOverlay(combatState) {
 
       // Update Combat details
       showCombatOverlay(res.combat_state);
+
+      // Trigger hit animations based on HP decrease
+      if (res.combat_state) {
+        const newEnemyHp = res.combat_state.enemy?.stats?.hp || 0;
+        if (newEnemyHp < oldEnemyHp) {
+          const enemyCard = document.getElementById("rpgCombatEnemyCard");
+          if (enemyCard) {
+            enemyCard.classList.add("damage-shake", "damage-flash");
+            setTimeout(() => {
+              enemyCard.classList.remove("damage-shake", "damage-flash");
+            }, 500);
+          }
+        }
+
+        let partyTookDamage = false;
+        if (res.combat_state.combat_party) {
+          res.combat_state.combat_party.forEach(c => {
+            const oldHp = oldPartyHps[c.character_id] || 0;
+            if (c.stats.hp < oldHp) {
+              partyTookDamage = true;
+            }
+          });
+        }
+
+        if (partyTookDamage && overlay) {
+          overlay.classList.add("party-damage-shake", "screen-flash-red");
+          setTimeout(() => {
+            overlay.classList.remove("party-damage-shake", "screen-flash-red");
+          }, 500);
+        }
+      }
 
       // If combat has concluded, show post victory selection or death
       if (res.is_combat_over) {
