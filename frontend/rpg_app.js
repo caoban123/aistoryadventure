@@ -582,18 +582,18 @@ function initRpgSetupWizard() {
       objectiveSuggestionsContainer.innerHTML = "";
     }
 
-    const goldDice = document.getElementById("goldDiceGraphic");
-    if (goldDice) {
-      goldDice.textContent = "🎲";
-      goldDice.className = "dice-graphic gold-glow";
+    const goldDiceCube = document.getElementById("goldDiceCube");
+    if (goldDiceCube) {
+      goldDiceCube.style.transform = "rotateX(0deg) rotateY(0deg)";
+      goldDiceCube.classList.remove("rolling");
     }
     const goldResult = document.getElementById("goldRollResult");
     if (goldResult) goldResult.innerHTML = "";
 
-    const equipDice = document.getElementById("equipDiceGraphic");
-    if (equipDice) {
-      equipDice.textContent = "🎲";
-      equipDice.className = "dice-graphic equip-glow";
+    const equipDiceCube = document.getElementById("equipDiceCube");
+    if (equipDiceCube) {
+      equipDiceCube.style.transform = "rotateX(0deg) rotateY(0deg)";
+      equipDiceCube.classList.remove("rolling");
     }
     const equipResult = document.getElementById("equipRollResult");
     if (equipResult) equipResult.innerHTML = "";
@@ -837,12 +837,18 @@ function initRpgSetupWizard() {
         rolledGold = null;
         rolledEquipment = null;
 
-        document.getElementById("goldDiceGraphic").textContent = "🎲";
-        document.getElementById("goldDiceGraphic").className = "dice-graphic gold-glow";
+        const goldDiceCube = document.getElementById("goldDiceCube");
+        if (goldDiceCube) {
+          goldDiceCube.style.transform = "rotateX(0deg) rotateY(0deg)";
+          goldDiceCube.classList.remove("rolling");
+        }
         document.getElementById("goldRollResult").innerHTML = "";
 
-        document.getElementById("equipDiceGraphic").textContent = "🎲";
-        document.getElementById("equipDiceGraphic").className = "dice-graphic equip-glow";
+        const equipDiceCube = document.getElementById("equipDiceCube");
+        if (equipDiceCube) {
+          equipDiceCube.style.transform = "rotateX(0deg) rotateY(0deg)";
+          equipDiceCube.classList.remove("rolling");
+        }
         document.getElementById("equipRollResult").innerHTML = "";
 
         // Reset navigation buttons for rolling steps
