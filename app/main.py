@@ -33,6 +33,18 @@ app.include_router(story_router)
 app.include_router(rpg_router)
 app.include_router(admin_router)
 
+from fastapi.staticfiles import StaticFiles
+import os
+
+# Mount generated assets folder so that it can be served directly from backend/Nginx proxy
+if settings.is_production:
+    generated_dir = "/data/ai-story/generated"
+else:
+    generated_dir = os.path.join("frontend", "assets", "generated")
+
+os.makedirs(generated_dir, exist_ok=True)
+app.mount("/assets/generated", StaticFiles(directory=generated_dir), name="generated_assets")
+
 
 @app.on_event("startup")
 async def startup_readiness_check() -> None:

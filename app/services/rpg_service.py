@@ -115,7 +115,14 @@ async def call_kaggle_api(url: str, data: dict) -> dict:
 def save_base64_image(base64_str: str, dest_filename: str) -> str:
     import os
     import base64
-    dest_dir = os.path.join("frontend", "assets", "generated")
+    from app.config import get_settings
+    
+    settings = get_settings()
+    if settings.is_production:
+        dest_dir = "/data/ai-story/generated"
+    else:
+        dest_dir = os.path.join("frontend", "assets", "generated")
+        
     os.makedirs(dest_dir, exist_ok=True)
     dest_path = os.path.join(dest_dir, dest_filename)
     
