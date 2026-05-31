@@ -17,7 +17,9 @@ settings = get_settings()
 
 firebase_initialized = False
 
-if not firebase_admin._apps:
+if firebase_admin._apps:
+    firebase_initialized = True
+else:
     try:
         if settings.firebase_service_account_json:
             cred = credentials.Certificate(json.loads(settings.firebase_service_account_json))

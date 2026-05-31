@@ -2003,7 +2003,17 @@ function getDefaultStoryTitle() {
 }
 
 function hasUnsavedDraftSession() {
-  return Boolean(sessionId && currentSessionIsSaved === false);
+  if (sessionId && currentSessionIsSaved === false) {
+    return true;
+  }
+  if (window.RPGApp) {
+    const rpgSessionId = window.RPGApp.getCurrentSessionId?.();
+    const rpgSaved = window.RPGApp.isSessionSaved?.();
+    if (rpgSessionId && rpgSaved === false) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function setManualSaveStatus(message = "", isError = false) {
@@ -2159,12 +2169,21 @@ function upsertCachedSession(session) {
 }
 
 async function saveCurrentSessionToHistory() {
-  if (!sessionId) {
+  let targetSessionId = sessionId;
+  let isRpg = false;
+
+  if (!targetSessionId && window.RPGApp) {
+    targetSessionId = window.RPGApp.getCurrentSessionId?.();
+    isRpg = true;
+  }
+
+  if (!targetSessionId) {
     setManualSaveStatus("No active story to save.", true);
     return false;
   }
 
-  if (currentSessionIsSaved) {
+  const isSaved = isRpg ? window.RPGApp.isSessionSaved?.() : currentSessionIsSaved;
+  if (isSaved) {
     updateManualSaveUI();
     return true;
   }
@@ -2172,7 +2191,7 @@ async function saveCurrentSessionToHistory() {
   const title = await storyTitleDialog({
     title: "Save this story",
     copy: "Give this draft a title before it appears in History.",
-    defaultTitle: getDefaultStoryTitle(),
+    defaultTitle: isRpg ? "Hành trình RPG" : getDefaultStoryTitle(),
     confirmLabel: "Save to History",
   });
 
@@ -2185,7 +2204,7 @@ async function saveCurrentSessionToHistory() {
     updateManualSaveUI({ busy: true });
 
     const data = await requestJson(
-      `${API_BASE}/game/sessions/${encodeURIComponent(sessionId)}/save`,
+      `${API_BASE}/game/sessions/${encodeURIComponent(targetSessionId)}/save`,
       {
         method: "POST",
         body: JSON.stringify({ title }),
@@ -2193,10 +2212,16 @@ async function saveCurrentSessionToHistory() {
     );
     const savedSession = data?.session || data;
 
-    setCurrentSessionSaved(true);
-    setCurrentSessionTitle(savedSession?.title || title);
+    if (isRpg) {
+      window.RPGApp.setSessionSaved?.(true);
+      const rpgLabel = document.getElementById("rpgSessionLabel");
+      if (rpgLabel) rpgLabel.textContent = title;
+    } else {
+      setCurrentSessionSaved(true);
+      setCurrentSessionTitle(savedSession?.title || title);
+    }
+    
     setManualSaveStatus("Saved to History");
-
     upsertCachedSession(savedSession);
 
     return true;
@@ -2213,7 +2238,15 @@ async function saveCurrentSessionToHistory() {
 async function discardCurrentDraftSession() {
   if (!hasUnsavedDraftSession()) return true;
 
-  const draftSessionId = sessionId;
+  let draftSessionId = sessionId;
+  let isRpg = false;
+
+  if (!draftSessionId && window.RPGApp) {
+    draftSessionId = window.RPGApp.getCurrentSessionId?.();
+    isRpg = true;
+  }
+
+  if (!draftSessionId) return true;
 
   try {
     await requestJson(
@@ -2227,12 +2260,18 @@ async function discardCurrentDraftSession() {
       closeSavePreview({ render: false });
     }
 
-    clearCurrentSessionReference();
-    if (storyLog) storyLog.innerHTML = "";
-    if (choicesBox) choicesBox.innerHTML = "";
-    if (customAction) customAction.value = "";
-    pendingOpeningMessage = "";
-    pendingChoices = [];
+    if (isRpg) {
+      if (window.RPGApp.clearSession) {
+        window.RPGApp.clearSession();
+      }
+    } else {
+      clearCurrentSessionReference();
+      if (storyLog) storyLog.innerHTML = "";
+      if (choicesBox) choicesBox.innerHTML = "";
+      if (customAction) customAction.value = "";
+      pendingOpeningMessage = "";
+      pendingChoices = [];
+    }
 
     return true;
   } catch (err) {
@@ -2296,6 +2335,8 @@ async function guardUnsavedDraftNavigation(callback) {
   await callback?.();
   return true;
 }
+
+window.guardUnsavedDraftNavigation = guardUnsavedDraftNavigation;
 
 updateManualSaveUI();
 

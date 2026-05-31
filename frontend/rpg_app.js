@@ -5,6 +5,7 @@
 
 // Local state tracking
 let currentSessionId = null;
+let currentSessionIsSaved = false;
 let gameState = null;
 let selectedGender = "Male";
 let swapSource = null; // Used for party swap click-to-select machine
@@ -349,9 +350,17 @@ function initRpgSetupWizard() {
   // Back to landing page
   const backBtn = document.getElementById("backToLandingFromRpgSetup");
   if (backBtn) {
-    backBtn.addEventListener("click", () => {
-      if (window.showPage) {
-        window.showPage(document.getElementById("landingPage"));
+    backBtn.addEventListener("click", async () => {
+      if (window.guardUnsavedDraftNavigation) {
+        await window.guardUnsavedDraftNavigation(() => {
+          if (window.showPage) {
+            window.showPage(document.getElementById("landingPage"));
+          }
+        });
+      } else {
+        if (window.showPage) {
+          window.showPage(document.getElementById("landingPage"));
+        }
       }
     });
   }
@@ -482,6 +491,7 @@ function initRpgSetupWizard() {
         });
 
         currentSessionId = res.session_id;
+        currentSessionIsSaved = false;
         gameState = res.rpg_state;
 
         // Reset dice rolled indicators for Step 4/5
@@ -753,6 +763,7 @@ function initRpgSetupWizard() {
         }
 
         currentSessionId = res.session_id;
+        currentSessionIsSaved = false;
         gameState = res.rpg_state;
 
         // Reset and show initial story
@@ -2407,6 +2418,7 @@ function triggerGameOver() {
 
 async function resumeSession(sessionId, sessionData) {
   currentSessionId = sessionId;
+  currentSessionIsSaved = true;
 
   // Clear story log and composer
   const storyLog = document.getElementById("rpgStoryLog");
@@ -2609,10 +2621,29 @@ if (rpgPage && window.ALL_PAGES && !window.ALL_PAGES.includes(rpgPage)) {
 // Initialise on script load (module)
 initRPGApp();
 
+function clearSession() {
+  currentSessionId = null;
+  currentSessionIsSaved = false;
+  gameState = null;
+  const storyLog = document.getElementById("rpgStoryLog");
+  if (storyLog) storyLog.innerHTML = "";
+  const choicesBox = document.getElementById("rpgChoicesBox");
+  if (choicesBox) choicesBox.innerHTML = "";
+  const customAction = document.getElementById("rpgCustomAction");
+  if (customAction) customAction.value = "";
+  if (typeof window.resetRpgSetupWizard === "function") {
+    window.resetRpgSetupWizard();
+  }
+}
+
 // Expose to window namespace for main app integration
 window.RPGApp = {
   resumeSession,
   renderState,
-  initRPGApp
+  initRPGApp,
+  getCurrentSessionId: () => currentSessionId,
+  isSessionSaved: () => currentSessionIsSaved,
+  setSessionSaved: (val) => { currentSessionIsSaved = val; },
+  clearSession
 };
 console.log("Chronicles of Destiny RPG Engine loaded successfully.");
