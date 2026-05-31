@@ -2568,9 +2568,18 @@
         
         <!-- RPG 7-Step Setup Wizard Progress Indicator -->
         <div class="rpg-wizard-progress">
-          <div class="progress-line">
-            <div class="progress-line-fill" id="rpgWizardProgressFill" style="width: 0%;"></div>
-          </div>
+          <svg class="rpg-mystic-path-svg" viewBox="0 0 800 60" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="mysticGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#a273ff" />
+                <stop offset="100%" stop-color="#ff4fa8" />
+              </linearGradient>
+            </defs>
+            <path class="mystic-path-bg" d="M 10 30 Q 100 10, 200 30 T 400 30 T 600 30 T 790 30" fill="none" />
+            <path class="mystic-path-fill" id="rpgMysticPathFill" d="M 10 30 Q 100 10, 200 30 T 400 30 T 600 30 T 790 30" fill="none" stroke-dasharray="800" stroke-dashoffset="800" />
+            <circle class="mystic-glowing-token" id="rpgMysticToken" cx="10" cy="30" r="6" />
+          </svg>
+          <div id="rpgWizardProgressFill" style="display: none; width: 0%;"></div>
           <div class="progress-steps" id="rpgWizardStepsContainer">
             <div class="progress-step active" data-step="1"><span>1</span><label>Tên</label></div>
             <div class="progress-step" data-step="2"><span>2</span><label>Giới tính</label></div>
@@ -2653,7 +2662,16 @@
             
             <div class="dice-roll-box-centered" id="diceRollGoldBox">
               <div class="dice-graphic-container">
-                <div class="dice-graphic" id="goldDiceGraphic">🎲</div>
+                <div class="scene3d">
+                  <div class="cube3d" id="goldDiceCube">
+                    <div class="cube-face front">1</div>
+                    <div class="cube-face back">6</div>
+                    <div class="cube-face right">2</div>
+                    <div class="cube-face left">5</div>
+                    <div class="cube-face top">3</div>
+                    <div class="cube-face bottom">4</div>
+                  </div>
+                </div>
               </div>
               <button id="rpgRollGoldBtn" type="button" class="primary-btn roll-btn gold-glow">Tung xúc xắc Vàng 💰</button>
               <p id="goldRollResult" class="roll-result-text"></p>
@@ -2673,7 +2691,16 @@
             
             <div class="dice-roll-box-centered" id="diceRollEquipBox">
               <div class="dice-graphic-container">
-                <div class="dice-graphic" id="equipDiceGraphic">🎲</div>
+                <div class="scene3d">
+                  <div class="cube3d" id="equipDiceCube">
+                    <div class="cube-face front">1</div>
+                    <div class="cube-face back">6</div>
+                    <div class="cube-face right">2</div>
+                    <div class="cube-face left">5</div>
+                    <div class="cube-face top">3</div>
+                    <div class="cube-face bottom">4</div>
+                  </div>
+                </div>
               </div>
               <button id="rpgRollEquipBtn" type="button" class="primary-btn roll-btn equip-glow" disabled>Tung xúc xắc Trang Bị ⚔️</button>
               <p id="equipRollResult" class="roll-result-text"></p>
@@ -2763,30 +2790,35 @@
               </div>
               <div class="rpg-summary-stats-box" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--rpg-border-glass);">
                 <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 8px; font-weight: bold; font-family: var(--rpg-font-outfit);">Chỉ số ban đầu (Class: Specialist)</div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 15px;">
-                  <div class="summary-stat-item" style="display:flex; justify-content:space-between; font-size:0.8rem;">
-                    <span style="color:rgba(255,255,255,0.5);">HP:</span>
-                    <strong id="summaryStatHp" style="color:#2ecc71;">-</strong>
+                <div class="rpg-summary-stats-grid">
+                  <div class="rpg-radar-chart-container" id="rpgSummaryRadarContainer">
+                    <!-- Dynamic Radar Chart SVG will go here -->
                   </div>
-                  <div class="summary-stat-item" style="display:flex; justify-content:space-between; font-size:0.8rem;">
-                    <span style="color:rgba(255,255,255,0.5);">ATK:</span>
-                    <strong id="summaryStatAtk" style="color:#e74c3c;">-</strong>
-                  </div>
-                  <div class="summary-stat-item" style="display:flex; justify-content:space-between; font-size:0.8rem;">
-                    <span style="color:rgba(255,255,255,0.5);">DEF:</span>
-                    <strong id="summaryStatDef" style="color:#3498db;">-</strong>
-                  </div>
-                  <div class="summary-stat-item" style="display:flex; justify-content:space-between; font-size:0.8rem;">
-                    <span style="color:rgba(255,255,255,0.5);">RES:</span>
-                    <strong id="summaryStatRes" style="color:#9b59b6;">-</strong>
-                  </div>
-                  <div class="summary-stat-item" style="display:flex; justify-content:space-between; font-size:0.8rem;">
-                    <span style="color:rgba(255,255,255,0.5);">M.DEF:</span>
-                    <strong id="summaryStatResDef" style="color:#1abc9c;">-</strong>
-                  </div>
-                  <div class="summary-stat-item" style="display:flex; justify-content:space-between; font-size:0.8rem;">
-                    <span style="color:rgba(255,255,255,0.5);">SPD:</span>
-                    <strong id="summaryStatSpd" style="color:#f1c40f;">-</strong>
+                  <div class="summary-stats-text-list">
+                    <div class="summary-stat-item" style="display:flex; justify-content:space-between; font-size:0.8rem;">
+                      <span style="color:rgba(255,255,255,0.5);">HP:</span>
+                      <strong id="summaryStatHp" style="color:#2ecc71;">-</strong>
+                    </div>
+                    <div class="summary-stat-item" style="display:flex; justify-content:space-between; font-size:0.8rem;">
+                      <span style="color:rgba(255,255,255,0.5);">ATK:</span>
+                      <strong id="summaryStatAtk" style="color:#e74c3c;">-</strong>
+                    </div>
+                    <div class="summary-stat-item" style="display:flex; justify-content:space-between; font-size:0.8rem;">
+                      <span style="color:rgba(255,255,255,0.5);">DEF:</span>
+                      <strong id="summaryStatDef" style="color:#3498db;">-</strong>
+                    </div>
+                    <div class="summary-stat-item" style="display:flex; justify-content:space-between; font-size:0.8rem;">
+                      <span style="color:rgba(255,255,255,0.5);">RES:</span>
+                      <strong id="summaryStatRes" style="color:#9b59b6;">-</strong>
+                    </div>
+                    <div class="summary-stat-item" style="display:flex; justify-content:space-between; font-size:0.8rem;">
+                      <span style="color:rgba(255,255,255,0.5);">M.DEF:</span>
+                      <strong id="summaryStatResDef" style="color:#1abc9c;">-</strong>
+                    </div>
+                    <div class="summary-stat-item" style="display:flex; justify-content:space-between; font-size:0.8rem;">
+                      <span style="color:rgba(255,255,255,0.5);">SPD:</span>
+                      <strong id="summaryStatSpd" style="color:#f1c40f;">-</strong>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2855,13 +2887,15 @@
                 <p class="eyebrow">Chế Độ RPG</p>
                 <strong id="rpgSessionLabel">Phiên RPG Mới</strong>
               </div>
+              <div class="rpg-time-badge" id="rpgTimeBadge" title="Thời gian trong ngày">☀️ Trưa</div>
               <button id="rpgSeeWorldBtn" type="button" class="rpg-premium-eye-btn" title="Quan sát thế giới (Sinh hình ảnh AI)">
                 <span class="eye-glow"></span>
                 <span class="eye-icon">👁️‍🗨️</span>
               </button>
             </div>
-            <div class="rpg-topbar-right">
+            <div class="rpg-topbar-right" style="display:flex; gap:8px; align-items:center;">
               <button id="rpgSavesNavBtn" type="button" class="ghost small-btn">Danh sách lưu</button>
+              <button id="rpgSettingsBtn" type="button" class="ghost small-btn" style="padding: 5px 8px; font-size: 1rem; cursor: pointer;" title="Cài đặt">⚙️</button>
             </div>
           </header>
           
@@ -3356,6 +3390,12 @@
 
 <!-- COMBAT OVERLAY -->
 <div id="rpgCombatOverlay" class="rpg-combat-overlay hidden">
+  <div class="rpg-combat-timeline-bar glass-panel" id="rpgCombatTimeline">
+    <div class="timeline-title">Thứ Tự Lượt Đấu (Timeline)</div>
+    <div class="timeline-sequence" id="rpgTimelineSequence">
+      <!-- Dynamic character icons showing sequence based on SPD -->
+    </div>
+  </div>
   <div class="combat-grid">
     <!-- Player Party Side -->
     <div class="combat-side party-side">
@@ -3429,6 +3469,52 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- RPG SETTINGS DRAWER -->
+<div id="rpgSettingsDrawer" class="rpg-drawer hidden">
+  <div class="rpg-drawer-backdrop" id="rpgSettingsDrawerBackdrop"></div>
+  <div class="rpg-drawer-content glass-panel">
+    <button id="rpgCloseSettingsBtn" class="rpg-drawer-close" type="button">×</button>
+    <p class="eyebrow">Cấu Hình Trò Chơi</p>
+    <h3>Cài Đặt Chế Độ RPG</h3>
+    
+    <div class="rpg-drawer-body">
+      <!-- Text Speed Setting -->
+      <div class="drawer-group">
+        <label for="settingsTextSpeed">Tốc độ hiển thị chữ</label>
+        <p class="setting-desc">Tùy chỉnh tốc độ đánh máy chữ khi hiển thị nhật ký câu chuyện.</p>
+        <select id="settingsTextSpeed" class="rpg-select">
+          <option value="0">Tức thì (Không hiệu ứng)</option>
+          <option value="40">Chậm (40ms)</option>
+          <option value="20" selected>Bình thường (20ms)</option>
+          <option value="8">Nhanh (8ms)</option>
+        </select>
+      </div>
+
+      <!-- Weather Toggle Setting -->
+      <div class="drawer-group">
+        <label class="rpg-checkbox-label">
+          <input type="checkbox" id="settingsToggleWeather" checked />
+          <span>Kích hoạt Hiệu ứng Thời tiết</span>
+        </label>
+        <p class="setting-desc">Bật/tắt tuyết rơi, đom đóm, sương mù... để tiết kiệm tài nguyên hệ thống.</p>
+      </div>
+
+      <hr class="rpg-divider" />
+
+      <!-- Manual Backup/Restore -->
+      <div class="drawer-group">
+        <label>Sao lưu & Khôi phục Save Game</label>
+        <p class="setting-desc">Tự sao lưu dữ liệu session hiện tại thành tệp JSON hoặc tải tệp lên để tiếp tục chơi.</p>
+        <div style="display:flex; gap:10px; margin-top:8px;">
+          <button id="settingsExportSaveBtn" type="button" class="primary-btn small-btn" style="flex:1;">Tải Save JSON 💾</button>
+          <button id="settingsImportSaveTrigger" type="button" class="ghost small-btn" style="flex:1;">Nạp File Save 📂</button>
+        </div>
+        <input type="file" id="settingsImportSaveInput" accept=".json" style="display:none;" />
+      </div>
+    </div>
   </div>
 </div>
 

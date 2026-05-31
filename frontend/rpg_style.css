@@ -2038,3 +2038,351 @@ body.rpg-shop-open .rpg-right-sidebar {
   color: #a273ff;
   font-weight: bold;
 }
+
+/* ==========================================================================
+   RPG UI OVERHAUL GENERATION 2 STYLING
+   ========================================================================== */
+
+/* 1. Mystic Path SVG */
+.rpg-mystic-path-svg {
+  width: 100%;
+  height: 50px;
+  margin-bottom: 20px;
+  overflow: visible;
+}
+.mystic-path-bg {
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.mystic-path-fill {
+  stroke: url(#mysticGradient);
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.mystic-glowing-token {
+  fill: #ff4fa8;
+  filter: drop-shadow(0 0 8px #ff4fa8);
+  transition: cx 0.8s cubic-bezier(0.4, 0, 0.2, 1), cy 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 2. 3D Dice styling */
+.scene3d {
+  width: 80px;
+  height: 80px;
+  perspective: 400px;
+  margin: 15px auto;
+}
+.cube3d {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 1s cubic-bezier(0.2, 0.8, 0.3, 1.1);
+}
+.cube-face {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  background: rgba(18, 14, 32, 0.85);
+  border: 2px solid var(--rpg-border-glass);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #fff;
+  font-family: var(--rpg-font-outfit);
+  box-shadow: inset 0 0 15px rgba(162, 115, 255, 0.35);
+  text-shadow: 0 0 5px #a273ff;
+}
+
+.cube-face.front  { transform: rotateY(  0deg) translateZ(40px); }
+.cube-face.back   { transform: rotateY(180deg) translateZ(40px); }
+.cube-face.right  { transform: rotateY( 90deg) translateZ(40px); }
+.cube-face.left   { transform: rotateY(-90deg) translateZ(40px); }
+.cube-face.top    { transform: rotateX( 90deg) translateZ(40px); }
+.cube-face.bottom { transform: rotateX(-90deg) translateZ(40px); }
+
+#goldDiceCube .cube-face {
+  border-color: rgba(255, 200, 55, 0.6);
+  box-shadow: inset 0 0 15px rgba(255, 200, 55, 0.25);
+  text-shadow: 0 0 5px #ffc837;
+  color: #ffc837;
+}
+#equipDiceCube .cube-face {
+  border-color: rgba(162, 115, 255, 0.6);
+  box-shadow: inset 0 0 15px rgba(162, 115, 255, 0.25);
+  text-shadow: 0 0 5px #a273ff;
+  color: #a273ff;
+}
+
+.cube3d.rolling {
+  animation: cube-spin 0.6s infinite linear;
+}
+
+@keyframes cube-spin {
+  0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+  100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
+}
+
+/* 3. Step 8 Grid & Radar Chart Layout */
+.rpg-summary-stats-grid {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 20px;
+  align-items: center;
+  margin-top: 10px;
+}
+.rpg-radar-chart-container {
+  width: 100%;
+  max-width: 180px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.25);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.05);
+  padding: 10px;
+  box-sizing: border-box;
+}
+.summary-stats-text-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 15px;
+  flex-grow: 1;
+}
+
+/* 4. Time of Day Shader */
+.rpg-page.morning {
+  background-image: radial-gradient(circle at 50% 30%, rgba(255, 120, 50, 0.12) 0%, rgba(18, 14, 32, 1) 70%) !important;
+}
+.rpg-page.day {
+  background-image: radial-gradient(circle at 50% 30%, rgba(52, 152, 219, 0.08) 0%, rgba(18, 14, 32, 1) 70%) !important;
+}
+.rpg-page.sunset {
+  background-image: radial-gradient(circle at 50% 30%, rgba(162, 115, 255, 0.12) 0%, rgba(18, 14, 32, 1) 70%) !important;
+}
+.rpg-page.night {
+  background-image: radial-gradient(circle at 50% 30%, rgba(0, 0, 0, 0.3) 0%, rgba(10, 8, 18, 1) 80%) !important;
+}
+
+/* 5. Combat Initiative Timeline Bar */
+.rpg-combat-timeline-bar {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  width: calc(100% - 40px);
+  margin: 15px auto 5px auto;
+  padding: 10px 20px;
+  border-radius: 12px;
+  background: rgba(18, 14, 32, 0.7);
+  border: 1px solid var(--rpg-border-glass);
+}
+.timeline-title {
+  font-family: var(--rpg-font-outfit);
+  font-weight: bold;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.timeline-sequence {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-grow: 1;
+  overflow-x: auto;
+}
+.timeline-unit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-family: var(--rpg-font-outfit);
+  color: #fff;
+  transition: all 0.3s ease;
+}
+.timeline-unit.active {
+  background: rgba(162, 115, 255, 0.25);
+  border-color: #a273ff;
+  box-shadow: 0 0 10px rgba(162, 115, 255, 0.3);
+  transform: scale(1.05);
+}
+.timeline-unit.enemy {
+  border-color: #ff4d4d;
+  background: rgba(255, 77, 77, 0.1);
+}
+.timeline-unit.enemy.active {
+  background: rgba(255, 77, 77, 0.25);
+  box-shadow: 0 0 10px rgba(255, 77, 77, 0.3);
+}
+
+/* 6. Floating Damage Numbers */
+.floating-damage {
+  position: absolute;
+  font-family: var(--rpg-font-outfit);
+  font-weight: 900;
+  font-size: 1.8rem;
+  pointer-events: none;
+  animation: float-damage-anim 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  z-index: 2000;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.8), 0 0 4px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes float-damage-anim {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    transform: translateY(-20px) scale(1.2);
+    opacity: 1;
+  }
+  30% {
+    transform: translateY(-25px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-80px) scale(0.9);
+    opacity: 0;
+  }
+}
+
+/* 7. Settings Drawer */
+.rpg-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: flex;
+  justify-content: flex-end;
+  visibility: visible;
+  opacity: 1;
+  transition: all 0.3s ease;
+}
+.rpg-drawer.hidden {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.rpg-drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(2px);
+}
+.rpg-drawer-content {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  height: 100vh;
+  border-radius: 0 !important;
+  border-left: 1px solid var(--rpg-border-active) !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  padding: 30px 24px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -10px 0 30px rgba(0,0,0,0.6);
+  transform: translateX(0);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.rpg-drawer.hidden .rpg-drawer-content {
+  transform: translateX(100%);
+}
+.rpg-drawer-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  font-size: 2rem;
+  color: rgba(255,255,255,0.4);
+  cursor: pointer;
+  line-height: 1;
+}
+.rpg-drawer-close:hover {
+  color: #ff4fa8;
+}
+.rpg-drawer h3 {
+  margin-top: 5px;
+  margin-bottom: 25px;
+  font-size: 1.25rem;
+  font-family: var(--rpg-font-cinzel);
+}
+.rpg-drawer-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+.drawer-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.drawer-group label {
+  font-family: var(--rpg-font-outfit);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #fff;
+}
+.setting-desc {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.45);
+  margin: 0;
+  line-height: 1.4;
+}
+.rpg-select {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--rpg-border-glass);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: var(--rpg-font-outfit);
+  font-size: 0.85rem;
+  outline: none;
+}
+.rpg-select option {
+  background: #120e20;
+  color: #fff;
+}
+.rpg-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.rpg-checkbox-label input[type="checkbox"] {
+  accent-color: #a273ff;
+  width: 16px;
+  height: 16px;
+}
+.rpg-divider {
+  border: none;
+  border-top: 1px dashed rgba(255,255,255,0.1);
+  margin: 10px 0;
+}
+
+.rpg-time-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: var(--rpg-font-outfit);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}

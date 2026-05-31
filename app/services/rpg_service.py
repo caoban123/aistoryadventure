@@ -1925,3 +1925,23 @@ class RPGService:
                 raise ValueError("Kaggle backend không trả về ảnh hợp lệ.")
         except Exception as e:
             raise ValueError(f"Không thể kết nối đến Kaggle server: {e}")
+
+    async def restore_rpg_game(self, session_id: str, game_state: dict, user_id: str) -> bool:
+        """Restores a serialized RPG state for the user session."""
+        session = await self.store.get_session(session_id)
+        if session:
+            if session.user_id != user_id:
+                raise PermissionError("Không có quyền phục hồi session này.")
+            session.rpg_state = game_state
+            await self.store.update_session(session)
+        else:
+            session = SessionState(
+                session_id=session_id,
+                user_id=user_id,
+                is_saved=False,
+                title=f"Hành trình RPG phục hồi",
+                mode="rpg",
+                rpg_state=game_state
+            )
+            await self.store.create_session(session)
+        return True

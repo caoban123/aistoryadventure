@@ -611,6 +611,25 @@ async def get_state(
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
+@router.post("/session/restore")
+async def restore_session(
+    request: dict,
+    user=Depends(get_current_user)
+):
+    await enforce_player_or_http(user)
+    try:
+        session_id = request.get("session_id")
+        game_state = request.get("game_state")
+        if not session_id or not game_state:
+            raise HTTPException(status_code=400, detail="Thiếu session_id hoặc game_state.")
+        
+        await service.restore_rpg_game(session_id, game_state, user_id=user["uid"])
+        return {"success": True, "session_id": session_id}
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
 @router.post("/suggest-appearance")
 async def suggest_appearance(
     player_name: str,

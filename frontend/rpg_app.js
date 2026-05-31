@@ -70,6 +70,168 @@ function getClassEmoji(charClass) {
   }
 }
 
+// Global RPG variables
+let weatherEnabled = true;
+let currentTextSpeed = 20; // 20ms per word by default
+
+function getCubeRotation(rollValue) {
+  switch (parseInt(rollValue)) {
+    case 1: return "rotateX(0deg) rotateY(0deg)";
+    case 2: return "rotateX(0deg) rotateY(-90deg)";
+    case 3: return "rotateX(-90deg) rotateY(0deg)";
+    case 4: return "rotateX(90deg) rotateY(0deg)";
+    case 5: return "rotateX(0deg) rotateY(90deg)";
+    case 6: return "rotateX(0deg) rotateY(180deg)";
+    default: return "rotateX(0deg) rotateY(0deg)";
+  }
+}
+
+function renderRadarChart(stats) {
+  if (!stats) return "";
+  
+  const axes = [
+    { label: "HP", val: stats.max_hp || stats.hp || 100, max: 200, color: "#2ecc71" },
+    { label: "ATK", val: stats.atk || 10, max: 100, color: "#e74c3c" },
+    { label: "DEF", val: parseFloat(stats.defense || 0), max: 50, color: "#3498db" },
+    { label: "RES", val: stats.res || 0, max: 100, color: "#9b59b6" },
+    { label: "M.DEF", val: parseFloat(stats.res_def || 0), max: 50, color: "#1abc9c" },
+    { label: "SPD", val: stats.atk_spd || 100, max: 200, color: "#f1c40f" }
+  ];
+  
+  const size = 160;
+  const center = size / 2;
+  const maxRadius = 45;
+  const numAxes = axes.length;
+  
+  // Background grid polygons
+  let gridPolys = "";
+  const gridLevels = [0.33, 0.66, 1.0];
+  gridLevels.forEach(level => {
+    const points = [];
+    for (let i = 0; i < numAxes; i++) {
+      const angle = i * (2 * Math.PI / numAxes) - Math.PI / 2;
+      const r = maxRadius * level;
+      const x = center + Math.cos(angle) * r;
+      const y = center + Math.sin(angle) * r;
+      points.push(`${x},${y}`);
+    }
+    gridPolys += `<polygon points="${points.join(" ")}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1" />`;
+  });
+  
+  // Radial lines and labels
+  let radialLines = "";
+  let labelText = "";
+  for (let i = 0; i < numAxes; i++) {
+    const angle = i * (2 * Math.PI / numAxes) - Math.PI / 2;
+    const outerX = center + Math.cos(angle) * maxRadius;
+    const outerY = center + Math.sin(angle) * maxRadius;
+    
+    radialLines += `<line x1="${center}" y1="${center}" x2="${outerX}" y2="${outerY}" stroke="rgba(255,255,255,0.12)" stroke-width="1" />`;
+    
+    const labelDist = maxRadius + 14;
+    const labelX = center + Math.cos(angle) * labelDist;
+    const labelY = center + Math.sin(angle) * labelDist + 3;
+    let textAnchor = "middle";
+    if (Math.cos(angle) > 0.1) textAnchor = "start";
+    else if (Math.cos(angle) < -0.1) textAnchor = "end";
+    
+    labelText += `<text x="${labelX}" y="${labelY}" fill="rgba(255,255,255,0.5)" font-size="8" font-family="Outfit, sans-serif" text-anchor="${textAnchor}" font-weight="bold">${axes[i].label}</text>`;
+  }
+  
+  // Data polygon
+  const dataPoints = [];
+  const vertexDots = [];
+  for (let i = 0; i < numAxes; i++) {
+    const angle = i * (2 * Math.PI / numAxes) - Math.PI / 2;
+    const valPercent = Math.min(1.0, Math.max(0.1, axes[i].val / axes[i].max));
+    const r = maxRadius * valPercent;
+    const x = center + Math.cos(angle) * r;
+    const y = center + Math.sin(angle) * r;
+    dataPoints.push(`${x},${y}`);
+    
+    vertexDots.push(`<circle cx="${x}" cy="${y}" r="2" fill="${axes[i].color}" />`);
+  }
+  
+  return `
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="display:block;margin:0 auto;overflow:visible;">
+      ${gridPolys}
+      ${radialLines}
+      ${labelText}
+      <polygon points="${dataPoints.join(" ")}" fill="rgba(162, 115, 255, 0.25)" stroke="#a273ff" stroke-width="2" style="filter: drop-shadow(0 0 4px rgba(162, 115, 255, 0.5));" />
+      ${vertexDots.join("")}
+    </svg>
+  `;
+}
+
+function spawnDamageNumber(targetEl, amount, type) {
+  if (!targetEl) return;
+  const rect = targetEl.getBoundingClientRect();
+  const docEl = document.documentElement;
+  const x = rect.left + rect.width / 2 + (window.pageXOffset || docEl.scrollLeft) - (docEl.clientLeft || 0);
+  const y = rect.top + (window.pageYOffset || docEl.scrollTop) - (docEl.clientTop || 0);
+
+  const numEl = document.createElement("div");
+  numEl.className = "floating-damage";
+  numEl.style.left = `${x}px`;
+  numEl.style.top = `${y}px`;
+  
+  if (type === "heal") {
+    numEl.textContent = `+${amount}`;
+    numEl.style.color = "#2ecc71";
+  } else if (type === "critical") {
+    numEl.textContent = `-${amount}!`;
+    numEl.style.color = "#ffc837";
+    numEl.style.fontSize = "2.4rem";
+  } else if (type === "magic") {
+    numEl.textContent = `-${amount}`;
+    numEl.style.color = "#a273ff";
+  } else {
+    numEl.textContent = `-${amount}`;
+    numEl.style.color = "#ff4d4d";
+  }
+
+  document.body.appendChild(numEl);
+  setTimeout(() => {
+    numEl.remove();
+  }, 1000);
+}
+
+function typeTextWordByWord(element, htmlContent, speed) {
+  if (speed <= 0) {
+    element.innerHTML = htmlContent;
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    const tokens = htmlContent.match(/<[^>]+>|[^<>\s]+|\s+/g) || [];
+    let currentTokenIndex = 0;
+    element.innerHTML = "";
+    
+    function showNextToken() {
+      if (currentTokenIndex >= tokens.length) {
+        resolve();
+        return;
+      }
+      
+      const token = tokens[currentTokenIndex++];
+      element.innerHTML += token;
+      
+      const storyLog = document.getElementById("rpgStoryLog");
+      if (storyLog) {
+        storyLog.scrollTop = storyLog.scrollHeight;
+      }
+      
+      if (token.startsWith("<") || token.trim() === "") {
+        showNextToken();
+      } else {
+        setTimeout(showNextToken, speed);
+      }
+    }
+    
+    showNextToken();
+  });
+}
+
 function renderSpecialSkillsIndicators(char) {
   const skills = char.special_skills;
   if (!skills) return "";
@@ -118,7 +280,7 @@ function updateWeatherEffect(region) {
   overlay.className = "rpg-ambient-overlay";
   overlay.innerHTML = ""; 
 
-  if (!region) return;
+  if (!region || !weatherEnabled) return;
 
   if (region === "Biên Cương Băng Giá") {
     overlay.classList.add("snow-weather");
@@ -337,11 +499,26 @@ function initRpgSetupWizard() {
     const currentEl = document.getElementById(`rpgStep${step}`);
     if (currentEl) currentEl.classList.add("active");
 
-    // Update progress bar fill
-    const progressFill = document.getElementById("rpgWizardProgressFill");
-    if (progressFill) {
-      const fillPercent = ((step - 1) / 7) * 100;
-      progressFill.style.width = `${fillPercent}%`;
+    // Update SVG Mystic Path fill and glowing token
+    const pathFill = document.getElementById("rpgMysticPathFill");
+    const token = document.getElementById("rpgMysticToken");
+    if (pathFill && token) {
+      const totalLength = 800; // standard SVG path length
+      const fillPercent = (step - 1) / 7;
+      const drawLength = totalLength * fillPercent;
+      pathFill.style.strokeDashoffset = totalLength - drawLength;
+      
+      try {
+        const point = pathFill.getPointAtLength(drawLength);
+        token.setAttribute("cx", point.x);
+        token.setAttribute("cy", point.y);
+      } catch (e) {
+        // Safe math fallback
+        const x = 10 + fillPercent * 780;
+        const y = 30 - Math.sin(fillPercent * Math.PI * 3) * 10;
+        token.setAttribute("cx", x);
+        token.setAttribute("cy", y);
+      }
     }
 
     // Update step indicators active/completed state
@@ -702,12 +879,11 @@ function initRpgSetupWizard() {
   if (rollGoldBtn) {
     rollGoldBtn.addEventListener("click", async () => {
       rollGoldBtn.disabled = true;
-      const goldDiceGraphic = document.getElementById("goldDiceGraphic");
-      goldDiceGraphic.classList.add("rolling");
-
-      let interval = setInterval(() => {
-        goldDiceGraphic.textContent = Math.floor(Math.random() * 6) + 1;
-      }, 80);
+      const goldDiceCube = document.getElementById("goldDiceCube");
+      if (goldDiceCube) {
+        goldDiceCube.classList.add("rolling");
+        goldDiceCube.style.transform = "";
+      }
 
       try {
         const [res] = await Promise.all([
@@ -715,9 +891,10 @@ function initRpgSetupWizard() {
           sleep(1200)
         ]);
 
-        clearInterval(interval);
-        goldDiceGraphic.classList.remove("rolling");
-        goldDiceGraphic.textContent = res.dice_roll;
+        if (goldDiceCube) {
+          goldDiceCube.classList.remove("rolling");
+          goldDiceCube.style.transform = getCubeRotation(res.dice_roll);
+        }
 
         rolledGold = res.gold_gained;
         document.getElementById("goldRollResult").innerHTML = `💰 <strong>+${res.gold_gained} Vàng</strong> ban đầu!`;
@@ -732,9 +909,10 @@ function initRpgSetupWizard() {
         document.getElementById("rpgRollEquipBtn").disabled = false;
 
       } catch (err) {
-        clearInterval(interval);
-        goldDiceGraphic.classList.remove("rolling");
-        goldDiceGraphic.textContent = "🎲";
+        if (goldDiceCube) {
+          goldDiceCube.classList.remove("rolling");
+          goldDiceCube.style.transform = "rotateX(0deg) rotateY(0deg)";
+        }
         alert("Tung xúc xắc vàng lỗi: " + err.message);
         rollGoldBtn.disabled = false;
       }
@@ -759,12 +937,11 @@ function initRpgSetupWizard() {
   if (rollEquipBtn) {
     rollEquipBtn.addEventListener("click", async () => {
       rollEquipBtn.disabled = true;
-      const equipDiceGraphic = document.getElementById("equipDiceGraphic");
-      equipDiceGraphic.classList.add("rolling");
-
-      let interval = setInterval(() => {
-        equipDiceGraphic.textContent = Math.floor(Math.random() * 6) + 1;
-      }, 80);
+      const equipDiceCube = document.getElementById("equipDiceCube");
+      if (equipDiceCube) {
+        equipDiceCube.classList.add("rolling");
+        equipDiceCube.style.transform = "";
+      }
 
       try {
         const [res] = await Promise.all([
@@ -772,9 +949,10 @@ function initRpgSetupWizard() {
           sleep(1200)
         ]);
 
-        clearInterval(interval);
-        equipDiceGraphic.classList.remove("rolling");
-        equipDiceGraphic.textContent = res.dice_roll;
+        if (equipDiceCube) {
+          equipDiceCube.classList.remove("rolling");
+          equipDiceCube.style.transform = getCubeRotation(res.dice_roll);
+        }
 
         rolledEquipment = res.item;
         const rarity = res.item.rarity;
@@ -787,9 +965,10 @@ function initRpgSetupWizard() {
         step5NextBtn.classList.remove("disabled");
 
       } catch (err) {
-        clearInterval(interval);
-        equipDiceGraphic.classList.remove("rolling");
-        equipDiceGraphic.textContent = "🎲";
+        if (equipDiceCube) {
+          equipDiceCube.classList.remove("rolling");
+          equipDiceCube.style.transform = "rotateX(0deg) rotateY(0deg)";
+        }
         alert("Tung xúc xắc trang bị lỗi: " + err.message);
         rollEquipBtn.disabled = false;
       }
@@ -890,6 +1069,12 @@ function initRpgSetupWizard() {
         document.getElementById("summaryStatRes").textContent = stats.res;
         document.getElementById("summaryStatResDef").textContent = `${stats.res_def}%`;
         document.getElementById("summaryStatSpd").textContent = stats.atk_spd;
+
+        // Render Radar Chart SVG
+        const radarContainer = document.getElementById("rpgSummaryRadarContainer");
+        if (radarContainer) {
+          radarContainer.innerHTML = renderRadarChart(stats);
+        }
       }
 
       // Enable Start Adventure Button
@@ -1430,6 +1615,32 @@ function renderState(rpgState) {
 
   // 7. Update ambient weather overlay
   updateWeatherEffect(rpgState.region);
+
+  // 8. Update Day/Night Cycle and Ambient Shader
+  const turn = rpgState.turn_count || 0;
+  const timeBadge = document.getElementById("rpgTimeBadge");
+  const rpgPage = document.getElementById("rpgPage");
+  
+  if (rpgPage) {
+    rpgPage.classList.remove("morning", "day", "sunset", "night");
+    let timeLabel = "☀️ Trưa";
+    if (turn % 4 === 0) {
+      rpgPage.classList.add("morning");
+      timeLabel = "🌅 Sáng";
+    } else if (turn % 4 === 1) {
+      rpgPage.classList.add("day");
+      timeLabel = "☀️ Trưa";
+    } else if (turn % 4 === 2) {
+      rpgPage.classList.add("sunset");
+      timeLabel = "🌇 Chiều";
+    } else {
+      rpgPage.classList.add("night");
+      timeLabel = "🌙 Tối";
+    }
+    if (timeBadge) {
+      timeBadge.textContent = timeLabel;
+    }
+  }
 }
 
 function renderEquipSlot(elementId, item, slotType, characterId) {
@@ -1569,21 +1780,22 @@ function updateLeftNpcPanel(rpgState) {
 
 // ── STORY LOG & CHOICES PANEL ────────────────────────────────────────────────
 
-function appendStoryBlock(storyText) {
+async function appendStoryBlock(storyText) {
   const storyLog = document.getElementById("rpgStoryLog");
   if (!storyLog) return;
 
   const div = document.createElement("div");
   div.className = "story-block-entry";
   div.style.marginBottom = "20px";
-  div.innerHTML = formatRpgText(storyText);
-
   storyLog.appendChild(div);
 
-  // Smooth scroll
+  const formattedHtml = formatRpgText(storyText);
+  await typeTextWordByWord(div, formattedHtml, currentTextSpeed);
+
+  // Smooth scroll final correction
   setTimeout(() => {
     storyLog.scrollTop = storyLog.scrollHeight;
-  }, 100);
+  }, 50);
 }
 
 function appendLogEntry(logMsg) {
@@ -2251,6 +2463,54 @@ function showCombatOverlay(combatState) {
   overlay.classList.remove("hidden");
   overlay.combatState = combatState;
 
+  // Render Combat Initiative Timeline Sequence based on speeds
+  const timelineSequence = document.getElementById("rpgTimelineSequence");
+  if (timelineSequence && combatState) {
+    timelineSequence.innerHTML = "";
+    const participants = [];
+    
+    if (combatState.combat_party) {
+      combatState.combat_party.forEach(c => {
+        if (c.stats.hp > 0) {
+          participants.push({
+            name: c.name,
+            spd: c.stats.atk_spd || 100,
+            race: c.race,
+            class: c.char_class,
+            isEnemy: false,
+            id: c.character_id
+          });
+        }
+      });
+    }
+    
+    if (combatState.enemy && combatState.enemy.stats.hp > 0) {
+      participants.push({
+        name: combatState.enemy.name,
+        spd: combatState.enemy.stats.atk_spd || 90,
+        race: "Demon",
+        class: "Boss",
+        isEnemy: true,
+        id: "enemy"
+      });
+    }
+    
+    // Sort descending by speed (SPD)
+    participants.sort((a, b) => b.spd - a.spd);
+    
+    // Render timeline units
+    participants.forEach((p, idx) => {
+      const unit = document.createElement("div");
+      unit.className = `timeline-unit ${p.isEnemy ? "enemy" : ""} ${idx === 0 ? "active" : ""}`;
+      unit.innerHTML = `
+        <span class="timeline-emoji">${p.isEnemy ? "👿" : getRaceEmoji(p.race)}</span>
+        <span class="timeline-name">${p.name}</span>
+        <span class="timeline-spd" style="opacity:0.6;font-size:0.65rem;">(${p.spd})</span>
+      `;
+      timelineSequence.appendChild(unit);
+    });
+  }
+
   // 1. Enemy Card Details
   const enemy = combatState.enemy;
   if (enemy) {
@@ -2533,6 +2793,7 @@ function showCombatOverlay(combatState) {
           const enemyCard = document.getElementById("rpgCombatEnemyCard");
           if (enemyCard) {
             enemyCard.classList.add("damage-shake", "damage-flash");
+            spawnDamageNumber(enemyCard, oldEnemyHp - newEnemyHp, "normal");
             setTimeout(() => {
               enemyCard.classList.remove("damage-shake", "damage-flash");
             }, 500);
@@ -2544,7 +2805,16 @@ function showCombatOverlay(combatState) {
           res.combat_state.combat_party.forEach(c => {
             const oldHp = oldPartyHps[c.character_id] || 0;
             if (c.stats.hp < oldHp) {
+              const card = document.querySelector(`.combat-party-card button[data-id="${c.character_id}"]`)?.closest('.combat-party-card');
+              if (card) {
+                spawnDamageNumber(card, oldHp - c.stats.hp, "normal");
+              }
               partyTookDamage = true;
+            } else if (c.stats.hp > oldHp && oldHp > 0) {
+              const card = document.querySelector(`.combat-party-card button[data-id="${c.character_id}"]`)?.closest('.combat-party-card');
+              if (card) {
+                spawnDamageNumber(card, c.stats.hp - oldHp, "heal");
+              }
             }
           });
         }
@@ -2840,6 +3110,140 @@ function initRpgImagesController() {
   }
 }
 
+function initRpgSettingsDrawer() {
+  const settingsBtn = document.getElementById("rpgSettingsBtn");
+  const settingsDrawer = document.getElementById("rpgSettingsDrawer");
+  const closeSettingsBtn = document.getElementById("rpgCloseSettingsBtn");
+  const backdrop = document.getElementById("rpgSettingsDrawerBackdrop");
+  
+  if (settingsBtn && settingsDrawer) {
+    // Open drawer
+    settingsBtn.addEventListener("click", () => {
+      settingsDrawer.classList.add("active");
+    });
+    
+    // Close drawer handlers
+    const closeDrawer = () => settingsDrawer.classList.remove("active");
+    if (closeSettingsBtn) closeSettingsBtn.addEventListener("click", closeDrawer);
+    if (backdrop) backdrop.addEventListener("click", closeDrawer);
+    
+    // 1. Text Speed Setting
+    const textSpeedSelect = document.getElementById("settingsTextSpeed");
+    if (textSpeedSelect) {
+      textSpeedSelect.value = currentTextSpeed;
+      textSpeedSelect.addEventListener("change", (e) => {
+        currentTextSpeed = parseInt(e.target.value);
+        console.log("RPG Text Speed updated to:", currentTextSpeed);
+      });
+    }
+    
+    // 2. Weather Toggle Setting
+    const toggleWeatherCheckbox = document.getElementById("settingsToggleWeather");
+    if (toggleWeatherCheckbox) {
+      toggleWeatherCheckbox.checked = weatherEnabled;
+      toggleWeatherCheckbox.addEventListener("change", (e) => {
+        weatherEnabled = e.target.checked;
+        console.log("RPG Weather Particle System enabled:", weatherEnabled);
+        if (gameState && gameState.region) {
+          updateWeatherEffect(gameState.region);
+        } else {
+          updateWeatherEffect(null);
+        }
+      });
+    }
+    
+    // 3. Export Save Button
+    const exportBtn = document.getElementById("settingsExportSaveBtn");
+    if (exportBtn) {
+      exportBtn.addEventListener("click", () => {
+        if (!gameState) {
+          alert("Không tìm thấy dữ liệu game hiện tại để tải về.");
+          return;
+        }
+        
+        const exportData = {
+          session_id: currentSessionId,
+          game_state: gameState,
+          saved_at: new Date().toISOString(),
+          app: "AI Story Adventure RPG Mode"
+        };
+        
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+        const downloadAnchor = document.createElement("a");
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `aistory_rpg_save_${currentSessionId || "session"}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+        console.log("RPG Save exported successfully.");
+      });
+    }
+    
+    // 4. Import Save Button & File Input trigger
+    const importTrigger = document.getElementById("settingsImportSaveTrigger");
+    const importInput = document.getElementById("settingsImportSaveInput");
+    
+    if (importTrigger && importInput) {
+      importTrigger.addEventListener("click", () => {
+        importInput.click();
+      });
+      
+      importInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+          try {
+            const importedData = JSON.parse(evt.target.result);
+            if (!importedData.game_state || !importedData.session_id) {
+              throw new Error("Tệp JSON không chứa session_id hoặc game_state hợp lệ.");
+            }
+            
+            const apiBase = getApiBase();
+            const response = await fetch(`${apiBase}/game/rpg/session/restore`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                session_id: importedData.session_id,
+                game_state: importedData.game_state
+              })
+            });
+            const res = await response.json();
+            if (response.ok && res.success) {
+              alert("Khôi phục save game thành công! Đang tải lại phiên chơi...");
+              currentSessionId = importedData.session_id;
+              gameState = importedData.game_state;
+              
+              // Load view
+              const setupPage = document.getElementById("rpgSetupPage");
+              const rpgPage = document.getElementById("rpgPage");
+              if (setupPage) setupPage.classList.remove("active");
+              if (rpgPage) {
+                rpgPage.classList.add("active");
+                if (typeof window.showPage === "function") {
+                  window.showPage("rpgPage");
+                }
+              }
+              
+              renderState(gameState);
+              appendStoryBlock("♻️ *Đã khôi phục thành công phiên chơi từ file save JSON của bạn! Hãy tiếp tục cuộc hành trình.*");
+              closeDrawer();
+            } else {
+              throw new Error(res.detail || "Không thể đồng bộ dữ liệu save lên máy chủ.");
+            }
+          } catch (err) {
+            alert("Nạp file save thất bại: " + err.message);
+          } finally {
+            importInput.value = "";
+          }
+        };
+        reader.readAsText(file);
+      });
+    }
+  }
+}
+
 function initRPGApp() {
   initRpgSetupWizard();
   initRpgComposer();
@@ -2847,6 +3251,7 @@ function initRPGApp() {
   initPartyController();
   initCombatOverlayController();
   initRpgImagesController();
+  initRpgSettingsDrawer();
 
   // Saves tab navigation binding
   const savesBtn = document.getElementById("rpgSavesNavBtn");
