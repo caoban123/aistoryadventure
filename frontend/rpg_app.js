@@ -837,7 +837,10 @@ function setupAvatarDisplay(imgElement, defaultSpan, char) {
     return;
   }
   
-  const srcPath = `assets/generated/${currentSessionId}_${filename}`;
+  const apiBase = getApiBase();
+  const baseUrl = apiBase.startsWith("http") ? apiBase : (apiBase === "/api" ? "/api" : "");
+  const cleanBaseUrl = baseUrl.replace(/\/+$/, "");
+  const srcPath = `${cleanBaseUrl}/assets/generated/${currentSessionId}_${filename}`;
   const version = char._img_version || 0;
   imgElement.src = srcPath + "?t=" + version;
   
@@ -2498,7 +2501,17 @@ function initRpgImagesController() {
         const res = await rpgFetch(url, { method: "POST" });
         if (res && res.success && res.image_url) {
           // Bypass browser cache by appending current timestamp
-          worldImgView.src = `${res.image_url}?t=${Date.now()}`;
+          const apiBase = getApiBase();
+          const baseUrl = apiBase.startsWith("http") ? apiBase : (apiBase === "/api" ? "/api" : "");
+          const cleanBaseUrl = baseUrl.replace(/\/+$/, "");
+          let imgUrl = res.image_url;
+          if (!imgUrl.startsWith("http")) {
+            if (imgUrl.startsWith("/")) {
+              imgUrl = imgUrl.substring(1);
+            }
+            imgUrl = `${cleanBaseUrl}/${imgUrl}`;
+          }
+          worldImgView.src = `${imgUrl}?t=${Date.now()}`;
           worldImgView.onload = () => {
             worldImgSpinner.style.display = "none";
             worldImgView.style.display = "block";
