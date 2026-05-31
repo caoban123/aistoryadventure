@@ -31,6 +31,7 @@ services:
       EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-simple}
       MAX_RECENT_MESSAGES: ${MAX_RECENT_MESSAGES:-8}
       MAX_RELEVANT_MEMORIES: ${MAX_RELEVANT_MEMORIES:-6}
+      KAGGLE_BACKEND_URL: ${KAGGLE_BACKEND_URL:-}
     volumes:
       - ai_story_runtime:/data/ai-story
     expose:
