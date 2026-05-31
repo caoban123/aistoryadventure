@@ -3125,11 +3125,11 @@ function initRpgSettingsDrawer() {
   if (settingsBtn && settingsDrawer) {
     // Open drawer
     settingsBtn.addEventListener("click", () => {
-      settingsDrawer.classList.remove("hidden");
+      settingsDrawer.classList.add("active");
     });
     
     // Close drawer handlers
-    const closeDrawer = () => settingsDrawer.classList.add("hidden");
+    const closeDrawer = () => settingsDrawer.classList.remove("active");
     if (closeSettingsBtn) closeSettingsBtn.addEventListener("click", closeDrawer);
     if (backdrop) backdrop.addEventListener("click", closeDrawer);
     

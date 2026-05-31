@@ -2839,8 +2839,48 @@
       <div id="rpgAmbientOverlay" class="rpg-ambient-overlay"></div>
       <div class="rpg-grid-container">
         
-        <!-- MAIN CONSOLE: CHAT / STORY / CHOICES -->
-        <main class="rpg-main-console glass-panel" id="rpgMainConsole">
+        <!-- LEFT SIDEBAR: NPC INFO PANEL -->
+        <aside class="rpg-left-sidebar glass-panel" id="rpgNpcPanel">
+          <div class="panel-header">
+            <p class="eyebrow">NPC Thông Tin</p>
+            <h3 style="display: flex; align-items: center; gap: 8px; margin: 0;">
+              <span id="rpgNpcIcon"></span>
+              <span id="rpgNpcName">Chưa Gặp Gỡ</span>
+            </h3>
+          </div>
+          <div class="panel-body">
+            <div class="rpg-npc-avatar" id="rpgNpcAvatarContainer" style="position: relative;">
+              <span id="rpgNpcAvatarDefault">❔</span>
+              <img id="rpgNpcAvatarImg" src="" alt="NPC Avatar" style="width: 100%; height: 100%; object-fit: cover; display: none;" />
+              <div id="rpgNpcAvatarLoading" class="avatar-loading-spinner hidden" style="position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #fff;">🪄</div>
+              
+              <!-- Floating control buttons in the bottom-right corner -->
+              <div class="avatar-overlay-controls" style="position: absolute; bottom: 8px; right: 8px; display: flex; gap: 6px; z-index: 10;">
+                <button id="rpgNpcRefreshBtn" type="button" class="action-chip-btn" style="padding: 4px; font-size: 0.8rem; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; cursor: pointer; color: white;" title="Tạo lại hình ảnh">🔄</button>
+                <button id="rpgNpcToggleBtn" type="button" class="action-chip-btn" style="padding: 4px; font-size: 0.8rem; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; cursor: pointer; color: white;" title="Bật/Tắt hiển thị ảnh">👁️</button>
+              </div>
+            </div>
+            <div class="rpg-npc-badge-row">
+              <span class="rpg-badge rarity" id="rpgNpcRarity">-</span>
+              <span class="rpg-badge race" id="rpgNpcRace">-</span>
+              <span class="rpg-badge class" id="rpgNpcClass">-</span>
+            </div>
+            <p class="rpg-npc-desc" id="rpgNpcDescription">
+              Không có thông tin thực thể hiện tại.
+            </p>
+            <div class="rpg-npc-stats-list">
+              <div class="stat-row"><span>HP</span><strong id="rpgNpcStatHp">-/-</strong></div>
+              <div class="stat-row"><span>ATK</span><strong id="rpgNpcStatAtk">-</strong></div>
+              <div class="stat-row"><span>RES</span><strong id="rpgNpcStatRes">-</strong></div>
+              <div class="stat-row"><span>DEF %</span><strong id="rpgNpcStatDef">-</strong></div>
+              <div class="stat-row"><span>M.DEF %</span><strong id="rpgNpcStatMdef">-</strong></div>
+              <div class="stat-row"><span>SPD</span><strong id="rpgNpcStatSpd">-</strong></div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- CENTER PANEL: CHAT / STORY / CHOICES -->
+        <main class="rpg-center-panel glass-panel">
           <header class="rpg-topbar">
             <div style="display: flex; align-items: center; gap: 15px;">
               <div>
@@ -2888,51 +2928,11 @@
           </section>
         </main>
 
-        <!-- SIDE DASHBOARD: NPC, PLAYER STATS, PARTY, INVENTORY -->
-        <aside class="rpg-side-dashboard" id="rpgSideDashboard">
+        <!-- RIGHT SIDEBAR: PLAYER INFO & PARTY -->
+        <aside class="rpg-right-sidebar">
           
-          <!-- NPC INFO PANEL -->
-          <div class="rpg-card glass-panel" id="rpgNpcPanel">
-            <div class="panel-header">
-              <p class="eyebrow">NPC Thông Tin</p>
-              <h3 style="display: flex; align-items: center; gap: 8px; margin: 0;">
-                <span id="rpgNpcIcon"></span>
-                <span id="rpgNpcName">Chưa Gặp Gỡ</span>
-              </h3>
-            </div>
-            <div class="panel-body">
-              <div class="rpg-npc-avatar" id="rpgNpcAvatarContainer" style="position: relative;">
-                <span id="rpgNpcAvatarDefault">❔</span>
-                <img id="rpgNpcAvatarImg" src="" alt="NPC Avatar" style="width: 100%; height: 100%; object-fit: cover; display: none;" />
-                <div id="rpgNpcAvatarLoading" class="avatar-loading-spinner hidden" style="position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #fff;">🪄</div>
-                
-                <!-- Floating control buttons in the bottom-right corner -->
-                <div class="avatar-overlay-controls" style="position: absolute; bottom: 8px; right: 8px; display: flex; gap: 6px; z-index: 10;">
-                  <button id="rpgNpcRefreshBtn" type="button" class="action-chip-btn" style="padding: 4px; font-size: 0.8rem; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; cursor: pointer; color: white;" title="Tạo lại hình ảnh">🔄</button>
-                  <button id="rpgNpcToggleBtn" type="button" class="action-chip-btn" style="padding: 4px; font-size: 0.8rem; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; cursor: pointer; color: white;" title="Bật/Tắt hiển thị ảnh">👁️</button>
-                </div>
-              </div>
-              <div class="rpg-npc-badge-row">
-                <span class="rpg-badge rarity" id="rpgNpcRarity">-</span>
-                <span class="rpg-badge race" id="rpgNpcRace">-</span>
-                <span class="rpg-badge class" id="rpgNpcClass">-</span>
-              </div>
-              <p class="rpg-npc-desc" id="rpgNpcDescription">
-                Không có thông tin thực thể hiện tại.
-              </p>
-              <div class="rpg-npc-stats-list">
-                <div class="stat-row"><span>HP</span><strong id="rpgNpcStatHp">-/-</strong></div>
-                <div class="stat-row"><span>ATK</span><strong id="rpgNpcStatAtk">-</strong></div>
-                <div class="stat-row"><span>RES</span><strong id="rpgNpcStatRes">-</strong></div>
-                <div class="stat-row"><span>DEF %</span><strong id="rpgNpcStatDef">-</strong></div>
-                <div class="stat-row"><span>M.DEF %</span><strong id="rpgNpcStatMdef">-</strong></div>
-                <div class="stat-row"><span>SPD</span><strong id="rpgNpcStatSpd">-</strong></div>
-              </div>
-            </div>
-          </div>
-
           <!-- Character Details -->
-          <div class="rpg-card glass-panel" id="rpgPlayerCard">
+          <div class="rpg-char-card glass-panel" id="rpgPlayerCard">
             <div class="panel-header">
               <p class="eyebrow">Người Chơi Chính</p>
               <div style="display:flex; align-items:center; gap:8px;">
@@ -2968,7 +2968,7 @@
           </div>
 
           <!-- Party members -->
-          <div class="rpg-card glass-panel" id="rpgPartyCard">
+          <div class="rpg-party-card glass-panel">
             <div class="panel-header">
               <p class="eyebrow">Đồng Hành (Party)</p>
               <button id="rpgManagePartyBtn" type="button" class="ghost-btn-xs">Quản lý 👥</button>
@@ -2979,7 +2979,7 @@
           </div>
 
           <!-- Inventory summary -->
-          <div class="rpg-card glass-panel" id="rpgInventoryCard">
+          <div class="rpg-inventory-card glass-panel">
             <div class="panel-header">
               <p class="eyebrow">Hành Trang</p>
               <div class="gold-summary">💰 <span id="rpgGoldText">0</span> Vàng</div>

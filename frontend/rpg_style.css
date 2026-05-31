@@ -56,12 +56,13 @@
 }
 
 .rpg-grid-container {
-  display: flex;
-  flex-flow: row wrap;
+  display: grid;
+  grid-template-columns: 290px 1fr 350px;
   gap: 24px;
   width: 100%;
-  max-width: 1550px;
+  max-width: 1450px;
   margin: 0 auto;
+  align-items: stretch;
 }
 
 /* --- Glassmorphic Containers --- */
@@ -83,36 +84,15 @@
   box-shadow: 0 12px 40px 0 rgba(162, 115, 255, 0.05);
 }
 
-.rpg-main-console {
-  flex: 1 1 700px;
+/* --- Left Sidebar (NPC Info Panel) --- */
+.rpg-left-sidebar {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 120px);
-  position: sticky;
-  top: 80px;
-  padding: 24px;
-  min-width: 320px;
-  box-sizing: border-box;
-}
-
-.rpg-side-dashboard {
-  flex: 1 1 380px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
   height: calc(100vh - 120px);
   position: sticky;
   top: 80px;
   overflow-y: auto;
-  min-width: 320px;
-  box-sizing: border-box;
-  padding-right: 4px;
-}
-
-.rpg-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
+  padding: 20px;
 }
 
 .rpg-npc-avatar {
@@ -397,9 +377,23 @@
   letter-spacing: 0.8px;
 }
 
-/* --- Side Dashboard Modules --- */
-.rpg-side-dashboard .glass-panel {
+/* --- Right Sidebar (Player and Party Info) --- */
+.rpg-right-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: calc(100vh - 120px);
+  position: sticky;
+  top: 80px;
+  overflow-y: auto;
+}
+
+.rpg-right-sidebar .glass-panel {
   padding: 20px;
+}
+
+.rpg-char-card {
+  position: relative;
 }
 
 .rpg-char-level {
@@ -882,16 +876,17 @@
 /* --- Combat Overlay --- */
 .rpg-combat-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   background: radial-gradient(circle at 50% 50%, #0d0a1b 0%, #030305 100%);
-  z-index: 1400;
+  z-index: 900;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: center;
-  padding: 24px;
+  padding: 40px;
   box-sizing: border-box;
-  overflow-y: auto;
 }
 
 .rpg-combat-overlay.hidden {
@@ -900,12 +895,12 @@
 
 .combat-grid {
   display: grid;
-  grid-template-columns: 320px 1fr 320px;
-  grid-template-rows: auto auto;
+  grid-template-columns: 340px 1fr 340px;
+  grid-template-rows: 1fr 140px;
   gap: 24px;
   width: 100%;
-  max-width: 1250px;
-  box-sizing: border-box;
+  height: 100%;
+  max-width: 1550px;
 }
 
 .combat-side {
@@ -941,8 +936,7 @@
 .combat-center-log {
   display: flex;
   flex-direction: column;
-  min-height: 280px;
-  max-height: 400px;
+  height: 100%;
   overflow: hidden;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--rpg-border-glass);
@@ -1290,8 +1284,21 @@
 }
 
 /* --- Responsive Layout & Zoom Adaptability --- */
+@media (min-width: 1201px) and (max-width: 1400px) {
+  .rpg-grid-container {
+    grid-template-columns: 260px 1fr 310px;
+    gap: 16px;
+  }
+}
+
 @media (max-width: 1200px) {
-  .rpg-main-console, .rpg-side-dashboard {
+  .rpg-grid-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    gap: 20px;
+  }
+  
+  .rpg-left-sidebar, .rpg-right-sidebar, .rpg-center-panel {
     height: auto !important;
     position: static !important;
     overflow-y: visible !important;
@@ -1321,11 +1328,11 @@
   .rpg-page {
     padding-top: 70px;
   }
-  .rpg-main-console, .rpg-side-dashboard {
+  .rpg-left-sidebar, .rpg-right-sidebar, .rpg-center-panel {
     height: calc(100vh - 100px);
     top: 70px;
   }
-  .rpg-main-console {
+  .rpg-center-panel {
     padding: 16px;
   }
   .rpg-story-log {
@@ -1345,7 +1352,7 @@
 }
 
 @media (max-height: 720px) {
-  .rpg-main-console, .rpg-side-dashboard {
+  .rpg-left-sidebar, .rpg-right-sidebar, .rpg-center-panel {
     height: auto !important;
     position: static !important;
     overflow-y: visible !important;
@@ -2168,15 +2175,12 @@ body.rpg-shop-open .rpg-right-sidebar {
   display: flex;
   align-items: center;
   gap: 15px;
-  width: 100%;
-  max-width: 1250px;
-  margin: 0 auto 20px auto;
-  padding: 12px 20px;
+  width: calc(100% - 40px);
+  margin: 15px auto 5px auto;
+  padding: 10px 20px;
   border-radius: 12px;
-  background: rgba(18, 14, 32, 0.85);
+  background: rgba(18, 14, 32, 0.7);
   border: 1px solid var(--rpg-border-glass);
-  box-sizing: border-box;
-  flex-shrink: 0;
 }
 .timeline-title {
   font-family: var(--rpg-font-outfit);
