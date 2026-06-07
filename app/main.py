@@ -121,7 +121,7 @@ async def status():
     )
     if settings_error:
         append_settings_error(readiness, settings_error)
-
+    print(1)
     return {
         "app_name": settings.app_name,
         "app_env": settings.app_env,

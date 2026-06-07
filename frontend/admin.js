@@ -323,7 +323,7 @@ function renderOverview(overview = {}) {
   const todayUsage = currentUsage?.today || {};
   const thirtyUsage = currentUsage?.last_30d || {};
   const provider = overview.text_provider;
-  const model = overview.text_model;
+  const model = overview.active_model;
 
   const inToday = todayUsage.actual_input_tokens || todayUsage.estimated_input_tokens || 0;
   const outToday = todayUsage.actual_output_tokens || todayUsage.estimated_output_tokens || 0;
@@ -584,9 +584,9 @@ function renderErrors(items = []) {
 function renderAudit(items = []) {
   const text = items.length
     ? items.map((item) => {
-        const target = item.target_uid ? ` -> đối tượng: ${item.target_uid}` : "";
-        return `[${formatDate(item.created_at)}] Admin ${item.actor_email || item.actor_uid}: ${item.action}${target}`;
-      }).join("\n")
+      const target = item.target_uid ? ` -> đối tượng: ${item.target_uid}` : "";
+      return `[${formatDate(item.created_at)}] Admin ${item.actor_email || item.actor_uid}: ${item.action}${target}`;
+    }).join("\n")
     : "Chưa ghi nhận nhật ký tác vụ admin nào.";
 
   if (auditOutput) auditOutput.textContent = text;
@@ -703,9 +703,9 @@ async function setBanState(shouldBan) {
     const endpoint = shouldBan ? "ban" : "unban";
     const options = shouldBan
       ? {
-          method: "POST",
-          body: JSON.stringify({ reason: banReasonInput?.value?.trim() || "" }),
-        }
+        method: "POST",
+        body: JSON.stringify({ reason: banReasonInput?.value?.trim() || "" }),
+      }
       : { method: "POST" };
 
     await requestJson(`${API_BASE}/admin/users/${encodeURIComponent(uid)}/${endpoint}`, options);
@@ -991,12 +991,12 @@ announcementForm?.addEventListener("submit", async (event) => {
       method: "POST",
       body: JSON.stringify({ title, content, type }),
     });
-    
+
     // Clear form
     if ($("announcementTitle")) $("announcementTitle").value = "";
     if ($("announcementContent")) $("announcementContent").value = "";
     if ($("announcementType")) $("announcementType").value = "temporary";
-    
+
     await loadDashboard();
     setStatus("Phát sóng thông báo thành công!", "ok");
   } catch (err) {

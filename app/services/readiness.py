@@ -15,7 +15,14 @@ PROVIDER_KEYS = {
     "groq": "GROQ_API_KEY",
 }
 
-SUPPORTED_PROVIDERS = {"mock", "openai", "gemini", "ollama", "groq"}
+SUPPORTED_PROVIDERS = {
+    "mock",
+    "openai",
+    "gemini",
+    "ollama",
+    "groq",
+    "round_robin",
+}
 
 
 def build_readiness_report(
@@ -71,6 +78,17 @@ def _add_provider_checks(
         )
         return
 
+    if provider == "round_robin":
+        checks.append(
+            ReadinessCheckItem(
+                check_id="provider.ready",
+                label="AI provider",
+                status="ok",
+                message="Round Robin provider is configured.",
+            )
+        )
+        return
+
     if provider == "mock":
         checks.append(
             ReadinessCheckItem(
@@ -108,6 +126,8 @@ def _add_provider_checks(
             )
         )
         return
+
+
 
     checks.append(
         ReadinessCheckItem(

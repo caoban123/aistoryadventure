@@ -1,3 +1,4 @@
+.idea/
 .env
 .env.*
 !.env.production.example
@@ -12,3 +13,4 @@ backups/
 restore_rollback/
 *.firebase-adminsdk-*.json
 aistoryadventure-*-firebase-adminsdk-*.json
+firebase-admin.json
