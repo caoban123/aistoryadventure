@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+python-dotenv
+openai
+google-genai
+firebase-admin
+chromadb
+qdrant-client
+fastembed
+pytest
+pytest-asyncio
+PyYAML

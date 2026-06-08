@@ -1,0 +1,66 @@
+name: ai-story-adventure
+
+services:
+  api:
+    build:
+      context: ../..
+      dockerfile: deploy/coolify/backend.Dockerfile
+    restart: unless-stopped
+    environment:
+      APP_NAME: ${APP_NAME:-AI Story Adventure}
+      APP_ENV: ${APP_ENV:-production}
+      STRICT_STARTUP_CHECKS: ${STRICT_STARTUP_CHECKS:-false}
+      API_PREFIX: ${API_PREFIX:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://aistoryadventure.xyz,https://admin.aistoryadventure.xyz}
+
+      TEXT_PROVIDER: ${TEXT_PROVIDER:-gemini}
+      TEXT_MODEL: ${TEXT_MODEL:-gemini-2.5-flash}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:?Set GEMINI_API_KEY in Coolify}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://127.0.0.1:11434}
+
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:?Set FIREBASE_PROJECT_ID in Coolify}
+      FIREBASE_SERVICE_ACCOUNT_JSON: ${FIREBASE_SERVICE_ACCOUNT_JSON:?Set FIREBASE_SERVICE_ACCOUNT_JSON as a Coolify secret}
+      FIREBASE_CREDENTIALS_PATH: ${FIREBASE_CREDENTIALS_PATH:-}
+      FIRESTORE_TIMEOUT_SECONDS: ${FIRESTORE_TIMEOUT_SECONDS:-5}
+      USE_LOCAL_STORE_IF_FIREBASE_MISSING: ${USE_LOCAL_STORE_IF_FIREBASE_MISSING:-false}
+
+      LOCAL_DATA_DIR: ${LOCAL_DATA_DIR:-/data/ai-story/data}
+      CHROMA_PERSIST_DIR: ${CHROMA_PERSIST_DIR:-/data/ai-story/chroma_db}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-simple}
+      MAX_RECENT_MESSAGES: ${MAX_RECENT_MESSAGES:-8}
+      MAX_RELEVANT_MEMORIES: ${MAX_RELEVANT_MEMORIES:-6}
+      KAGGLE_BACKEND_URL: ${KAGGLE_BACKEND_URL:-}
+    volumes:
+      - ai_story_runtime:/data/ai-story
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/status', timeout=5).read()"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  web:
+    build:
+      context: ../..
+      dockerfile: deploy/coolify/frontend.Dockerfile
+    restart: unless-stopped
+    environment:
+      API_BASE: ${PUBLIC_API_BASE:-https://api.aistoryadventure.xyz}
+    depends_on:
+      api:
+        condition: service_started
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  ai_story_runtime:
