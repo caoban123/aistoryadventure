@@ -268,6 +268,11 @@ class StoryService:
         query = f"{request.player_input}\n{session.foundation_text}\n{session.story_summary}\n{session.character_summary}"
         relevant = await self.memory.relevant_memories(request.session_id, query)
 
+        # Apply hybrid search & reranking from 3-Layer Memory System
+        current_loc = session.structured_state.current_location or "Unknown"
+        keywords = [w.strip("?,.!") for w in request.player_input.lower().split() if len(w) > 2]
+        relevant = self.memory.rerank_memories(relevant, current_loc, keywords)
+
         critical_instruction = ""
         if session.mode == "adventure" and session.adventure_profile:
             wounds = int(session.adventure_profile.get("wounds") or 0)

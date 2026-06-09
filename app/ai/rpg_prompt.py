@@ -111,17 +111,26 @@ def build_rpg_turn_prompt(
     else:
         action_context = f"Lượt chơi bình thường. Người chơi thực hiện hành động: '{player_input}'."
 
+    rolling_summary = getattr(session, "rolling_story_summary", "")
+    structured_state_json = session.structured_state.model_dump_json(indent=2)
+
     choices_count_instruction = "trả về đúng 2 lựa chọn tránh/đi hướng khác" if offered_event else "tạo ra 3 lựa chọn tiếp theo"
 
     return f"""
-Bạn là người dẫn chuyện chính cho một game nhập vai RPG text-based giả tưởng (Fantasy RPG).
+Bạn là người dẫn chuyện (Dungeon Master) cho một game nhập vai RPG text-based giả tưởng (Fantasy RPG).
 
 NGÔN NGỮ: Toàn bộ câu chuyện phải bằng TIẾNG VIỆT văn học tự nhiên, cuốn hút.
 
-Thông tin bối cảnh & ký ức liên quan:
+[STORY SUMMARY (Tóm tắt cốt truyện cục bộ)]:
+{rolling_summary if rolling_summary else "Hành trình mới bắt đầu, chưa có sự kiện lịch sử."}
+
+[STRUCTURED FACTS (Sự kiện cốt lõi không thể thay đổi)]:
+{structured_state_json}
+
+[RERANKED MEMORIES & NPC HISTORY (Ký ức liên quan)]:
 {mem_str or "Không có ký ức cũ."}
 
-Lịch sử câu chuyện gần đây:
+[RECENT HISTORY (Raw Window)]:
 {hist_str}
 
 Trạng thái Game hiện tại:
@@ -134,11 +143,12 @@ Ngữ cảnh sự kiện hiện tại:
 {action_context}
 {event_context or ""}
 
-Nhiệm vụ:
-1. Tiếp tục dẫn dắt cốt truyện dựa trên lịch sử và sự kiện hiện tại. 
+CHIẾN LƯỢC SÁNG TẠO & NHIỆM VỤ:
+1. Tiếp tục dẫn dắt cốt truyện dựa trên lịch sử và sự kiện hiện tại. Không lặp lại những gì đã xảy ra.
 2. Viết bằng tiếng Việt sinh động, chú trọng miêu tả giác quan, không khí thế giới RPG kỳ ảo.
-3. Nếu đây là lượt bình thường hoặc có sự kiện đề xuất sắp xảy ra, hãy {choices_count_instruction} cho người chơi.
-4. Nếu đây là sự kiện đặc biệt đang hoạt động (monk/merchant/stranger/item), hãy viết câu chuyện dẫn nhập sự kiện thật tự nhiên và trả về danh sách choices gồm các hành động cụ thể để người chơi tương tác (ví dụ: Thương nhân -> ["Xem hàng hóa", "Trò chuyện", "Rời đi"]). Bạn có thể đưa các choices cố định này vào trường 'choices'.
+3. [QUAN TRỌNG - PHÁ VỠ RẬP KHUÔN]: Đừng chỉ phản hồi thụ động hành động của người chơi. Bạn có quyền tự do sáng tạo cao nhất! Hãy thỉnh thoảng ném vào một biến cố bất ngờ (Plot twist), chướng ngại vật, hoặc một phát hiện bí ẩn để thế giới có vẻ rộng lớn và khó đoán hơn.
+4. Nếu đây là lượt bình thường hoặc có sự kiện đề xuất sắp xảy ra, hãy {choices_count_instruction} cho người chơi.
+5. Nếu đây là sự kiện đặc biệt đang hoạt động (monk/merchant/stranger/item), hãy viết câu chuyện dẫn nhập tự nhiên và có thể đưa các hành động cụ thể để người chơi tương tác vào trường 'choices'.
 
 Trả về ĐÚNG định dạng JSON sau, không thêm bất kỳ văn bản nào ngoài JSON:
 {{

@@ -206,6 +206,9 @@ def build_turn_prompt(
     target_words: int = 600,
     critical_instruction: str = "",
 ) -> str:
+    structured_state_json = session.structured_state.model_dump_json(indent=2)
+    rolling_summary = getattr(session, "rolling_story_summary", "")
+
     recent_text = "\n".join(
         [f"{m.role.upper()}: {m.content}" for m in recent_messages]
     ) or "None."
@@ -314,16 +317,16 @@ Trả về ĐÚNG định dạng JSON sau. Không markdown, không giải thích
 === TÓM TẮT NHÂN VẬT ===
 {session.character_summary}
 
-=== TÓM TẮT DIỄN BIẾN ===
-{session.story_summary}
+=== STORY SUMMARY (Tóm tắt cốt truyện cục bộ) ===
+{rolling_summary}
 
-=== SỰ KIỆN QUAN TRỌNG ===
-{facts}
+=== STRUCTURED FACTS (Sự kiện cốt lõi không thể thay đổi) ===
+{structured_state_json}
 
-=== KÝ ỨC LIÊN QUAN ===
+=== RERANKED MEMORIES & NPC HISTORY (Ký ức liên quan) ===
 {memory_text}
 
-=== TIN NHẮN GẦN ĐÂY ===
+=== RECENT HISTORY (Raw Window) ===
 {recent_text}
 
 === HÀNH ĐỘNG NGƯỜI CHƠI ===
@@ -418,28 +421,68 @@ def build_memory_extract_prompt(message_text: str) -> str:
     return f"""
 Bạn là hệ thống trích xuất ký ức cho một trò chơi phiêu lưu / tiểu thuyết tương tác AI.
 
-NGÔN NGỮ: Toàn bộ ký ức trích xuất phải bằng tiếng Việt súc tích.
-
 Nhiệm vụ:
-Đọc đoạn văn dưới đây. Trích xuất 1 đến 6 ký ức quan trọng cho bộ nhớ dài hạn.
-Mỗi ký ức là một câu tiếng Việt ngắn gọn, giàu thông tin, đủ để dùng trong các lượt sau.
+Đọc đoạn văn dưới đây. Trích xuất 1 đến 5 ký ức quan trọng cho bộ nhớ dài hạn.
+Trả về định dạng JSON array chứa các object. Mỗi object đại diện cho 1 ký ức quan trọng.
 
-Ưu tiên trích xuất:
-- Sự kiện có hậu quả rõ ràng
-- Khám phá về thế giới hoặc nhân vật
-- Đồ vật, địa điểm, hoặc NPC quan trọng
-- Lời hứa, bí mật, hay mâu thuẫn chưa giải quyết
-- Quyết định lớn và cái giá phải trả
-- Thay đổi cảm xúc hoặc mối quan hệ có ý nghĩa
-- Quy tắc hoặc luật lệ của thế giới vừa được tiết lộ
+Cấu trúc JSON yêu cầu:
+[
+  {{
+    "text": "Nội dung ký ức (Tiếng Việt súc tích, 1 câu)",
+    "location": "Địa điểm xảy ra (ví dụ: Rừng thông, Hang rồng, hoặc Unknown)",
+    "involved_npcs": ["Tên NPC 1", "Tên NPC 2"],
+    "keywords": ["từ khóa 1", "từ khóa 2", "từ khóa 3"]
+  }}
+]
 
-Bỏ qua những chi tiết nhỏ nhặt, lời thoại filler, hay mô tả bầu không khí không có thông tin mới.
-
-Không giải thích. Không JSON. Không markdown.
-Mỗi ký ức một dòng.
-Nếu không có gì quan trọng, chỉ trả về đúng một dòng:
-NONE
+Ưu tiên trích xuất: sự kiện có hậu quả, khám phá thế giới, thông tin NPC, quyết định quan trọng, thay đổi trạng thái quan hệ. Bỏ qua hội thoại rườm rà.
+Nếu không có gì đáng lưu, trả về mảng rỗng [].
+Chỉ trả về JSON hợp lệ.
 
 Đoạn văn cần phân tích:
 {message_text}
+""".strip()
+
+def build_structured_state_prompt(current_state_json: str, recent_messages_text: str) -> str:
+    return f"""
+Bạn là hệ thống theo dõi trạng thái cấu trúc (Structured State) của trò chơi.
+Dưới đây là trạng thái hiện tại (JSON):
+{current_state_json}
+
+Và các diễn biến mới nhất:
+{recent_messages_text}
+
+Nhiệm vụ của bạn là CẬP NHẬT lại JSON trạng thái trên dựa vào diễn biến mới.
+Đặc biệt lưu ý:
+- Cập nhật current_location nếu người chơi di chuyển.
+- Cập nhật current_quest nếu nhận nhiệm vụ mới hoặc hoàn thành.
+- Nếu gặp NPC mới, thêm vào npcs. Nếu NPC cũ chết/mất tích, đổi status sang 'dead'/'missing'. Cập nhật relationship_score (-100 đến 100).
+- Nếu có quyết định mang tính sinh tử/thay đổi cốt truyện, thêm vào critical_choices.
+- Inventory và bosses_defeated (nếu chơi RPG mode).
+- emotional_states và branching_flags (nếu chơi Novel mode).
+
+Hãy trả về ĐÚNG CẤU TRÚC JSON GỐC với dữ liệu đã được cập nhật. Không thêm giải thích gì ngoài JSON.
+""".strip()
+
+def build_rolling_summary_prompt(current_summary: str, recent_messages: list) -> str:
+    history_text = "\n".join([f"{'Người chơi' if m.role == 'user' else 'AI'}: {m.content}" for m in recent_messages])
+    return f"""
+Bạn là một thư ký ghi chép cốt truyện game. Nhiệm vụ của bạn là cập nhật bản tóm tắt cốt truyện liên tục.
+Dưới đây là bản tóm tắt cốt truyện từ trước đến nay (Rolling Summary):
+---
+{current_summary if current_summary else "Chưa có sự kiện nào đáng kể."}
+---
+
+Dưới đây là các diễn biến (raw text) mới nhất vừa xảy ra:
+---
+{history_text}
+---
+
+Yêu cầu:
+1. Viết lại một bản tóm tắt LIỀN MẠCH, bao gồm cả cốt truyện cũ và những diễn biến mới nhất.
+2. Giữ lại các chi tiết mang tính nhân quả: tên NPC, quyết định quan trọng, thay đổi trạng thái, vật phẩm nhặt được.
+3. Lược bỏ các chi tiết hội thoại rườm rà, tập trung vào sự phát triển của mạch truyện cốt lõi.
+4. Viết bằng tiếng Việt, văn xuôi mạch lạc. KHÔNG dài quá 400 từ.
+
+Chỉ trả về đoạn văn bản tóm tắt (không dùng Markdown block, không giải thích gì thêm).
 """.strip()

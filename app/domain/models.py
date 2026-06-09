@@ -2,13 +2,60 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Literal, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 Role = Literal["user", "ai", "system"]
 
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+class NPCState(BaseModel):
+    npc_id: str
+    name: str
+    status: Literal["alive", "dead", "missing", "unknown"] = "alive"
+    relationship_score: int = 0
+    known_information: list[str] = Field(default_factory=list)
+
+class StructuredState(BaseModel):
+    current_location: str = "Unknown"
+    current_quest: str = ""
+    npcs: dict[str, NPCState] = Field(default_factory=dict)
+    critical_choices: list[str] = Field(default_factory=list)
+
+    inventory: list[str] = Field(default_factory=list)
+    bosses_defeated: list[str] = Field(default_factory=list)
+
+    emotional_states: dict[str, str] = Field(default_factory=dict)
+    branching_flags: dict[str, bool] = Field(default_factory=dict)
+
+    @model_validator(mode='before')
+    @classmethod
+    def clean_state(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+
+        # 1. Clean up critical_choices: if item is dict, extract its value
+        if "critical_choices" in data and isinstance(data["critical_choices"], list):
+            cleaned_choices = []
+            for item in data["critical_choices"]:
+                if isinstance(item, dict):
+                    val = item.get("choice") or item.get("text") or next(iter(item.values()), str(item))
+                    cleaned_choices.append(str(val))
+                else:
+                    cleaned_choices.append(str(item))
+            data["critical_choices"] = cleaned_choices
+
+        # 2. Clean up emotional_states: convert values to string
+        if "emotional_states" in data and isinstance(data["emotional_states"], dict):
+            cleaned_emotions = {}
+            for k, v in data["emotional_states"].items():
+                if isinstance(v, dict):
+                    v = v.get("level") or v.get("value") or next(iter(v.values()), str(v))
+                cleaned_emotions[str(k)] = str(v)
+            data["emotional_states"] = cleaned_emotions
+
+        return data
 
 class Message(BaseModel):
     message_id: str
@@ -29,6 +76,7 @@ class SessionState(BaseModel):
     world_summary: str = ""
     character_summary: str = ""
     story_summary: str = ""
+    rolling_story_summary: str = ""
 
     important_facts: list[str] = Field(default_factory=list)
 
@@ -47,6 +95,8 @@ class SessionState(BaseModel):
     novel_profile: dict[str, Any] = Field(default_factory=dict)
     target_words: int = 600
 
+    structured_state: StructuredState = Field(default_factory=StructuredState)
+
 class MemoryChunk(BaseModel):
     chunk_id: str
     session_id: str
@@ -54,6 +104,9 @@ class MemoryChunk(BaseModel):
     kind: str = "event"
     importance: int = 3
     source_message_id: str | None = None
+    location: str | None = None
+    involved_npcs: list[str] = Field(default_factory=list)
+    keywords: list[str] = Field(default_factory=list)
     created_at: str = Field(default_factory=utc_now_iso)
 
 

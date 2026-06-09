@@ -153,7 +153,8 @@ class GeminiPoolProvider(TextProvider):
     def __init__(self):
         settings = get_settings()
 
-        keys = settings.gemini_api_keys.strip()
+        keys = settings.gemini_api_keys or ""
+        keys = keys.strip()
 
         if not keys:
             raise RuntimeError(
@@ -166,15 +167,12 @@ class GeminiPoolProvider(TextProvider):
             if k.strip()
         ]
 
-        self.index = 0
-        self.model = settings.gemini_model
+        if not self.keys:
+            raise RuntimeError(
+                "No valid keys found in GEMINI_API_KEYS"
+            )
 
-    def _next_client(self):
-        key = self.keys[self.index]
-        key_display = f"{key[:6]}...{key[-4:]}"  # che bớt key, chỉ hiện đầu/cuối
-        print(f"[GEMINI] Using model={self.model} | key[{self.index}]={key_display}")
-        self.index = (self.index + 1) % len(self.keys)
-        return genai.Client(api_key=key)
+        self.model = settings.gemini_model
 
     async def generate_text(
         self,
@@ -184,10 +182,12 @@ class GeminiPoolProvider(TextProvider):
 
         last_error = None
 
-        for _ in range(len(self.keys)):
-
+        # Always try keys in order, starting from the first key (index 0)
+        for idx, key in enumerate(self.keys):
             try:
-                client = self._next_client()
+                key_display = f"{key[:6]}...{key[-4:]}"
+                print(f"[GEMINI] Trying key[{idx}]={key_display} | model={self.model}")
+                client = genai.Client(api_key=key)
 
                 response = await asyncio.to_thread(
                     client.models.generate_content,
@@ -195,11 +195,23 @@ class GeminiPoolProvider(TextProvider):
                     contents=prompt,
                 )
 
+                usage = getattr(response, "usage_metadata", None)
+                if usage:
+                    self.set_usage(
+                        input_tokens=getattr(usage, "prompt_token_count", None),
+                        output_tokens=getattr(usage, "candidates_token_count", None),
+                    )
+                else:
+                    self.clear_usage()
+
                 return response.text or ""
 
             except Exception as e:
+                print(f"[GEMINI] Key[{idx}] failed: {e}")
                 last_error = e
 
+        if last_error is None:
+            raise RuntimeError("No keys were tried in GeminiPoolProvider")
         raise last_error
 
 class GroqPoolProvider(TextProvider):
@@ -207,7 +219,8 @@ class GroqPoolProvider(TextProvider):
     def __init__(self):
         settings = get_settings()
 
-        keys = settings.groq_api_keys.strip()
+        keys = settings.groq_api_keys or ""
+        keys = keys.strip()
 
         if not keys:
             raise RuntimeError(
@@ -220,24 +233,24 @@ class GroqPoolProvider(TextProvider):
             if k.strip()
         ]
 
-        self.index = 0
-        self.model = settings.groq_model
+        if not self.keys:
+            raise RuntimeError(
+                "No valid keys found in GROQ_API_KEYS"
+            )
 
-    def _next_client(self):
-        key = self.keys[self.index]
-        key_display = f"{key[:6]}...{key[-4:]}"
-        print(f"[GROQ] Using model={self.model} | key[{self.index}]={key_display}")
-        self.index = (self.index + 1) % len(self.keys)
-        return AsyncOpenAI(
-            api_key=key,
-            base_url="https://api.groq.com/openai/v1",
-        )
+        self.model = settings.groq_model
 
     async def generate_text(self, prompt: str) -> str:
         last_error = None
-        for _ in range(len(self.keys)):
+        # Always try keys in order, starting from the first key (index 0)
+        for idx, key in enumerate(self.keys):
             try:
-                client = self._next_client()
+                key_display = f"{key[:6]}...{key[-4:]}"
+                print(f"[GROQ] Trying key[{idx}]={key_display} | model={self.model}")
+                client = AsyncOpenAI(
+                    api_key=key,
+                    base_url="https://api.groq.com/openai/v1",
+                )
                 response = await client.chat.completions.create(
                     model=self.model,
                     messages=[
@@ -248,6 +261,14 @@ class GroqPoolProvider(TextProvider):
                     ],
                     temperature=0.9,
                 )
+                usage = getattr(response, "usage", None)
+                if usage:
+                    self.set_usage(
+                        input_tokens=getattr(usage, "prompt_tokens", None),
+                        output_tokens=getattr(usage, "completion_tokens", None),
+                    )
+                else:
+                    self.clear_usage()
                 return (
                     response
                     .choices[0]
@@ -256,7 +277,10 @@ class GroqPoolProvider(TextProvider):
                     or ""
                 )
             except Exception as e:
+                print(f"[GROQ] Key[{idx}] failed: {e}")
                 last_error = e
+        if last_error is None:
+            raise RuntimeError("No keys were tried in GroqPoolProvider")
         raise last_error
 
 
@@ -295,12 +319,17 @@ class RoundRobinProvider(TextProvider):
 
             try:
                 print(f"[FALLBACK] Trying: {provider.__class__.__name__}")
-                return await provider.generate_text(prompt)
+                res = await provider.generate_text(prompt)
+                # Sync last_usage to self
+                self.last_usage = getattr(provider, "last_usage", None)
+                return res
             except Exception as e:
                 # provider đã thử hết key nội bộ, chuyển sang cái tiếp theo
                 print(f"[FALLBACK] {provider.__class__.__name__} exhausted: {e}")
                 last_error = e
 
+        if last_error is None:
+            raise RuntimeError("No configured API providers are available for Round Robin.")
         raise RuntimeError("All providers exhausted") from last_error
 
 

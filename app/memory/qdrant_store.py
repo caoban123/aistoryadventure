@@ -70,6 +70,9 @@ class QdrantStore:
             "source_message_id": chunk.source_message_id or "",
             "created_at": chunk.created_at,
             "text": chunk.text,
+            "location": chunk.location,
+            "involved_npcs": chunk.involved_npcs,
+            "keywords": chunk.keywords,
         }
 
         await client.upsert(
@@ -114,6 +117,9 @@ class QdrantStore:
                     kind=payload.get("kind", "event"),
                     importance=int(payload.get("importance", 3)),
                     source_message_id=payload.get("source_message_id") or None,
+                    location=payload.get("location"),
+                    involved_npcs=payload.get("involved_npcs") or [],
+                    keywords=payload.get("keywords") or [],
                     created_at=payload.get("created_at"),
                 )
             )
@@ -150,6 +156,9 @@ class QdrantStore:
                     kind=payload.get("kind", "event"),
                     importance=int(payload.get("importance", 3)),
                     source_message_id=payload.get("source_message_id") or None,
+                    location=payload.get("location"),
+                    involved_npcs=payload.get("involved_npcs") or [],
+                    keywords=payload.get("keywords") or [],
                     created_at=payload.get("created_at"),
                 )
             )

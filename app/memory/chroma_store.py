@@ -25,6 +25,9 @@ class ChromaStore:
                 "importance": chunk.importance,
                 "source_message_id": chunk.source_message_id or "",
                 "created_at": chunk.created_at,
+                "location": chunk.location or "",
+                "involved_npcs": ",".join(chunk.involved_npcs),
+                "keywords": ",".join(chunk.keywords),
             }],
         )
 
@@ -46,6 +49,9 @@ class ChromaStore:
                 kind=meta.get("kind", "event"),
                 importance=int(meta.get("importance", 3)),
                 source_message_id=meta.get("source_message_id") or None,
+                location=meta.get("location") or None,
+                involved_npcs=[x.strip() for x in meta.get("involved_npcs", "").split(",") if x.strip()],
+                keywords=[x.strip() for x in meta.get("keywords", "").split(",") if x.strip()],
                 created_at=meta.get("created_at"),
             ))
         return chunks
@@ -69,6 +75,9 @@ class ChromaStore:
                 kind=meta.get("kind", "event"),
                 importance=int(meta.get("importance", 3)),
                 source_message_id=meta.get("source_message_id") or None,
+                location=meta.get("location") or None,
+                involved_npcs=[x.strip() for x in meta.get("involved_npcs", "").split(",") if x.strip()],
+                keywords=[x.strip() for x in meta.get("keywords", "").split(",") if x.strip()],
                 created_at=meta.get("created_at"),
             ))
 

@@ -5,7 +5,7 @@ import sys
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
-transcript_path = r"C:\Users\Admin\.gemini\antigravity\brain\24a4b91c-8f3c-4270-a926-e0a5c32e5627\.system_generated\logs\transcript.jsonl"
+transcript_path = r"C:\Users\\Admin\.gemini\antigravity\\brain\\24a4b91c-8f3c-4270-a926-e0a5c32e5627\\.system_generated\logs\transcript.jsonl"
 
 if not os.path.exists(transcript_path):
     print("Transcript not found")
