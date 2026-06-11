@@ -989,6 +989,7 @@ class RPGService:
         char = RPGEngine.generate_random_character(lvl, {"Mythic": 0, "Legendary": 0, "Epic": 0, "Rare": 0, "Uncommon": 0, "Common": 100})
         char.rarity = rarity
         char.race = race
+        char.level = lvl
         char.char_class = char_class
         char.gender = gender
         if rarity == "Mythic":
