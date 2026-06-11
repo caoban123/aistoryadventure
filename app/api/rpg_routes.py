@@ -1,13 +1,14 @@
 from __future__ import annotations
 import json
 from time import perf_counter
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from app.auth.firebase_auth import get_current_user
 from app.domain.rpg_schemas import (
     RPGStartRequest, RPGTurnRequest, RPGPromptTurnRequest,
     RPGEventActionRequest, RPGCombatActionRequest,
     RPGShopBuyRequest, RPGShopBuyMercRequest, RPGShopSellRequest,
     RPGPartySwapRequest, RPGEquipRequest,
+    RPGQuestRefreshRequest, RPGFastTravelRequest, RPGLeaveRegionRequest,
     RPGTurnResponse, RPGCombatResponse, RPGShopResponse
 )
 from app.services.rpg_service import RPGService
@@ -153,6 +154,7 @@ async def suggest_objectives(
 @router.post("/turn", response_model=RPGTurnResponse)
 async def process_turn(
     request: RPGTurnRequest,
+    background_tasks: BackgroundTasks,
     user=Depends(get_current_user)
 ):
     await enforce_player_or_http(user)
@@ -162,7 +164,7 @@ async def process_turn(
     started_at = perf_counter()
     
     try:
-        result = await service.process_turn(request.session_id, request.choice_index, user_id=user["uid"])
+        result = await service.process_turn(request.session_id, request.choice_index, user_id=user["uid"], background_tasks=background_tasks)
         points_entry = await spend_points_or_http(user, "turn", request.session_id)
         await log_ai_flow(
             user=user,
@@ -196,6 +198,7 @@ async def process_turn(
 @router.post("/turn/prompt", response_model=RPGTurnResponse)
 async def process_turn_prompt(
     request: RPGPromptTurnRequest,
+    background_tasks: BackgroundTasks,
     user=Depends(get_current_user)
 ):
     await enforce_player_or_http(user)
@@ -205,7 +208,7 @@ async def process_turn_prompt(
     started_at = perf_counter()
     
     try:
-        result = await service.process_turn_prompt(request.session_id, request.player_input, user_id=user["uid"])
+        result = await service.process_turn_prompt(request.session_id, request.player_input, user_id=user["uid"], background_tasks=background_tasks)
         points_entry = await spend_points_or_http(user, "turn", request.session_id)
         await log_ai_flow(
             user=user,
@@ -448,7 +451,7 @@ async def process_combat_end_action(
     started_at = perf_counter()
     
     try:
-        result = await service.process_combat_end_action(request.session_id, request.action, user_id=user["uid"])
+        result = await service.process_combat_end_action(request.session_id, request.action, user_id=user["uid"], custom_name=request.custom_name)
         points_entry = await spend_points_or_http(user, "turn", request.session_id)
         await log_ai_flow(
             user=user,
@@ -523,7 +526,7 @@ async def shop_buy_merc(
 ):
     await enforce_player_or_http(user)
     try:
-        return await service.process_shop_buy_merc(request.session_id, request.merc_index, user_id=user["uid"])
+        return await service.process_shop_buy_merc(request.session_id, request.merc_index, user_id=user["uid"], custom_name=request.custom_name)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
@@ -596,6 +599,108 @@ async def use_item(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+@router.post("/quest/refresh")
+async def refresh_quest(
+    request: RPGQuestRefreshRequest,
+    user=Depends(get_current_user)
+):
+    await enforce_player_or_http(user)
+    try:
+        return await service.refresh_quest(request.session_id, request.quest_id, user_id=user["uid"])
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+@router.post("/fast-travel", response_model=RPGTurnResponse)
+async def fast_travel(
+    request: RPGFastTravelRequest,
+    background_tasks: BackgroundTasks,
+    user=Depends(get_current_user)
+):
+    await enforce_player_or_http(user)
+    estimated_input_tokens = estimate_token_count(request.session_id) + estimate_token_count(request.target_region)
+    await ensure_rate_limit_or_http(user, "turn", "rpg.fast_travel", estimated_input_tokens)
+    await ensure_points_or_http(user, "turn")
+    started_at = perf_counter()
+    
+    try:
+        result = await service.fast_travel(request.session_id, request.target_region, user_id=user["uid"], background_tasks=background_tasks)
+        points_entry = await spend_points_or_http(user, "turn", request.session_id)
+        await log_ai_flow(
+            user=user,
+            action="turn",
+            operation="rpg.fast_travel",
+            status="success",
+            started_at=started_at,
+            session_id=request.session_id,
+            estimated_input_tokens=estimated_input_tokens,
+            estimated_output_tokens=response_token_estimate(result),
+            points_delta=points_entry.delta if points_entry else 0
+        )
+        return result
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        await log_ai_flow(
+            user=user,
+            action="turn",
+            operation="rpg.fast_travel",
+            status="error",
+            started_at=started_at,
+            session_id=request.session_id,
+            estimated_input_tokens=estimated_input_tokens,
+            error=exc
+        )
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+@router.post("/leave-region", response_model=RPGTurnResponse)
+async def leave_region(
+    request: RPGLeaveRegionRequest,
+    user=Depends(get_current_user)
+):
+    await enforce_player_or_http(user)
+    estimated_input_tokens = estimate_token_count(request.session_id)
+    await ensure_rate_limit_or_http(user, "turn", "rpg.leave_region", estimated_input_tokens)
+    await ensure_points_or_http(user, "turn")
+    started_at = perf_counter()
+    
+    try:
+        result = await service.leave_region(request.session_id, user_id=user["uid"])
+        points_entry = await spend_points_or_http(user, "turn", request.session_id)
+        await log_ai_flow(
+            user=user,
+            action="turn",
+            operation="rpg.leave_region",
+            status="success",
+            started_at=started_at,
+            session_id=request.session_id,
+            estimated_input_tokens=estimated_input_tokens,
+            estimated_output_tokens=response_token_estimate(result),
+            points_delta=points_entry.delta if points_entry else 0
+        )
+        return result
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        await log_ai_flow(
+            user=user,
+            action="turn",
+            operation="rpg.leave_region",
+            status="error",
+            started_at=started_at,
+            session_id=request.session_id,
+            estimated_input_tokens=estimated_input_tokens,
+            error=exc
+        )
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 # --- State ---
@@ -678,5 +783,26 @@ async def refresh_character_image(
         return await service.refresh_character_image(session_id, character_id, user_id=user["uid"])
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+from pydantic import BaseModel
+
+class RPGDebugCommandRequest(BaseModel):
+    session_id: str
+    command: str
+
+@router.post("/debug/command")
+async def run_debug_command(
+    request: RPGDebugCommandRequest,
+    user=Depends(get_current_user)
+):
+    await enforce_player_or_http(user)
+    try:
+        return await service.execute_debug_command(request.session_id, request.command, user_id=user["uid"])
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc

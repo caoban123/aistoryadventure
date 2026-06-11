@@ -203,7 +203,7 @@ def build_turn_prompt(
     recent_messages: list[Message],
     relevant_memories: list[MemoryChunk],
     player_input: str,
-    target_words: int = 600,
+    target_words: int = 300,
     critical_instruction: str = "",
 ) -> str:
     structured_state_json = session.structured_state.model_dump_json(indent=2)

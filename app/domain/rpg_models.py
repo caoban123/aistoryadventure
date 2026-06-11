@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Literal, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 # ==================== ENUMS / CONSTANTS ====================
 Rarity = Literal["Mythic", "Legendary", "Epic", "Rare", "Uncommon", "Common"]
@@ -42,7 +42,7 @@ class RPGBuff(BaseModel):
     duration: int | None = None  # None = chỉ dùng 1 lần rồi biến mất, int = số turn còn lại
 
 class RPGDebuff(BaseModel):
-    name: str  # "Chảy máu", "Thiêu đốt", "Tê liệt", "Choáng", "Chậm chạp", "Yếu đuối", "Sợ hãi"
+    name: str  # "Chảy máu", "Thiêu đốt", "Tê liệt", "Choáng", "Chậm chạp", "Yếu đuối", "Sợ hãi", "Giá lạnh", "Đông cứng"
     duration: int | None = None  # None = no limit (chỉ xóa bằng skill/item)
 
 # ==================== CHARACTER STATS ====================
@@ -89,7 +89,7 @@ class RPGCharacter(BaseModel):
     
     level: int = 1
     exp: int = 0
-    max_level: int = 50
+    max_level: int = 99
     
     stats: RPGCharacterStats = Field(default_factory=RPGCharacterStats)
     base_stats: RPGCharacterStats | None = None  # Lưu stats gốc cho combat
@@ -102,6 +102,22 @@ class RPGCharacter(BaseModel):
     special_skills: RPGSpecialSkills = Field(default_factory=RPGSpecialSkills)
     
     is_player_character: bool = False
+
+    @model_validator(mode="after")
+    def set_dynamic_max_level(self) -> RPGCharacter:
+        if self.character_id == "player" or self.is_player_character:
+            self.max_level = 99
+        else:
+            rarity_max = {
+                "Mythic": 90,
+                "Legendary": 80,
+                "Epic": 70,
+                "Rare": 60,
+                "Uncommon": 55,
+                "Common": 50
+            }
+            self.max_level = rarity_max.get(self.rarity, 50)
+        return self
 
 # ==================== PARTY ====================
 class RPGParty(BaseModel):
@@ -146,6 +162,21 @@ class RPGGameState(BaseModel):
     offered_event: str | None = None  # Sự kiện đang được đề xuất ở lượt trước (chưa kích hoạt)
     sympathy: int = 0  # Mức độ thiện cảm kẻ lạ mặt
     current_stranger: RPGCharacter | None = None  # NPC kẻ lạ mặt hiện tại
+    current_monk: RPGCharacter | None = None  # NPC tu sĩ hiện tại
+    current_merchant: RPGCharacter | None = None  # NPC thương nhân hiện tại
+    bypass_region_turn: bool = False  # Bỏ qua kiến trúc ở lượt trước, chặn xúc xắc kiến trúc ở lượt này
     region: str = ""
     objective: str = ""
+    
+    # Update 1-1 Map, Quest, Dungeon & Achievement additions
+    environment: str = ""
+    current_region: str | None = None
+    explored_regions: list[str] = Field(default_factory=list)
+    unlocked_fast_travel: list[str] = Field(default_factory=list)
+    dungeon_state: dict[str, Any] | None = None
+    active_quests: list[dict[str, Any]] = Field(default_factory=list)
+    achievements_progress: dict[str, Any] = Field(default_factory=dict)
+    debug_cheats: dict[str, Any] = Field(default_factory=dict)
+    dummy_combat_backup: RPGParty | None = None
+
 

@@ -292,8 +292,8 @@ class RoundRobinProvider(TextProvider):
     """
     def __init__(self):
         self.provider_classes = [
-            GeminiPoolProvider,   # ưu tiên 1: thử hết key Gemini
-            GroqPoolProvider,     # ưu tiên 2: thử hết key Groq
+            GroqPoolProvider, # ưu tiên 1: thử hết key Gemini
+            GeminiPoolProvider,     # ưu tiên 2: thử hết key Groq
             OllamaProvider,       # ưu tiên 3: fallback cuối
         ]
         self._providers: list[TextProvider | None] = [None] * len(self.provider_classes)

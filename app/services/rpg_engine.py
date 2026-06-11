@@ -74,10 +74,13 @@ RARITY_MAX_LEVEL = {
 }
 
 MYTHIC_CHARACTERS = {
-    "Defender": {"name": "Hoshiguma the breacher", "gender": "Female"},
-    "Guard":    {"name": "VinaVictoria", "gender": "Female"},
-    "Caster":   {"name": "Wang", "gender": "Male"},
-    "Sniper":   {"name": "Lemuen", "gender": "Female"},
+    "Defender": [{"name": "Hoshiguma the breacher", "gender": "Female"}],
+    "Guard":    [
+        {"name": "VinaVictoria", "gender": "Female"},
+        {"name": "SilverAsh the Reignfrost", "gender": "Male"}
+    ],
+    "Caster":   [{"name": "Wang", "gender": "Male"}],
+    "Sniper":   [{"name": "Lemuen", "gender": "Female"}],
 }
 
 DEF_CAPS = {
@@ -124,7 +127,7 @@ ITEM_CATALOG = {
 
 BUY_PRICES = {"Mythic": 500, "Legendary": 400, "Epic": 300, "Rare": 150, "Uncommon": 80, "Common": 30}
 SELL_PRICES = {"Mythic": 400, "Legendary": 300, "Epic": 200, "Rare": 90, "Uncommon": 50, "Common": 10}
-MERC_PRICES = {"Mythic": 800, "Legendary": 600, "Epic": 400, "Rare": 200, "Uncommon": 100, "Common": 50}
+MERC_PRICES = {"Mythic": 3999, "Legendary": 600, "Epic": 400, "Rare": 200, "Uncommon": 100, "Common": 50}
 
 SHOP_UPGRADE_COSTS = {1: 25, 2: 60, 3: 90, 4: 100, 5: 120}
 SHOP_SLOTS = {1: 4, 2: 5, 3: 6, 4: 6, 5: 6, 6: 6}
@@ -138,19 +141,8 @@ SHOP_RARITY_PROBS = {
     6: {"Mythic": 10, "Legendary": 15, "Epic": 20, "Rare": 25, "Uncommon": 20, "Common": 10},
 }
 
-# "monk": 10,
-# "merchant": 10,
-# "stranger": 12,
-# "item": 13,
-# "normal": 55,
-
-EVENT_PROBS = {
-    "monk": 20,
-    "merchant": 20,
-    "stranger": 30,
-    "item": 20,
-    "normal": 10,
-}
+# Note: EVENT_PROBS is deprecated. Active turn event probabilities are now dynamic
+# and managed in app/services/rpg_service.py based on environment and region.
 
 STRANGER_RARITY_PROBS = {
     "Mythic": 5, "Legendary": 8, "Epic": 10, "Rare": 15, "Uncommon": 20, "Common": 42
@@ -182,6 +174,8 @@ DEBUFFS = {
     "Chậm chạp":  {"duration": 3,    "effect": "-50% Atk_SPD"},
     "Yếu đuối":  {"duration": 2,    "effect": "-10% ATK, -10% DEF, -10% Res_DEF"},
     "Sợ hãi":    {"duration": 3,    "effect": "Không tấn công, không chịu đòn"},
+    "Giá lạnh":  {"duration": 6,    "effect": "-30% Atk_SPD cho mỗi tầng, cộng dồn tối đa 2 tầng"},
+    "Đông cứng": {"duration": 1,    "effect": "Đứng im chịu trận, không thể né đòn/phản đòn, nhận x1.5 sát thương vật lý (x1.8 từ SilverAsh)"},
 }
 
 ENEMY_DEBUFF_CHANCE = {
@@ -228,31 +222,41 @@ class RPGEngine:
         Also handles Hoshiguma and VinaVictoria custom caps and passive bonuses.
         """
         # 1. Base Class Stats
-        cls_stats = BASE_STATS.get(character.char_class, BASE_STATS["Specialist"])
-        
-        # 2. Race / Class Multipliers
-        race_bonuses = {}
-        if character.race in RACE_CLASS_BONUS:
-            race_data = RACE_CLASS_BONUS[character.race]
-            if "_all" in race_data:
-                race_bonuses = race_data["_all"]
-            elif character.char_class in race_data:
-                race_bonuses = race_data[character.char_class]
-        
-        stats_l1 = {}
-        for stat in ["max_hp", "atk", "res", "defense", "res_def", "atk_spd"]:
-            base_val = cls_stats.get(stat, 0)
-            bonus_pct = race_bonuses.get(stat, 0)
-            stats_l1[stat] = int(base_val * (1 + bonus_pct / 100))
-
-        # 3. Add Level Bonuses
-        level_bonus = 1
-        if character.is_player_character:
-            level_bonus *= 2
+        if character.base_stats is not None:
+            stats_l1 = {
+                "max_hp": character.base_stats.max_hp,
+                "atk": character.base_stats.atk,
+                "res": character.base_stats.res,
+                "defense": character.base_stats.defense,
+                "res_def": character.base_stats.res_def,
+                "atk_spd": character.base_stats.atk_spd
+            }
+            current_stats = stats_l1.copy()
+        else:
+            cls_stats = BASE_STATS.get(character.char_class, BASE_STATS["Specialist"])
             
-        current_stats = {}
-        for stat in ["max_hp", "atk", "res", "defense", "res_def", "atk_spd"]:
-            current_stats[stat] = stats_l1[stat] + level_bonus
+            # 2. Race / Class Multipliers
+            race_bonuses = {}
+            if character.race in RACE_CLASS_BONUS:
+                race_data = RACE_CLASS_BONUS[character.race]
+                if "_all" in race_data:
+                    race_bonuses = race_data["_all"]
+                elif character.char_class in race_data:
+                    race_bonuses = race_data[character.char_class]
+            
+            stats_l1 = {}
+            for stat in ["max_hp", "atk", "res", "defense", "res_def", "atk_spd"]:
+                base_val = cls_stats.get(stat, 0)
+                bonus_pct = race_bonuses.get(stat, 0)
+                stats_l1[stat] = int(base_val * (1 + bonus_pct / 100))
+
+            # 3. Add Level Bonuses
+            level_scale = max(0, character.level - 1)
+            growth_rate = 0.06 if character.is_player_character else 0.04
+                
+            current_stats = {}
+            for stat in ["max_hp", "atk", "res", "defense", "res_def", "atk_spd"]:
+                current_stats[stat] = int(stats_l1[stat] * (1 + level_scale * growth_rate))
 
         # 4. Equipment Bonuses
         equip_mods = {"max_hp": 0.0, "atk": 0.0, "res": 0.0, "defense": 0.0, "res_def": 0.0, "atk_spd": 0.0}
@@ -322,6 +326,12 @@ class RPGEngine:
                 final_stats["atk"] = int(final_stats["atk"] * 0.90)
                 final_stats["defense"] = int(final_stats["defense"] * 0.90)
                 final_stats["res_def"] = int(final_stats["res_def"] * 0.90)
+        
+        # Xử lý Giá lạnh
+        frost_stacks = sum(1 for d in character.debuffs if d.name == "Giá lạnh")
+        if frost_stacks > 0:
+            penalty = 0.30 * min(frost_stacks, 2)
+            final_stats["atk_spd"] = int(final_stats["atk_spd"] * (1 - penalty))
 
         # Set character's stats while keeping current HP bounded by new max_hp
         new_max_hp = final_stats["max_hp"]
@@ -366,14 +376,42 @@ class RPGEngine:
         name = ""
         gender = random.choice(["Male", "Female"])
         if rarity == "Mythic" and char_class in MYTHIC_CHARACTERS:
-            preset = MYTHIC_CHARACTERS[char_class]
+            presets = MYTHIC_CHARACTERS[char_class]
+            preset = random.choice(presets)
             name = preset["name"]
             gender = preset["gender"]
         else:
             # We leave name blank so AI can generate one, or generate a simple placeholder
             name = f"{race} {char_class} Vô danh"
             
-        # Skill templates based on race/class
+        # Initialize Character base
+        character = RPGCharacter(
+            character_id=str(uuid.uuid4())[:8],
+            name=name,
+            race=race,
+            char_class=char_class,
+            rarity=rarity,
+            gender=gender,
+            level=level,
+            max_level=max_lvl
+        )
+        cls.init_character_skills(character)
+        
+        # Calculate stats at level
+        cls_stats = BASE_STATS.get(char_class, BASE_STATS["Specialist"])
+        character.stats.hp = cls_stats["max_hp"] # Set raw hp value so calc_current_stats caps it correctly
+        cls.sync_character_stats(character)
+        character.stats.hp = character.stats.max_hp
+        
+        return character
+
+    @classmethod
+    def init_character_skills(cls, character: RPGCharacter) -> None:
+        """Initializes special skills for a character based on race, class, and name."""
+        race = character.race
+        char_class = character.char_class
+        name = character.name
+        
         special_skills = RPGSpecialSkills()
         if race == "Valkyrie":
             if char_class == "Defender":
@@ -381,9 +419,14 @@ class RPGEngine:
                 special_skills.skill_1 = "Võ sĩ đạo"
                 special_skills.skill_2 = "Hoả liên trảm quỷ"
             elif char_class == "Guard":
-                special_skills.passive_skill = "Hoàng đế"
-                special_skills.skill_1 = "Sư tử hống"
-                special_skills.skill_2 = "Phán quyết cuối cùng"
+                if name == "SilverAsh the Reignfrost":
+                    special_skills.passive_skill = "Kỷ băng hà"
+                    special_skills.skill_1 = "Quét kiếm"
+                    special_skills.skill_2 = "Băng tuyết vũ"
+                else:
+                    special_skills.passive_skill = "Hoàng đế"
+                    special_skills.skill_1 = "Sư tử hống"
+                    special_skills.skill_2 = "Phán quyết cuối cùng"
             elif char_class == "Caster":
                 special_skills.passive_skill = "Khai triển"
                 special_skills.skill_1 = "Vây hãm"
@@ -408,27 +451,8 @@ class RPGEngine:
             special_skills.skill_1 = "Phong tước"
         elif race == "Orc":
             special_skills.passive_skill = "Cuồng nộ"
-
-        # Initialize Character base
-        character = RPGCharacter(
-            character_id=str(uuid.uuid4())[:8],
-            name=name,
-            race=race,
-            char_class=char_class,
-            rarity=rarity,
-            gender=gender,
-            level=level,
-            max_level=max_lvl,
-            special_skills=special_skills
-        )
-        
-        # Calculate stats at level
-        cls_stats = BASE_STATS.get(char_class, BASE_STATS["Specialist"])
-        character.stats.hp = cls_stats["max_hp"] # Set raw hp value so calc_current_stats caps it correctly
-        cls.sync_character_stats(character)
-        character.stats.hp = character.stats.max_hp
-        
-        return character
+            
+        character.special_skills = special_skills
 
     @classmethod
     def generate_player_character(cls, name: str, gender: str) -> RPGCharacter:
@@ -441,7 +465,7 @@ class RPGEngine:
             rarity="Common",
             gender=gender,
             level=1,
-            max_level=50,
+            max_level=99,
             is_player_character=True
         )
         cls_stats = BASE_STATS["Specialist"]
@@ -462,15 +486,28 @@ class RPGEngine:
         rarity_data = ITEM_CATALOG.get(rarity, ITEM_CATALOG["Common"])
         item_data = rarity_data.get(item_type, rarity_data["Consume"])
         
+        name = item_data["name"]
+        description = item_data.get("description", "")
+        if rarity == "Epic" and item_type == "Consume":
+            if random.random() < 0.5:
+                env_list = ["Đồng bằng", "Đồi núi", "Rừng rậm", "Núi lửa", "Hoang mạc", "Núi tuyết", "Thiên giới"]
+                selected_env = random.choice(env_list)
+                name = f"Bản đồ cổ {selected_env}"
+                description = f"Bản đồ cổ của vùng {selected_env}. Khi mua sẽ tự động mở khóa điểm dịch chuyển đến Kiến trúc lớn của vùng này."
+
+        buy_price = BUY_PRICES.get(rarity, 30)
+        if name.startswith("Bản đồ cổ"):
+            buy_price = 199
+
         return RPGItem(
             item_id=str(uuid.uuid4())[:8],
-            name=item_data["name"],
+            name=name,
             rarity=rarity,
             item_type=item_type,
             stats_bonus=item_data.get("stats_bonus", {}),
-            description=item_data.get("description", ""),
+            description=description,
             sell_price=SELL_PRICES.get(rarity, 10),
-            buy_price=BUY_PRICES.get(rarity, 30)
+            buy_price=buy_price
         )
 
     @classmethod
@@ -744,6 +781,29 @@ class CombatEngine:
         # Track acted or hit character IDs to implement Devil's Ngạ Quỷ passive and Lemuen's Truy nã
         acted_or_hit_ids = set()
 
+        # Kiểm tra nội tại Kỷ băng hà của SilverAsh (phía đồng minh)
+        silverash_allies = [c for c in combat_state.combat_party if c.name == "SilverAsh the Reignfrost" and c.stats.hp > 0]
+        if silverash_allies:
+            enemy = combat_state.enemy
+            if enemy and enemy.stats.hp > 0:
+                frost_count = sum(1 for d in enemy.debuffs if d.name == "Giá lạnh")
+                if frost_count >= 2:
+                    enemy.debuffs = [d for d in enemy.debuffs if d.name != "Giá lạnh"]
+                    enemy.debuffs.append(RPGDebuff(name="Đông cứng", duration=1))
+                    logs.append(f"❄️ Nội tại 'Kỷ băng hà' của SilverAsh kích hoạt! Chuyển {frost_count} tầng Giá lạnh trên {enemy.name} thành Đông cứng (1 lượt)!")
+                    RPGEngine.sync_character_stats(enemy, 1)
+
+        # Kiểm tra nội tại Kỷ băng hà của SilverAsh (phía kẻ địch)
+        if combat_state.enemy and combat_state.enemy.name == "SilverAsh the Reignfrost" and combat_state.enemy.stats.hp > 0:
+            for char in combat_state.combat_party:
+                if char.stats.hp > 0:
+                    frost_count = sum(1 for d in char.debuffs if d.name == "Giá lạnh")
+                    if frost_count >= 2:
+                        char.debuffs = [d for d in char.debuffs if d.name != "Giá lạnh"]
+                        char.debuffs.append(RPGDebuff(name="Đông cứng", duration=1))
+                        logs.append(f"❄️ Kẻ địch {combat_state.enemy.name} kích hoạt nội tại 'Kỷ băng hà'! Chuyển {frost_count} tầng Giá lạnh trên {char.name} thành Đông cứng (1 lượt)!")
+                        RPGEngine.sync_character_stats(char, len(combat_state.combat_party))
+
         # Lemuen Auto-firing at the start of the turn
         for char in combat_state.combat_party:
             if char.special_skills.passive_skill == "Truy nã" and char.stats.hp > 0 and char.special_skills.skill_1_activating:
@@ -779,9 +839,9 @@ class CombatEngine:
             return [f"Lỗi: Nhân vật {attacker.name} đang trong chế độ tự động bắn (Khóa mục tiêu), không thể chọn hành động thủ công."], False, None
 
         # Apply Elf Passive (né tránh) and stuns
-        is_stunned = any(d.name in ["Choáng", "Sợ hãi"] for d in attacker.debuffs)
+        is_stunned = any(d.name in ["Choáng", "Sợ hãi", "Đông cứng"] for d in attacker.debuffs)
         if is_stunned:
-            logs.append(f"💤 {attacker.name} bị choáng hoặc sợ hãi, bỏ qua lượt này!")
+            logs.append(f"💤 {attacker.name} bị khống chế (Choáng/Sợ hãi/Đông cứng), bỏ qua lượt này!")
             # Enemy turn proceeds
             cls.enemy_turn(combat_state, defender_id, logs, acted_or_hit_ids)
             round_logs = cls.apply_buff_debuff_ticks(combat_state, acted_or_hit_ids)
@@ -793,6 +853,9 @@ class CombatEngine:
         # Check speed comparison for order of action
         enemy = combat_state.enemy
         player_first = attacker.stats.atk_spd >= enemy.stats.atk_spd
+        if skill_name == "skill_2" and attacker.special_skills.skill_2 == "Băng tuyết vũ":
+            player_first = True
+            logs.append(f"⚡ {attacker.name} sử dụng 'Băng tuyết vũ', chớp nhoáng cướp quyền ra đòn trước!")
         
         if player_first:
             # Player attacks first
@@ -846,7 +909,54 @@ class CombatEngine:
 
     @classmethod
     def execute_action(cls, attacker: RPGCharacter, skill_name: str, target_id: str, combat_state: RPGCombatState, logs: list[str], acted_or_hit_ids: set[str] = None) -> None:
-        """Executes the specific attack or skill chosen by the player character."""
+        """Executes the specific attack or skill chosen by the player character with boss dodge/block checks."""
+        import re
+        enemy = combat_state.enemy
+        
+        # Check enemy block/evasion for Golem, Ma vương Xương Cốt, and Alpha
+        dodge_type = None
+        if enemy and target_id == enemy.character_id:
+            if enemy.name == "Golem" and random.random() < 0.20:
+                dodge_type = "golem"
+            elif enemy.name == "Ma vương Xương Cốt" and random.random() < 0.10:
+                dodge_type = "skeleton"
+            elif enemy.name == "Alpha" and enemy.stats.hp / enemy.stats.max_hp < 0.20 and random.random() < 0.20:
+                dodge_type = "alpha"
+
+        if dodge_type:
+            # We want to run the action to spend energy/skills, but prevent damage
+            old_enemy_hp = enemy.stats.hp
+            temp_logs = []
+            
+            # Run the raw action logic
+            cls._execute_action_raw(attacker, skill_name, target_id, combat_state, temp_logs, acted_or_hit_ids)
+            
+            # Restore enemy HP
+            enemy.stats.hp = old_enemy_hp
+            
+            # Print dodge message
+            if dodge_type == "golem":
+                logs.append(f"🛡️ Golem kích hoạt kỹ năng đặc biệt: Chặn đứng hoàn toàn đòn đánh/chiêu thức từ {attacker.name}!")
+            elif dodge_type == "skeleton":
+                logs.append(f"💀 Ma vương Xương Cốt kích hoạt kỹ năng đặc biệt: Hóa hư vô, miễn nhiễm đòn đánh/chiêu thức từ {attacker.name}!")
+            elif dodge_type == "alpha":
+                logs.append(f"🌌 Alpha kích hoạt kỹ năng đặc biệt: Dịch chuyển hư không, né tránh hoàn toàn đòn đánh/chiêu thức từ {attacker.name}!")
+                
+            # Copy temp_logs to logs, modifying damage messages
+            for log in temp_logs:
+                # Replace "gây X sát thương" with "gây 0 sát thương (bị né/chặn)"
+                log = re.sub(r"gây \d+ sát thương", "gây 0 sát thương (bị né/chặn)", log)
+                # Replace "hút X HP" with "hút 0 HP"
+                log = re.sub(r"hút \d+ HP", "hút 0 HP", log)
+                # Replace HP display "Enemy HP: X/Y"
+                log = re.sub(r"Enemy HP: \d+/\d+", f"Enemy HP: {old_enemy_hp}/{enemy.stats.max_hp}", log)
+                logs.append(log)
+        else:
+            cls._execute_action_raw(attacker, skill_name, target_id, combat_state, logs, acted_or_hit_ids)
+
+    @classmethod
+    def _execute_action_raw(cls, attacker: RPGCharacter, skill_name: str, target_id: str, combat_state: RPGCombatState, logs: list[str], acted_or_hit_ids: set[str] = None) -> None:
+        """The original raw logic of execute_action (without dodge checking)."""
         enemy = combat_state.enemy
         if acted_or_hit_ids is not None:
             acted_or_hit_ids.add(attacker.character_id)
@@ -877,8 +987,18 @@ class CombatEngine:
                     logs.append(f"💨 {enemy.name} (Elf) nhanh nhẹn né tránh đòn tấn công cơ bản!")
                     return
 
+                is_frozen = any(d.name == "Đông cứng" for d in enemy.debuffs)
                 phys_dmg = int(attacker.stats.atk * (1 - enemy.stats.defense / 100))
                 mag_dmg = int(attacker.stats.res * (1 - enemy.stats.res_def / 100))
+                
+                if is_frozen:
+                    if attacker.name == "SilverAsh the Reignfrost":
+                        phys_dmg = int(phys_dmg * 1.8)
+                        logs.append(f"❄️ PHÁ BĂNG! SilverAsh gây x1.8 sát thương vật lý lên {enemy.name} đang bị đông cứng!")
+                    else:
+                        phys_dmg = int(phys_dmg * 1.5)
+                        logs.append(f"❄️ PHÁ BĂNG! {attacker.name} gây x1.5 sát thương vật lý lên {enemy.name} đang bị đông cứng!")
+                
                 dmg = max(1, phys_dmg, mag_dmg)
                 
                 # Check shield buff on enemy
@@ -937,6 +1057,37 @@ class CombatEngine:
                         logs.append(f"😨 {enemy.name} hoảng sợ nhận hiệu ứng 'Sợ hãi' trong 3 lượt!")
                 else:
                     logs.append(f"💨 {enemy.name} giữ vững ý chí, chống chịu được tiếng gầm.")
+
+            # Guard Skill 1: Quét kiếm (SilverAsh)
+            elif attacker.special_skills.skill_1 == "Quét kiếm":
+                attacker.special_skills.skill_1_countdown = 3
+                phys_dmg = int(0.80 * attacker.stats.atk * (1 - enemy.stats.defense / 100))
+                is_frozen = any(d.name == "Đông cứng" for d in enemy.debuffs)
+                if is_frozen:
+                    phys_dmg = int(phys_dmg * 1.8)
+                    logs.append(f"❄️ PHÁ BĂNG! SilverAsh quét kiếm gây x1.8 sát thương lên {enemy.name} đang bị đông cứng!")
+                dmg = max(1, phys_dmg)
+                
+                # Check shield
+                has_shield = any(b.name == "Lá chắn" for b in enemy.buffs)
+                if has_shield:
+                    enemy.buffs = [b for b in enemy.buffs if b.name != "Lá chắn"]
+                    logs.append(f"🛡️ {enemy.name} sử dụng Lá chắn hấp thụ hoàn toàn sát thương Quét kiếm!")
+                else:
+                    enemy.stats.hp = max(0, enemy.stats.hp - dmg)
+                    if any(b.name == "Lá chắn phép" for b in enemy.buffs):
+                        logs.append(f"✨ {enemy.name} kháng hiệu ứng Giá lạnh nhờ Lá chắn phép.")
+                    else:
+                        enemy.debuffs.append(RPGDebuff(name="Giá lạnh", duration=6))
+                        logs.append(f"❄️ {attacker.name} quét kiếm gây {dmg} sát thương và để lại 1 tầng Giá lạnh lên {enemy.name} (Enemy HP: {enemy.stats.hp}/{enemy.stats.max_hp}).")
+                        
+                        # Kích hoạt nội tại Kỷ băng hà ngay lập tức
+                        frost_count = sum(1 for d in enemy.debuffs if d.name == "Giá lạnh")
+                        if frost_count >= 2:
+                            enemy.debuffs = [d for d in enemy.debuffs if d.name != "Giá lạnh"]
+                            enemy.debuffs.append(RPGDebuff(name="Đông cứng", duration=1))
+                            logs.append(f"❄️ Nội tại 'Kỷ băng hà' kích hoạt! Chuyển {frost_count} tầng Giá lạnh thành Đông cứng (1 lượt)!")
+                            RPGEngine.sync_character_stats(enemy, 1)
 
             # Caster Skill 1: Vây hãm (đặt quân cờ/20% nổ)
             elif attacker.special_skills.skill_1 == "Vây hãm":
@@ -1095,6 +1246,41 @@ class CombatEngine:
                 crit_msg = f" (🔥 BẠO KÍCH! +{crit_dmg} sát thương chuẩn)" if crit_triggered else ""
                 logs.append(f"⚖️ VinaVictoria hành quyết 'Phán quyết cuối cùng' gây {dmg} sát thương ({true_dmg} chuẩn + {phys_dmg} vật lý{crit_msg}) lên {enemy.name} (Enemy HP: {enemy.stats.hp}/{enemy.stats.max_hp}).")
 
+            # Guard Skill 2: Băng tuyết vũ (SilverAsh - chém 5 nhát vật lý)
+            elif attacker.special_skills.skill_2 == "Băng tuyết vũ":
+                attacker.special_skills.skill_2_countdown = 8
+                logs.append(f"❄️ {attacker.name} kích hoạt 'Băng tuyết vũ', thi triển 5 nhát kiếm chớp nhoáng xé toạc không gian!")
+                
+                total_dmg = 0
+                for i in range(5):
+                    # Check né đòn Elf
+                    if enemy.special_skills.passive_skill == "Uyển chuyển" and random.random() < 0.20:
+                        logs.append(f"   💨 Nhát chém {i+1}: {enemy.name} né tránh thành công!")
+                        continue
+                        
+                    is_frozen = any(d.name == "Đông cứng" for d in enemy.debuffs)
+                    phys_dmg = int(attacker.stats.atk * (1 - enemy.stats.defense / 100))
+                    
+                    if is_frozen:
+                        phys_dmg = int(phys_dmg * 1.8)
+                        logs.append(f"   ❄️ Nhát chém {i+1}: Gây {phys_dmg} sát thương vật lý lên mục tiêu Đông cứng (x1.8)!")
+                    else:
+                        logs.append(f"   ⚔️ Nhát chém {i+1}: Gây {phys_dmg} sát thương vật lý.")
+                    
+                    # Check shield
+                    has_shield = any(b.name == "Lá chắn" for b in enemy.buffs)
+                    if has_shield:
+                        enemy.buffs = [b for b in enemy.buffs if b.name != "Lá chắn"]
+                        logs.append(f"      🛡️ Bị Lá chắn của {enemy.name} cản lại!")
+                    else:
+                        enemy.stats.hp = max(0, enemy.stats.hp - phys_dmg)
+                        total_dmg += phys_dmg
+                        cls.check_and_trigger_death(enemy, combat_state, logs)
+                        if enemy.stats.hp <= 0:
+                            break
+                            
+                logs.append(f"💥 Băng tuyết vũ gây tổng cộng {total_dmg} sát thương vật lý lên {enemy.name} (Enemy HP: {enemy.stats.hp}/{enemy.stats.max_hp}).")
+
             # Caster Skill 2: Chiếu tướng (30%*count*RES ma pháp)
             elif attacker.special_skills.skill_2 == "Chiếu tướng":
                 if attacker.special_skills.quan_co_count == 0:
@@ -1188,15 +1374,15 @@ class CombatEngine:
 
     @classmethod
     def enemy_turn(cls, combat_state: RPGCombatState, defender_id: str | None, logs: list[str], acted_or_hit_ids: set[str] = None) -> None:
-        """Executes the automatic enemy action."""
+        """Executes the automatic enemy action with custom Elite Boss & Alpha skills."""
         enemy = combat_state.enemy
         if not enemy or enemy.stats.hp <= 0:
             return
 
-        # Check if enemy is stunned / feared
-        is_stunned = any(d.name in ["Choáng", "Sợ hãi"] for d in enemy.debuffs)
+        # Check if enemy is stunned / feared / frozen
+        is_stunned = any(d.name in ["Choáng", "Sợ hãi", "Đông cứng"] for d in enemy.debuffs)
         if is_stunned:
-            logs.append(f"💤 {enemy.name} bị choáng hoặc sợ hãi, không thể hành động lượt này!")
+            logs.append(f"💤 {enemy.name} bị khống chế (Choáng/Sợ hãi/Đông cứng), không thể hành động lượt này!")
             return
 
         if acted_or_hit_ids is not None:
@@ -1236,10 +1422,31 @@ class CombatEngine:
                     logs.append(f"💨 {defender.name} cố gắng đỡ đòn bảo vệ {target.name} nhưng thất bại!")
 
         # Execute Enemy Attack
+        is_frozen = any(d.name == "Đông cứng" for d in target.debuffs)
         phys_dmg = int(enemy.stats.atk * (1 - target.stats.defense / 100))
         mag_dmg = int(enemy.stats.res * (1 - target.stats.res_def / 100))
+        
+        if is_frozen:
+            if enemy.name == "SilverAsh the Reignfrost":
+                phys_dmg = int(phys_dmg * 1.8)
+                logs.append(f"❄️ PHÁ BĂNG! SilverAsh của kẻ địch gây x1.8 sát thương vật lý lên {target.name} đang bị đông cứng!")
+            else:
+                phys_dmg = int(phys_dmg * 1.5)
+                logs.append(f"❄️ PHÁ BĂNG! {enemy.name} gây x1.5 sát thương vật lý lên {target.name} đang bị đông cứng!")
+                
         dmg = max(1, phys_dmg, mag_dmg)
         
+        # Elite Boss Custom Attack Modifiers: WereWolf, Poseidon, Alpha
+        if enemy.name == "WereWolf" and enemy.stats.hp / enemy.stats.max_hp < 0.20 and random.random() < 0.20:
+            dmg = dmg * 2
+            logs.append(f"💥 WereWolf phẫn nộ kích hoạt 'Cuồng loạn' chém x2 sát thương!")
+        elif enemy.name == "Poseidon" and random.random() < 0.30:
+            dmg = dmg * 2
+            logs.append(f"🌊 Poseidon vung đinh ba vạn cân đánh x2 sát thương!")
+        elif enemy.name == "Alpha" and random.random() < 0.10:
+            dmg = dmg * 3
+            logs.append(f"🌌 Alpha vung trường thương đen kích hoạt đánh x3 sát thương!")
+
         # Apply Elf Mưa tên negative modifier (Sơ hở debuff)
         has_so_ho = any(d.name == "Sơ hở" for d in target.debuffs)
         if has_so_ho:
@@ -1264,24 +1471,94 @@ class CombatEngine:
                     target.special_skills.hoshi_passive_countdown = -1
                     logs.append(f"💥 Hoshiguma đang trong quá trình hồi sinh nhưng nhận sát thương, 'Ma thần bất diệt' bị hủy bỏ hoàn toàn!")
             
-            # Apply Enemy Race Debuff Chance
-            debuff_data = ENEMY_DEBUFF_CHANCE.get(enemy.race, {"chance": 0, "debuffs": []})
-            if debuff_data["chance"] > 0 and target.stats.hp > 0:
-                # Check if target is immune via Lá chắn phép
-                if any(b.name == "Lá chắn phép" for b in target.buffs):
+            # Elite Boss & Alpha Debuffs & Healing/Lifesteal
+            if target.stats.hp > 0:
+                has_magic_shield = any(b.name == "Lá chắn phép" for b in target.buffs)
+                if has_magic_shield:
                     logs.append(f"✨ {target.name} kháng hoàn toàn hiệu ứng bất lợi từ kẻ địch nhờ Lá chắn phép.")
-                elif random.uniform(0, 100) <= debuff_data["chance"]:
-                    debuff_name = random.choice(debuff_data["debuffs"])
-                    duration = DEBUFFS[debuff_name]["duration"]
-                    target.debuffs.append(RPGDebuff(name=debuff_name, duration=duration))
-                    logs.append(f"🤢 {target.name} chịu tác động xấu '{debuff_name}'!")
+                else:
+                    if enemy.name == "Medusa":
+                        if random.random() < 0.20:
+                            target.debuffs.append(RPGDebuff(name="Tê liệt", duration=2))
+                            logs.append(f"🤢 {target.name} bị tê liệt bởi ánh nhìn của Medusa!")
+                        if random.random() < 0.10:
+                            target.debuffs.append(RPGDebuff(name="Chảy máu", duration=3))
+                            logs.append(f"🤢 {target.name} bị chảy máu bởi nọc độc Medusa!")
+                    elif enemy.name == "Vua Goblin":
+                        if random.random() < 0.30:
+                            target.debuffs.append(RPGDebuff(name="Chảy máu", duration=3))
+                            logs.append(f"🤢 {target.name} bị chảy máu bởi đại đao của Vua Goblin!")
+                    elif enemy.name == "WereWolf":
+                        if enemy.stats.hp / enemy.stats.max_hp >= 0.20 and random.random() < 0.10:
+                            target.debuffs.append(RPGDebuff(name="Chảy máu", duration=3))
+                            logs.append(f"🤢 {target.name} bị cào rách vai, nhận hiệu ứng Chảy máu!")
+                    elif enemy.name == "Dracula":
+                        if random.random() < 0.10:
+                            target.debuffs.append(RPGDebuff(name="Chảy máu", duration=3))
+                            logs.append(f"🤢 {target.name} bị cắn chảy máu xối xả!")
+                    elif enemy.name == "Golem":
+                        if random.random() < 0.10:
+                            target.debuffs.append(RPGDebuff(name="Choáng", duration=1))
+                            logs.append(f"🤢 {target.name} bị chấn động mạnh dẫn đến Choáng!")
+                    elif enemy.name == "Diablo":
+                        if random.random() < 0.20:
+                            target.debuffs.append(RPGDebuff(name="Thiêu đốt", duration=3))
+                            logs.append(f"🤢 {target.name} bị thiêu đốt bởi ngọn lửa Địa Ngục của Diablo!")
+                    elif enemy.name == "Thiên Dực Long Vương":
+                        if random.random() < 0.20:
+                            target.debuffs.append(RPGDebuff(name="Tê liệt", duration=2))
+                            logs.append(f"🤢 {target.name} bị dòng điện của Thiên Dực Long Vương làm tê liệt!")
+                    elif enemy.name == "Ma vương Xương Cốt":
+                        if random.random() < 0.20:
+                            target.debuffs.append(RPGDebuff(name="Chảy máu", duration=3))
+                            logs.append(f"🤢 {target.name} bị chảy máu do kiếm khí hắc ám!")
+                    elif enemy.name == "Alpha":
+                        if random.random() < 0.30:
+                            possible_debuffs = ["Chảy máu", "Thiêu đốt", "Tê liệt", "Choáng", "Chậm chạp", "Yếu đuối", "Sợ hãi", "Giá lạnh"]
+                            debuff_name = random.choice(possible_debuffs)
+                            duration = 2 if debuff_name in ["Choáng", "Tê liệt"] else 3
+                            target.debuffs.append(RPGDebuff(name=debuff_name, duration=duration))
+                            logs.append(f"🤢 Alpha áp đặt quyền năng hư không, {target.name} chịu hiệu ứng {debuff_name}!")
+                    else:
+                        debuff_data = ENEMY_DEBUFF_CHANCE.get(enemy.race, {"chance": 0, "debuffs": []})
+                        if debuff_data["chance"] > 0 and random.uniform(0, 100) <= debuff_data["chance"]:
+                            debuff_name = random.choice(debuff_data["debuffs"])
+                            target.debuffs.append(RPGDebuff(name=debuff_name, duration=3))
+                            logs.append(f"🤢 {target.name} chịu tác động xấu '{debuff_name}'!")
+
+            # Lifesteal check for Dracula, Diablo, Alpha
+            if enemy.stats.hp > 0:
+                heal = 0
+                if enemy.name == "Dracula" and random.random() < 0.20:
+                    heal = int((enemy.stats.max_hp - enemy.stats.hp) * 0.20)
+                    logs.append(f"🧛 Dracula hút máu kẻ địch hồi phục {heal} HP!")
+                elif enemy.name == "Diablo" and random.random() < 0.10:
+                    heal = int((enemy.stats.max_hp - enemy.stats.hp) * 0.30)
+                    logs.append(f"😈 Diablo hút hồn hồi phục {heal} HP!")
+                elif enemy.name == "Alpha" and random.random() < 0.10:
+                    heal = int((enemy.stats.max_hp - enemy.stats.hp) * 0.40)
+                    logs.append(f"🌌 Alpha đảo ngược thời gian hồi phục {heal} HP!")
+
+                if heal > 0:
+                    enemy.stats.hp = min(enemy.stats.max_hp, enemy.stats.hp + heal)
+                    RPGEngine.sync_character_stats(enemy, 1)
+
+            # Splash damage check for Thiên Dực Long Vương
+            if enemy.name == "Thiên Dực Long Vương" and random.random() < 0.10:
+                other_allies = [c for c in combat_state.combat_party if c.character_id != target.character_id and c.stats.hp > 0]
+                if other_allies:
+                    other = random.choice(other_allies)
+                    splash = int(dmg * 0.50)
+                    other.stats.hp = max(0, other.stats.hp - splash)
+                    logs.append(f"🔥 Thiên Dực Long Vương quật đuôi gây {splash} sát thương lan lên {other.name}!")
+                    cls.check_and_trigger_death(other, combat_state, logs)
+                    RPGEngine.sync_character_stats(other, len(combat_state.combat_party))
 
             # Trigger death checks on target
             cls.check_and_trigger_death(target, combat_state, logs)
 
         # Sync stats
         RPGEngine.sync_character_stats(target, len(combat_state.combat_party))
-
     @classmethod
     def check_combat_outcome(cls, combat_state: RPGCombatState) -> tuple[bool, str | None]:
         """Checks if combat is over. Returns (is_over, result)."""
@@ -1321,10 +1598,7 @@ class CombatEngine:
 
 class EventEngine:
 
-    @staticmethod
-    def roll_event() -> str:
-        """Rolls a random event type."""
-        return RPGEngine.roll_by_probability(EVENT_PROBS)
+
 
     @staticmethod
     def apply_monk_blessing(party: RPGParty, inventory: RPGInventory) -> tuple[list[str], RPGParty, RPGInventory]:
@@ -1385,13 +1659,28 @@ class EventEngine:
     @staticmethod
     def calculate_combat_drops(enemy: RPGCharacter) -> tuple[int, int, list[RPGItem]]:
         """Calculates gold, EXP, and items dropped when an enemy is killed."""
-        rarity = enemy.rarity
-        drop_data = DROP_TABLE.get(rarity, DROP_TABLE["Common"])
-        
-        gold_gained = drop_data["gold"]
-        exp_gained = drop_data["exp"]
-        items_count = drop_data["items"]
-        probs = drop_data["probs"]
+        if enemy.name in ["Medusa", "Vua Goblin", "WereWolf", "Dracula", "Golem"]:
+            gold_gained = 200
+            exp_gained = 200
+            items_count = 5
+            probs = {"Mythic": 10, "Legendary": 20, "Epic": 25, "Rare": 30, "Uncommon": 10, "Common": 5}
+        elif enemy.name in ["Poseidon", "Diablo", "Thiên Dực Long Vương", "Ma vương Xương Cốt"]:
+            gold_gained = 360
+            exp_gained = 360
+            items_count = 6
+            probs = {"Mythic": 10, "Legendary": 20, "Epic": 25, "Rare": 30, "Uncommon": 10, "Common": 5}
+        elif enemy.name == "Alpha":
+            gold_gained = 600
+            exp_gained = 600
+            items_count = 10
+            probs = {"Mythic": 10, "Legendary": 20, "Epic": 25, "Rare": 30, "Uncommon": 10, "Common": 5}
+        else:
+            rarity = enemy.rarity
+            drop_data = DROP_TABLE.get(rarity, DROP_TABLE["Common"])
+            gold_gained = drop_data["gold"]
+            exp_gained = drop_data["exp"]
+            items_count = drop_data["items"]
+            probs = drop_data["probs"]
         
         dropped_items = []
         for _ in range(items_count):
@@ -1451,7 +1740,7 @@ class ShopEngine:
             return False, "Chỉ số vật phẩm không hợp lệ!", shop, inventory
             
         item = shop.items_for_sale[item_index]
-        cost = BUY_PRICES.get(item.rarity, 30)
+        cost = item.buy_price if item.buy_price > 0 else BUY_PRICES.get(item.rarity, 30)
         
         if inventory.gold < cost:
             return False, f"Không đủ vàng! Giá mua: {cost} vàng (Bạn có {inventory.gold} vàng).", shop, inventory

@@ -3,6 +3,20 @@ from typing import Any
 from app.domain.models import SessionState, Message, MemoryChunk
 from app.domain.rpg_models import RPGCharacter, RPGGameState
 
+AETERNA_WORLD_LORE = """
+Bối cảnh Sử thi Thế giới Aeterna:
+1. Thần thoại Khởi nguyên: Thuở bình minh, lục địa Aeterna ngủ yên trong Đại Dương Vô Tận như viên ngọc thạch ngậm đầy ma pháp. Sự cân bằng hoàn hảo bị xé rách ở Kỷ Nguyên Thứ Nhất bởi một Vết Nứt Ma Pháp khổng lồ từ lỗi vũ trụ, chia đại lục thành 7 vùng đất lập thể cực đoan. Đồng thời đánh thức và đưa lối cho 8 chủng tộc: Con người (Human) kiên cường, Hoàng tộc (Royalty) kiêu hãnh, Tộc Tiên (Elf) thanh cao, Orc hung hãn, Goblin tinh ranh, Ác Quỷ (Devil) sa đọa, Thiên Thần (Angel) thánh khiết và những chiến binh Valkyrie huyền thoại.
+2. Thảm họa Cổ Ngục và Chìa Khóa Vĩ Đại: Dòng ma pháp hắc ám tích tụ thành 7 Cổ Ngục (Dungeons) biệt lập sâu trong lòng đất, sinh ra 7 Đại Ma Thần (BOSS) tà ác mưu đồ hủy diệt trật tự thế giới. Hội đồng Tối cao Aeterna ban bố Sắc Lệnh Anh Hùng (Quests & Achievements). Theo huyền thoại cổ xưa, khi 7 Đại Ma Thần gục ngã dưới kiếm của Kẻ lữ hành định mệnh, mỗi Cổ Ngục hiến tế 1 Mảnh Vỡ Không Gian. Gom đủ 7 mảnh vỡ sẽ tự rèn nên Chiếc Chìa Khóa Vĩ Đại để mở Cổng Không Gian Hư Không – nơi ẩn thân của Final BOSS (kẻ thù tối cao đứng sau mọi sự diệt vong) cứu thế giới.
+3. Chi tiết 7 vùng đất và Thủ hộ truyền kỳ:
+  - Đồng Bằng Victoria: Nằm ở tâm điểm Aeterna, trù phú ngập tràn ánh nắng. Nơi ngự trị của tộc Human và Royalty với Vương Đô Victoria Gothic đá trắng nguy nga. Canh giữ nơi đây là Hoàng đế VinaVictoria (lớp Guard, thanh gươm vương quyền chẻ đôi bóng tối), bảo vệ lối vào Cổ Ngục Đồng Bằng.
+  - Đồi Núi Sương Mù: Vùng núi đá và thung lũng sương mù hiểm trở ở phía Tây. Nơi sinh sống của tộc Angel trên đỉnh núi và hang ngục Devil dưới thung lũng sâu. Canh giữ bởi Đại pháp sư Wang (tộc Tiên, chiến binh Valkyrie lớp Caster ẩn cư bảo vệ Cổ Ngục Thung Lũng).
+  - Đại Ngàn Londinium: Rừng mưa nhiệt đới bạt ngàn thánh địa của Elf. Cung điện Londinium bằng gỗ thánh tráng lệ ẩn sâu trong tán lá bạc ngàn. Cổ Ngục Đại Ngàn cắm rễ hấp thụ linh khí đất trời.
+  - Biên Thùy Tro Tàn (Núi lửa & Vực thẳm): Vùng đất chết chóc bao trùm bởi khói bụi tàn tro và nham thạch nóng chảy, lãnh địa Devil, Orc, Goblin với Tòa Thành Chúa Quỷ. Canh giữ bởi bán quỷ đặc cấp Hoshiguma The Breacher (Valkyrie lớp Defender, tấm khiên khổng lồ trấn ngự dòng nham thạch bên Cổ Ngục Hỏa Ngục).
+  - Bình Nguyên Cát: Hoang mạc và Sa mạc cát vàng oi bức của Orc và Goblin. Điểm nhấn là Thành Phố Tự Do – ốc đảo khổng lồ giao thương phi luật lệ cho mọi chủng tộc. Cổ Ngục Sa Mạc chôn vùi mảnh vỡ chìa khóa thứ năm.
+  - Băng Nguyên Khởi Nguyên: Vùng cực bắc tuyết phủ trắng xóa và bão tuyết gầm rú quanh năm. Có Pháo Đài Bất Khả Xâm Phạm uy nghiêm của Thống soái trẻ tuổi SilverAsh the Reignfrost (Valkyrie lớp Guard, nội tại Kỷ Băng Hà đóng băng linh hồn địch, canh giữ Cổ Ngục Băng Giá).
+  - Thánh Điện Thiên Giới: Thánh điện lơ lửng trên mây trắng, kiến trúc vàng ròng ngập ánh sáng vĩnh cửu của tộc Angel. Chánh Điện Thánh Đường Tối Cao được canh giữ bởi Lemuen (thiên thần đặc cấp, anh hùng Valkyrie lớp Sniper, canh giữ Cổ Ngục Thiên Giới).
+""".strip()
+
 def build_rpg_start_prompt(
     player_name: str,
     gender: str | None,
@@ -19,14 +33,17 @@ def build_rpg_start_prompt(
     armor_name = equipment.get("armor", {}).get("name") if equipment.get("armor") else "áo vải thô sơ"
 
     return f"""
-Bạn là người dẫn truyện chính cho một game nhập vai RPG text-based giả tưởng (Fantasy RPG).
+Bạn là người dẫn truyện chính cho một game nhập vai RPG text-based giả tưởng (Fantasy RPG) lấy bối cảnh tại lục địa Aeterna kỳ ảo.
+
+[BỐI CẢNH THẾ GIỚI]:
+{AETERNA_WORLD_LORE}
 
 Nhiệm vụ:
 Hãy viết chương mở đầu hành trình phiêu lưu cho nhân vật chính trong thế giới này. 
-Nêu bật bối cảnh ban đầu, không khí kỳ bí và giới thiệu các chi tiết liên quan đến khu vực khởi hành.
+Nêu bật bối cảnh sử thi Aeterna, không khí kỳ bí và giới thiệu các chi tiết liên quan đến khu vực khởi hành.
 
 Yêu cầu về ngôn ngữ:
-- Phải viết bằng TIẾNG VIỆT văn học giàu cảm xúc, tự nhiên, cuốn hút.
+- Phải viết bằng TIẾNG VIỆT văn học giàu cảm xúc, tự nhiên, cuốn hút, mang đậm chất sử thi anh hùng.
 - Người chơi là nhân vật chính ("Bạn" hoặc đại từ phù hợp).
 - Bắt đầu thẳng vào sự kiện, tránh dẫn nhập rườm rà.
 
@@ -108,8 +125,21 @@ def build_rpg_turn_prompt(
             action_context = "SỰ KIỆN SẮP XẢY RA: Người chơi sắp bắt gặp một Kẻ lạ mặt. Hãy viết câu chuyện dẫn dắt để người chơi phát hiện thấy bóng người thấp thoáng ở phía trước. Hãy gợi ý sự gặp gỡ này trong câu chuyện. Trả về đúng 2 lựa chọn tiếp tục hành trình cho người chơi ở trường 'choices' (vì Lựa chọn 1 sẽ bị hệ thống tự động gán là lựa chọn đi gặp kẻ lạ mặt)."
         elif offered_event == "item":
             action_context = "SỰ KIỆN SẮP XẢY RA: Tìm thấy vật phẩm/chiếc rương. Hãy viết câu chuyện dẫn dắt để người chơi phát hiện thấy một chiếc rương cổ hoặc vật phẩm lấp lánh trong bụi rậm/vách đá. Hãy gợi ý sự gặp gỡ này trong câu chuyện. Trả về đúng 2 lựa chọn tiếp tục hành trình cho người chơi ở trường 'choices' (vì Lựa chọn 1 sẽ bị hệ thống tự động gán là lựa chọn thu thập vật phẩm)."
+        elif offered_event.startswith("region:"):
+            region_name = offered_event.split(":", 1)[1]
+            action_context = f"SỰ KIỆN SẮP XẢY RA: Người chơi phát hiện thấy kiến trúc/địa điểm '{region_name}' ở phía trước. Hãy viết câu chuyện dẫn dắt để miêu tả vẻ kỳ vĩ hoặc bí ẩn của nơi này. Gợi ý sự khám phá địa điểm này trong câu chuyện. Trả về đúng 2 lựa chọn tiếp tục hành trình cho người chơi ở trường 'choices' (vì Lựa chọn 1 sẽ bị hệ thống tự động gán là lựa chọn tiến vào khám phá)."
+        elif offered_event.startswith("dungeon:"):
+            dungeon_name = offered_event.split(":", 1)[1]
+            action_context = f"SỰ KIỆN SẮP XẢY RA: Người chơi phát hiện thấy lối vào hầm ngục '{dungeon_name}' u tối đầy nguy hiểm. Hãy viết câu chuyện dẫn dắt để miêu tả lối vào hầm ngục rùng rợn này. Gợi ý sự khám phá hầm ngục trong câu chuyện. Trả về đúng 2 lựa chọn tiếp tục hành trình cho người chơi ở trường 'choices' (vì Lựa chọn 1 sẽ bị hệ thống tự động gán là lựa chọn tiến vào hầm ngục)."
     else:
         action_context = f"Lượt chơi bình thường. Người chơi thực hiện hành động: '{player_input}'."
+
+    curr_env = rpg_state_dict.get("environment", "")
+    curr_reg = rpg_state_dict.get("current_region", "")
+    reg_context = f"Bối cảnh hiện tại: Môi trường '{curr_env}'"
+    if curr_reg:
+        reg_context += f", cụ thể đang khám phá tại địa điểm/kiến trúc '{curr_reg}'"
+    action_context = reg_context + ". " + action_context
 
     rolling_summary = getattr(session, "rolling_story_summary", "")
     structured_state_json = session.structured_state.model_dump_json(indent=2)
@@ -117,9 +147,12 @@ def build_rpg_turn_prompt(
     choices_count_instruction = "trả về đúng 2 lựa chọn tránh/đi hướng khác" if offered_event else "tạo ra 3 lựa chọn tiếp theo"
 
     return f"""
-Bạn là người dẫn chuyện (Dungeon Master) cho một game nhập vai RPG text-based giả tưởng (Fantasy RPG).
+Bạn là người dẫn chuyện (Dungeon Master) cho một game nhập vai RPG text-based giả tưởng (Fantasy RPG) lấy bối cảnh tại lục địa Aeterna kỳ ảo.
 
-NGÔN NGỮ: Toàn bộ câu chuyện phải bằng TIẾNG VIỆT văn học tự nhiên, cuốn hút.
+[WORLD LORE & HISTORY (Bối cảnh thế giới)]:
+{AETERNA_WORLD_LORE}
+
+NGÔN NGỮ: Toàn bộ câu chuyện phải bằng TIẾNG VIỆT văn học tự nhiên, cuốn hút, mang sắc thái sử thi kì ảo.
 
 [STORY SUMMARY (Tóm tắt cốt truyện cục bộ)]:
 {rolling_summary if rolling_summary else "Hành trình mới bắt đầu, chưa có sự kiện lịch sử."}

@@ -93,7 +93,7 @@ class SessionState(BaseModel):
 
     adventure_profile: dict[str, Any] = Field(default_factory=dict)
     novel_profile: dict[str, Any] = Field(default_factory=dict)
-    target_words: int = 600
+    target_words: int = 300
 
     structured_state: StructuredState = Field(default_factory=StructuredState)
 

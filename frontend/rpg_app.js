@@ -44,7 +44,11 @@ function formatRpgText(text) {
     .join("");
 }
 
-function getRaceEmoji(race) {
+function getRaceEmoji(race, charName = "") {
+  const bosses = ["medusa", "golem", "werewolf", "dracula", "vua goblin", "poseidon", "diablo", "thiên dực long vương", "ma vương xương cốt", "alpha"];
+  if (race === "Bí ẩn" || race === "Mystery" || (charName && bosses.some(b => charName.toLowerCase().includes(b)))) {
+    return "👿";
+  }
   switch (race) {
     case "Valkyrie": return "⚔️";
     case "Angel": return "😇";
@@ -88,7 +92,7 @@ function getCubeRotation(rollValue) {
 
 function renderRadarChart(stats) {
   if (!stats) return "";
-  
+
   const axes = [
     { label: "HP", val: stats.max_hp || stats.hp || 100, max: 200, color: "#2ecc71" },
     { label: "ATK", val: stats.atk || 10, max: 100, color: "#e74c3c" },
@@ -97,12 +101,12 @@ function renderRadarChart(stats) {
     { label: "M.DEF", val: parseFloat(stats.res_def || 0), max: 50, color: "#1abc9c" },
     { label: "SPD", val: stats.atk_spd || 100, max: 200, color: "#f1c40f" }
   ];
-  
+
   const size = 160;
   const center = size / 2;
   const maxRadius = 45;
   const numAxes = axes.length;
-  
+
   // Background grid polygons
   let gridPolys = "";
   const gridLevels = [0.33, 0.66, 1.0];
@@ -117,7 +121,7 @@ function renderRadarChart(stats) {
     }
     gridPolys += `<polygon points="${points.join(" ")}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1" />`;
   });
-  
+
   // Radial lines and labels
   let radialLines = "";
   let labelText = "";
@@ -125,19 +129,19 @@ function renderRadarChart(stats) {
     const angle = i * (2 * Math.PI / numAxes) - Math.PI / 2;
     const outerX = center + Math.cos(angle) * maxRadius;
     const outerY = center + Math.sin(angle) * maxRadius;
-    
+
     radialLines += `<line x1="${center}" y1="${center}" x2="${outerX}" y2="${outerY}" stroke="rgba(255,255,255,0.12)" stroke-width="1" />`;
-    
+
     const labelDist = maxRadius + 14;
     const labelX = center + Math.cos(angle) * labelDist;
     const labelY = center + Math.sin(angle) * labelDist + 3;
     let textAnchor = "middle";
     if (Math.cos(angle) > 0.1) textAnchor = "start";
     else if (Math.cos(angle) < -0.1) textAnchor = "end";
-    
+
     labelText += `<text x="${labelX}" y="${labelY}" fill="rgba(255,255,255,0.5)" font-size="8" font-family="Outfit, sans-serif" text-anchor="${textAnchor}" font-weight="bold">${axes[i].label}</text>`;
   }
-  
+
   // Data polygon
   const dataPoints = [];
   const vertexDots = [];
@@ -148,10 +152,10 @@ function renderRadarChart(stats) {
     const x = center + Math.cos(angle) * r;
     const y = center + Math.sin(angle) * r;
     dataPoints.push(`${x},${y}`);
-    
+
     vertexDots.push(`<circle cx="${x}" cy="${y}" r="2" fill="${axes[i].color}" />`);
   }
-  
+
   return `
     <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="display:block;margin:0 auto;overflow:visible;">
       ${gridPolys}
@@ -174,7 +178,7 @@ function spawnDamageNumber(targetEl, amount, type) {
   numEl.className = "floating-damage";
   numEl.style.left = `${x}px`;
   numEl.style.top = `${y}px`;
-  
+
   if (type === "heal") {
     numEl.textContent = `+${amount}`;
     numEl.style.color = "#2ecc71";
@@ -206,28 +210,28 @@ function typeTextWordByWord(element, htmlContent, speed) {
     const tokens = htmlContent.match(/<[^>]+>|[^<>\s]+|\s+/g) || [];
     let currentTokenIndex = 0;
     element.innerHTML = "";
-    
+
     function showNextToken() {
       if (currentTokenIndex >= tokens.length) {
         resolve();
         return;
       }
-      
+
       const token = tokens[currentTokenIndex++];
       element.innerHTML += token;
-      
+
       const storyLog = document.getElementById("rpgStoryLog");
       if (storyLog) {
         storyLog.scrollTop = storyLog.scrollHeight;
       }
-      
+
       if (token.startsWith("<") || token.trim() === "") {
         showNextToken();
       } else {
         setTimeout(showNextToken, speed);
       }
     }
-    
+
     showNextToken();
   });
 }
@@ -235,31 +239,31 @@ function typeTextWordByWord(element, htmlContent, speed) {
 function renderSpecialSkillsIndicators(char) {
   const skills = char.special_skills;
   if (!skills) return "";
-  
+
   let indicatorsHtml = "";
-  
+
   // 1. Wang (Caster) Chess Pieces
   if (char.race === "Valkyrie" && char.char_class === "Caster" && skills.quan_co_count !== undefined && skills.quan_co_count > 0) {
     let chessOrbs = "";
     for (let i = 0; i < skills.quan_co_count; i++) {
-      chessOrbs += `<span class="valk-chess-orb" title="Quân cờ ${i+1}">⚫</span>`;
+      chessOrbs += `<span class="valk-chess-orb" title="Quân cờ ${i + 1}">⚫</span>`;
     }
     indicatorsHtml += `<div class="valk-special-indicators valk-wang-chess" title="Số quân cờ đang vây hãm">${chessOrbs}</div>`;
   }
-  
+
   // 2. Lemuen (Sniper) Bullet Slots
   if (char.race === "Valkyrie" && char.char_class === "Sniper" && skills.bullet_count !== undefined) {
     let bullets = "";
     for (let i = 0; i < 5; i++) {
       if (i < skills.bullet_count) {
-        bullets += `<span class="valk-bullet loaded" title="Đạn nạp sẵn: ${i+1}">⚡</span>`;
+        bullets += `<span class="valk-bullet loaded" title="Đạn nạp sẵn: ${i + 1}">⚡</span>`;
       } else {
         bullets += `<span class="valk-bullet empty"></span>`;
       }
     }
     indicatorsHtml += `<div class="valk-special-indicators valk-lemuen-bullets" title="Đạn khóa mục tiêu (Lemuen)">${bullets}</div>`;
   }
-  
+
   // 3. Hoshiguma (Defender) Revival countdown
   if (char.race === "Valkyrie" && char.char_class === "Defender" && skills.hoshi_passive_countdown !== undefined && skills.hoshi_passive_countdown > 0) {
     indicatorsHtml += `
@@ -268,7 +272,7 @@ function renderSpecialSkillsIndicators(char) {
       </div>
     `;
   }
-  
+
   return indicatorsHtml ? `<div class="special-skill-indicators-wrapper">${indicatorsHtml}</div>` : "";
 }
 
@@ -278,7 +282,7 @@ function updateWeatherEffect(region) {
 
   // Clear current classes
   overlay.className = "rpg-ambient-overlay";
-  overlay.innerHTML = ""; 
+  overlay.innerHTML = "";
 
   if (!region || !weatherEnabled) return;
 
@@ -324,11 +328,17 @@ function updateWeatherEffect(region) {
   }
 }
 
-function getItemEmoji(itemType) {
+function getItemEmoji(itemType, itemName = "") {
+  const nameLower = itemName ? itemName.toLowerCase() : "";
+  if (nameLower.includes("mảnh vỡ")) return "🧩";
+  if (nameLower.includes("chìa khoá") || nameLower.includes("chìa khóa")) return "🔑";
+  if (nameLower.includes("bản đồ")) return "🗺️";
+
   switch (itemType) {
     case "Weapon": return "🗡️";
     case "Armor": return "🛡️";
-    case "Consume": return "🧪";
+    case "Consume":
+    case "Consumable": return "🧪";
     default: return "📦";
   }
 }
@@ -353,7 +363,7 @@ function showItemTooltip(item, event) {
     tooltip.className = "rpg-item-tooltip glass-panel";
     document.body.appendChild(tooltip);
   }
-  
+
   let statsHtml = "";
   if (item.stats_bonus) {
     for (const [stat, bonus] of Object.entries(item.stats_bonus)) {
@@ -385,7 +395,7 @@ function showItemTooltip(item, event) {
     ${statsHtml ? `<div class="tooltip-stats">${statsHtml}</div>` : ""}
     <div class="tooltip-desc">${item.description || ""}</div>
   `;
-  
+
   tooltip.style.display = "block";
   updateItemTooltipPosition(event);
 }
@@ -396,14 +406,14 @@ function updateItemTooltipPosition(event) {
   const padding = 15;
   let left = event.pageX + padding;
   let top = event.pageY + padding;
-  
+
   if (left + tooltip.offsetWidth > window.innerWidth) {
     left = event.pageX - tooltip.offsetWidth - padding;
   }
   if (top + tooltip.offsetHeight > window.innerHeight) {
     top = event.pageY - tooltip.offsetHeight - padding;
   }
-  
+
   tooltip.style.left = `${left}px`;
   tooltip.style.top = `${top}px`;
 }
@@ -507,7 +517,7 @@ function initRpgSetupWizard() {
       const fillPercent = (step - 1) / 7;
       const drawLength = totalLength * fillPercent;
       pathFill.style.strokeDashoffset = totalLength - drawLength;
-      
+
       try {
         const point = pathFill.getPointAtLength(drawLength);
         token.setAttribute("cx", point.x);
@@ -657,6 +667,35 @@ function initRpgSetupWizard() {
           c.classList.remove("active");
         }
       });
+    });
+  }
+
+  // Step 3: Random Region Suggestion
+  const suggestRegionBtn = document.getElementById("rpgSuggestRegionBtn");
+  if (suggestRegionBtn) {
+    suggestRegionBtn.addEventListener("click", () => {
+      const regionsList = [
+        "Vương đô Victoria",
+        "Long kinh thành",
+        "Vương đô Londinium",
+        "Tòa Thành Chúa Quỷ",
+        "Thành Phố Tự Do",
+        "Pháo Đài Mùa Đông",
+        "Thánh Đường Tối Cao"
+      ];
+      const randomRegion = regionsList[Math.floor(Math.random() * regionsList.length)];
+      if (regionInput) {
+        regionInput.value = randomRegion;
+        selectedRegion = randomRegion;
+
+        regionChips.forEach(c => {
+          if (c.dataset.value === randomRegion) {
+            c.classList.add("active");
+          } else {
+            c.classList.remove("active");
+          }
+        });
+      }
     });
   }
 
@@ -1025,10 +1064,10 @@ function initRpgSetupWizard() {
         const playerName = nameInput ? nameInput.value.trim() : "Người lữ hành";
         const equipName = rolledEquipment ? rolledEquipment.name : "Không";
         const goldVal = rolledGold || 0;
-        
+
         const url = `${getApiBase()}/game/rpg/suggest-appearance?player_name=${encodeURIComponent(playerName)}&gender=${encodeURIComponent(selectedGender)}&region=${encodeURIComponent(selectedRegion)}&objective=${encodeURIComponent(selectedObjective)}&gold=${goldVal}&equipment_name=${encodeURIComponent(equipName)}`;
         const res = await rpgFetch(url, { method: "POST" });
-        
+
         const appInput = document.getElementById("rpgAppearanceInput");
         if (appInput && res && res.appearance) {
           appInput.value = res.appearance;
@@ -1149,6 +1188,27 @@ function initRpgSetupWizard() {
 }
 
 // Avatar Image Helpers
+function isRecruitedCompanion(char) {
+  if (!char || !char.character_id) return false;
+  if (char.character_id === "player" || char.character_id === "monk" || char.character_id === "merchant") return false;
+
+  if (gameState && gameState.party) {
+    const active = gameState.party.active || [];
+    const reserve = gameState.party.reserve || [];
+    const inActive = active.some(c => c.character_id === char.character_id);
+    const inReserve = reserve.some(c => c.character_id === char.character_id);
+    if (inActive || inReserve) return true;
+  }
+  return false;
+}
+
+function isBossCharacter(char) {
+  if (!char || !char.name) return false;
+  const bosses = ["medusa", "golem", "werewolf", "dracula", "vua goblin", "poseidon", "diablo", "thiên dực long vương", "ma vương xương cốt", "alpha"];
+  const nameLower = char.name.toLowerCase();
+  return bosses.some(b => nameLower.includes(b)) || char.char_class === "Boss" || char.race === "Bí ẩn" || char.char_class === "Bí ẩn";
+}
+
 function getCharacterImageFilename(char) {
   if (!char) return null;
   const nameLower = char.name.toLowerCase();
@@ -1156,11 +1216,27 @@ function getCharacterImageFilename(char) {
   if (nameLower.includes("vina victoria") || nameLower.includes("vinavictoria") || nameLower.includes("vina_victoria")) return "VinaVictoria.png";
   if (nameLower.includes("wang")) return "Wang.png";
   if (nameLower.includes("lemuen") || nameLower.includes("lumuen")) return "Lemuen.png";
-  
+  if (nameLower.includes("silverash")) return "SilverAsh_the_Reignfrost.png";
+
+  if (nameLower.includes("medusa")) return "Medusa.png";
+  if (nameLower.includes("vua goblin") || nameLower.includes("goblin king")) return "Goblin_King.png";
+  if (nameLower.includes("werewolf")) return "Werewolf.png";
+  if (nameLower.includes("dracula")) return "Dracula.png";
+  if (nameLower.includes("golem")) return "Golem.png";
+  if (nameLower.includes("poseidon")) return "Poseidon.png";
+  if (nameLower.includes("diablo")) return "Diablo.png";
+  if (nameLower.includes("thiên dực long vương") || nameLower.includes("dragon king")) return "Dragon_King.png";
+  if (nameLower.includes("ma vương xương cốt") || nameLower.includes("bone king")) return "Bone_King.png";
+  if (nameLower.includes("alpha")) return "Alpha.png";
+
   if (char.character_id === "player") return "player_avatar.png";
-  if (char.character_id === "monk") return "monk.png";
-  if (char.character_id === "merchant") return "merchant.png";
-  
+  if (char.character_id && (char.character_id === "monk" || char.character_id.startsWith("monk_"))) return `${char.character_id}.png`;
+  if (char.character_id && (char.character_id === "merchant" || char.character_id.startsWith("merchant_"))) return `${char.character_id}.png`;
+
+  if (isRecruitedCompanion(char)) {
+    return `${char.character_id}.png`;
+  }
+
   return `${char.race}_${char.char_class}.png`;
 }
 
@@ -1171,51 +1247,79 @@ function setupAvatarDisplay(imgElement, defaultSpan, char) {
     defaultSpan.textContent = "❔";
     return;
   }
-  
+
   // Set fallback emoji
   let fallbackEmoji = "❔";
-  if (char.character_id === "player") {
+  if (isBossCharacter(char)) {
+    fallbackEmoji = "👿";
+  } else if (char.character_id === "player") {
     fallbackEmoji = char.gender === "Male" ? "🧔" : "👩";
   } else if (char.character_id === "monk") {
     fallbackEmoji = "🧘";
   } else if (char.character_id === "merchant") {
     fallbackEmoji = "🛒";
   } else if (char.race) {
-    fallbackEmoji = getRaceEmoji(char.race);
+    fallbackEmoji = getRaceEmoji(char.race, char.name);
   }
   defaultSpan.textContent = fallbackEmoji;
-  
+
   const filename = getCharacterImageFilename(char);
   if (!filename) {
     imgElement.style.display = "none";
     defaultSpan.style.display = "block";
     return;
   }
-  
+
   const prefKey = `show_img_${char.character_id || char.name}`;
   const showImg = localStorage.getItem(prefKey) !== "false";
-  
+
   if (!showImg) {
     imgElement.style.display = "none";
     defaultSpan.style.display = "block";
     return;
   }
-  
+
+  // Hide image first while loading new src
+  imgElement.style.display = "none";
+  defaultSpan.style.display = "block";
+
   const apiBase = getApiBase();
   const baseUrl = apiBase.startsWith("http") ? apiBase : (apiBase === "/api" ? "/api" : "");
   const cleanBaseUrl = baseUrl.replace(/\/+$/, "");
   const srcPath = `${cleanBaseUrl}/assets/generated/${currentSessionId}_${filename}`;
   const version = char._img_version || 0;
   imgElement.src = srcPath + "?t=" + version;
-  
+
   imgElement.onload = () => {
     imgElement.style.display = "block";
     defaultSpan.style.display = "none";
   };
-  
+
   imgElement.onerror = () => {
     imgElement.style.display = "none";
     defaultSpan.style.display = "block";
+
+    // Auto-generate avatar if loading fails and not already tried in this run
+    if (!window.autoGeneratedAvatars) {
+      window.autoGeneratedAvatars = new Set();
+    }
+    const charId = char.character_id || char.name;
+    if (charId && !window.autoGeneratedAvatars.has(charId)) {
+      window.autoGeneratedAvatars.add(charId);
+      console.log(`Auto-generating avatar in background for character: ${charId}`);
+      (async () => {
+        try {
+          const url = `${getApiBase()}/game/rpg/image/refresh-character?session_id=${encodeURIComponent(currentSessionId)}&character_id=${encodeURIComponent(charId)}`;
+          const res = await rpgFetch(url, { method: "POST" });
+          if (res && res.success) {
+            char._img_version = Date.now();
+            setupAvatarDisplay(imgElement, defaultSpan, char);
+          }
+        } catch (err) {
+          console.error("Failed to auto-generate character avatar:", err);
+        }
+      })();
+    }
   };
 }
 
@@ -1226,30 +1330,30 @@ const skillDescriptions = {
   "Ma thần bất diệt": "Khi gục ngã lần đầu, tự động kích hoạt hồi sinh sau 8 lượt. Bị hủy nếu nhận sát thương trong lúc chờ.",
   "Võ sĩ đạo": "Kích hoạt 1 lần duy nhất: Chuyển toàn bộ chỉ số phòng thủ (DEF) thành lượng máu tối đa (Max HP) tương đương.",
   "Hoả liên trảm quỷ": "Chém 6 nhát kiếm lửa cuồng bạo lên kẻ địch, đồng thời kích hoạt trạng thái Bất Tử trong lượt này.",
-  
+
   // VinaVictoria
   "Hoàng đế": "Tăng +5% chỉ số cơ bản cho bản thân với mỗi đồng hành còn sống trong đội hình chính (tối đa +15%).",
   "Sư tử hống": "Phát ra tiếng gầm uy nghiêm gây sát thương vật lý và có tỷ lệ làm choáng kẻ địch.",
   "Phán quyết cuối cùng": "Tấn công phép bùng nổ gây sát thương lớn và áp dụng trạng thái Yếu Đuối lên kẻ địch.",
-  
+
   // Royalty
   "Chiến tích hoàng gia": "Khi tử trận, Royalty lập tức giảm 2 lượt thời gian hồi chiêu cho toàn bộ đồng đội còn sống.",
   "Phong tước": "Chỉ dùng 1 lần duy nhất: Hiến tế 50% HP của bản thân để làm mới hoàn toàn thời gian hồi chiêu của 1 đồng minh chỉ định.",
-  
+
   // Lemuen
   "Truy nã": "Khi không thực hiện tấn công và không chịu sát thương trong lượt, tự động tích lũy thêm 1 viên đạn truy nã (tối đa 5).",
   "Khóa mục tiêu": "Khởi động và bắn ngay 1 viên đạn truy nã. Mỗi lượt kế tiếp tự động bắn 1 viên vào đầu lượt mà không cần điều kiện (đến khi hết đạn).",
   "Khai hoả toàn diện": "Tiêu hao toàn bộ đạn tích lũy để dội bão tên lửa gồm nhiều viên đạn liên tiếp vào kẻ địch.",
-  
+
   // Devil
   "Ngạ Quỷ": "Nếu không hành động hoặc không chịu đòn trong lượt, hồi phục 5% HP đã mất.",
   "Hấp thụ": "Hút 15% HP của mục tiêu (đồng minh hoặc kẻ địch) để hồi phục cho bản thân.",
   "Huyết quỷ thuật": "Rút 20% HP hiện tại của đồng đội và 30% HP của bản thân để tạo ra quả cầu máu gây sát thương cực lớn lên kẻ địch.",
-  
+
   // Elf
   "Uyển chuyển": "Tăng khả năng né tránh, có 20% cơ hội né hoàn toàn các đòn tấn công cơ bản từ kẻ địch.",
   "Mưa tên": "Tăng 20% tốc độ (SPD) và bắn liên hoàn từ 2-5 mũi tên chuẩn vào kẻ địch. Nhận trạng thái Sơ Hở (+20% sát thương nhận vào) trong lượt.",
-  
+
   // Angel
   "Hộ vệ thiên sứ": "Hồi sinh một đồng đội (trừ Hoshiguma) khi họ lần đầu tiên về 0 HP trong trận chiến, phục hồi 5% HP tối đa. Kích hoạt 1 lần duy nhất.",
   "Lá chắn": "Tạo Lá Chắn bảo vệ Angel và 1 đồng minh chỉ định trong 2 lượt (lượt này và lượt sau), chặn hoàn toàn sát thương 1 lần.",
@@ -1261,11 +1365,16 @@ function showCharacterDetails(char, isCombat) {
   if (!modal) return;
 
   // 1. Details header & Avatar setup
-  document.getElementById("rpgDetailsCharIcon").textContent = getRaceEmoji(char.race);
+  document.getElementById("rpgDetailsCharIcon").textContent = getRaceEmoji(char.race, char.name);
   document.getElementById("rpgDetailsCharRarity").textContent = getRarityLabel(char.rarity);
   document.getElementById("rpgDetailsCharRarity").className = `eyebrow rpg-text-${char.rarity}`;
   document.getElementById("rpgDetailsCharName").textContent = char.name;
-  document.getElementById("rpgDetailsCharSub").textContent = `Lv.${char.level} - Tộc: ${char.race} - Lớp: ${char.char_class}`;
+
+  if (isBossCharacter(char)) {
+    document.getElementById("rpgDetailsCharSub").textContent = `Lv.${char.level} - Tộc: Bí ẩn - Lớp: Bí ẩn`;
+  } else {
+    document.getElementById("rpgDetailsCharSub").textContent = `Lv.${char.level} - Tộc: ${char.race} - Lớp: ${char.char_class}`;
+  }
 
   const specEl = document.getElementById("rpgDetailsSpecialIndicators");
   if (specEl) {
@@ -1339,6 +1448,15 @@ function showCharacterDetails(char, isCombat) {
   document.getElementById("rpgDetailsStatResDef").textContent = `${char.stats.res_def}%`;
   document.getElementById("rpgDetailsStatAtkSpd").textContent = char.stats.atk_spd;
 
+  const envDisplay = document.getElementById("rpgDetailsEnv");
+  const regDisplay = document.getElementById("rpgDetailsRegion");
+  if (envDisplay) {
+    envDisplay.textContent = (gameState && gameState.environment) ? gameState.environment : "Chưa xác định";
+  }
+  if (regDisplay) {
+    regDisplay.textContent = (gameState && gameState.current_region) ? gameState.current_region : "Hoang dã";
+  }
+
   // 3. Equipment
   const weapon = char.equipment ? char.equipment.weapon : null;
   const armor = char.equipment ? char.equipment.armor : null;
@@ -1363,14 +1481,14 @@ function showCharacterDetails(char, isCombat) {
 
   // 4. Skills & Cooldowns/Durations
   const skills = char.special_skills || {};
-  
+
   const renderSkillInfo = (elementId, label, name, descKey, cd, cdMax, isActive, activeDuration) => {
     const container = document.getElementById(elementId);
     if (!container) return;
-    
+
     const nameEl = container.querySelector(".skill-name");
     const descEl = container.querySelector(".skill-desc");
-    
+
     if (name) {
       let statusStr = "";
       if (isCombat) {
@@ -1402,13 +1520,13 @@ function showCharacterDetails(char, isCombat) {
     passiveDurationText = `${skills.hoshi_passive_countdown} lượt để hồi sinh`;
   }
   renderSkillInfo(
-    "rpgDetailsSkillPassive", 
-    "Nội Tại", 
-    passiveName, 
-    passiveName, 
-    0, 
-    0, 
-    passiveIsActive, 
+    "rpgDetailsSkillPassive",
+    "Nội Tại",
+    passiveName,
+    passiveName,
+    0,
+    0,
+    passiveIsActive,
     passiveDurationText
   );
 
@@ -1421,13 +1539,13 @@ function showCharacterDetails(char, isCombat) {
     s1Duration = char.special_skills.bullet_count;
   }
   renderSkillInfo(
-    "rpgDetailsSkill1", 
-    "Kỹ Năng 1", 
-    skill1Name, 
-    skill1Name, 
-    s1cd, 
-    5, 
-    s1Active, 
+    "rpgDetailsSkill1",
+    "Kỹ Năng 1",
+    skill1Name,
+    skill1Name,
+    s1cd,
+    5,
+    s1Active,
     s1Duration
   );
 
@@ -1436,13 +1554,13 @@ function showCharacterDetails(char, isCombat) {
   const s2cd = skills.skill_2_countdown || 0;
   const s2Active = false;
   renderSkillInfo(
-    "rpgDetailsSkill2", 
-    "Tuyệt Kỹ", 
-    skill2Name, 
-    skill2Name, 
-    s2cd, 
-    10, 
-    s2Active, 
+    "rpgDetailsSkill2",
+    "Tuyệt Kỹ",
+    skill2Name,
+    skill2Name,
+    s2cd,
+    10,
+    s2Active,
     null
   );
 
@@ -1477,7 +1595,7 @@ function showCharacterDetails(char, isCombat) {
   // Bind close events
   const closeBtn = document.getElementById("rpgCloseCharDetailsBtn");
   const backdrop = document.getElementById("rpgCharDetailsBackdrop");
-  
+
   const hideDetails = () => {
     modal.classList.add("hidden");
   };
@@ -1526,6 +1644,28 @@ function renderState(rpgState) {
     }
   }
 
+  // Update Location Info in Sidebar
+  const envDisplay = document.getElementById("rpgCurrentEnvironmentDisplay");
+  const regDisplay = document.getElementById("rpgCurrentRegionDisplay");
+  if (envDisplay) {
+    envDisplay.textContent = rpgState.environment || "Chưa xác định";
+  }
+  if (regDisplay) {
+    regDisplay.textContent = rpgState.current_region || "Hoang dã";
+  }
+
+  const leaveRegionBtn = document.getElementById("rpgLeaveRegionBtn");
+  if (leaveRegionBtn) {
+    const isInRegion = !!rpgState.current_region;
+    const isInDungeon = !!(rpgState.dungeon_state && rpgState.dungeon_state.active);
+    const isInCombat = !!(rpgState.combat && rpgState.combat.is_active);
+    if (isInRegion && !isInDungeon && !isInCombat) {
+      leaveRegionBtn.style.display = "inline-block";
+    } else {
+      leaveRegionBtn.style.display = "none";
+    }
+  }
+
   // 2. Sidebar - Party List (Active companions other than player)
   const partyList = document.getElementById("rpgPartyList");
   partyList.innerHTML = "";
@@ -1539,8 +1679,9 @@ function renderState(rpgState) {
       const card = document.createElement("div");
       card.className = "party-card-compact";
       card.innerHTML = `
-        <div class="party-avatar-circle" title="${c.race} ${c.char_class}">
-          ${getRaceEmoji(c.race)}
+        <div class="party-avatar-circle" title="${c.race} ${c.char_class}" style="position: relative; overflow: hidden; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+          <span class="companion-avatar-default" style="font-size: 1.2rem;">${getRaceEmoji(c.race, c.name)}</span>
+          <img class="companion-avatar-img" src="" alt="${c.name}" style="width: 100%; height: 100%; object-fit: cover; display: none; border-radius: 50%;" />
         </div>
         <div class="party-info-compact" style="flex:1;">
           <div style="display:flex; align-items:center; gap:5px;">
@@ -1560,8 +1701,13 @@ function renderState(rpgState) {
           </div>
         </div>
       `;
+
+      const defaultSpan = card.querySelector(".companion-avatar-default");
+      const imgElement = card.querySelector(".companion-avatar-img");
+      setupAvatarDisplay(imgElement, defaultSpan, c);
+
       card.addEventListener("click", () => showPartyManagementModal());
-      
+
       const detailsBtn = card.querySelector(".rpg-companion-details-btn");
       if (detailsBtn) {
         detailsBtn.addEventListener("click", (e) => {
@@ -1586,7 +1732,7 @@ function renderState(rpgState) {
     if (item) {
       slot.className = `inventory-slot-box has-item rpg-glow-${item.rarity}`;
       slot.innerHTML = `
-        ${getItemEmoji(item.item_type)}
+        ${getItemEmoji(item.item_type, item.name)}
         ${item.quantity > 1 ? `<span class="item-qty">${item.quantity}</span>` : ""}
       `;
       // Interactive Item Hover & Clicks
@@ -1626,7 +1772,7 @@ function renderState(rpgState) {
   const turn = rpgState.turn_count || 0;
   const timeBadge = document.getElementById("rpgTimeBadge");
   const rpgPage = document.getElementById("rpgPage");
-  
+
   if (rpgPage) {
     rpgPage.classList.remove("morning", "day", "sunset", "night");
     let timeLabel = "☀️ Trưa";
@@ -1717,6 +1863,15 @@ function updateLeftNpcPanel(rpgState) {
     npc = rpgState.combat.enemy;
   } else if (rpgState.current_event === "stranger" && rpgState.current_stranger) {
     npc = rpgState.current_stranger;
+  } else if (rpgState.current_event === "merchant" && rpgState.current_merchant) {
+    npc = rpgState.current_merchant;
+  } else if (rpgState.current_event === "monk" && rpgState.current_monk) {
+    npc = rpgState.current_monk;
+  }
+
+  const container = document.querySelector(".rpg-grid-container");
+  if (container && (rpgState.combat?.is_active || rpgState.current_event === "stranger")) {
+    container.classList.remove("npc-hidden");
   }
 
   if (npc) {
@@ -1725,15 +1880,29 @@ function updateLeftNpcPanel(rpgState) {
     if (npcIconEl) npcIconEl.textContent = getRaceEmoji(npc.race);
     setupAvatarDisplay(npcImg, npcDefault, npc);
 
-    rarityEl.textContent = getRarityLabel(npc.rarity);
-    rarityEl.className = `rpg-badge rarity rpg-glow-${npc.rarity} rpg-text-${npc.rarity}`;
+    if (npc.character_id && npc.character_id.startsWith("merchant")) {
+      rarityEl.textContent = "Thương Nhân";
+      rarityEl.className = "rpg-badge rarity";
+    } else if (npc.character_id && npc.character_id.startsWith("monk")) {
+      rarityEl.textContent = "Tu Sĩ";
+      rarityEl.className = "rpg-badge rarity";
+    } else {
+      rarityEl.textContent = getRarityLabel(npc.rarity);
+      rarityEl.className = `rpg-badge rarity rpg-glow-${npc.rarity} rpg-text-${npc.rarity}`;
+    }
 
     raceEl.textContent = npc.race;
     classEl.textContent = npc.char_class;
 
-    descEl.textContent = npc.condition === "Bình thường"
-      ? `Một thực thể thuộc tộc ${npc.race}, đảm nhận vai trò ${npc.char_class}. Trạng thái chiến đấu tốt.`
-      : `Thực thể này đang ${npc.condition}. Hãy cẩn trọng.`;
+    if (npc.character_id && npc.character_id.startsWith("merchant")) {
+      descEl.textContent = "Một thương nhân bí hiểm đang bày bán trang bị quý hiếm và chào mời lính đánh thuê gia nhập.";
+    } else if (npc.character_id && npc.character_id.startsWith("monk")) {
+      descEl.textContent = "Vị ẩn giả mang trong mình thánh lực, sẵn sàng ban phước phục hồi cho lữ khách.";
+    } else {
+      descEl.textContent = npc.condition === "Bình thường"
+        ? `Một thực thể thuộc tộc ${npc.race}, đảm nhận vai trò ${npc.char_class}. Trạng thái chiến đấu tốt.`
+        : `Thực thể này đang ${npc.condition}. Hãy cẩn trọng.`;
+    }
 
     hpEl.textContent = `${npc.stats.hp}/${npc.stats.max_hp}`;
     atkEl.textContent = npc.stats.atk;
@@ -1747,7 +1916,7 @@ function updateLeftNpcPanel(rpgState) {
       nameEl.textContent = "Thương Nhân Lang Thang";
       nameEl.className = "";
       if (npcIconEl) npcIconEl.textContent = "🛒";
-      setupAvatarDisplay(npcImg, npcDefault, { character_id: "merchant", name: "merchant" });
+      setupAvatarDisplay(npcImg, npcDefault, rpgState.current_merchant);
       rarityEl.textContent = "Thương Nhân";
       rarityEl.className = "rpg-badge rarity";
       raceEl.textContent = "-";
@@ -1757,7 +1926,7 @@ function updateLeftNpcPanel(rpgState) {
       nameEl.textContent = "Tu Sĩ Đạo Nhân";
       nameEl.className = "";
       if (npcIconEl) npcIconEl.textContent = "🧘";
-      setupAvatarDisplay(npcImg, npcDefault, { character_id: "monk", name: "monk" });
+      setupAvatarDisplay(npcImg, npcDefault, rpgState.current_monk);
       rarityEl.textContent = "Tu Sĩ";
       rarityEl.className = "rpg-badge rarity";
       raceEl.textContent = "-";
@@ -1781,6 +1950,17 @@ function updateLeftNpcPanel(rpgState) {
     defEl.textContent = "-";
     mdefEl.textContent = "-";
     spdEl.textContent = "-";
+  }
+
+  // Cập nhật Quest/Achievement/Dungeon/World Map và triggerBackgroundSeeWorld
+  updateQuestAchievementUI(rpgState);
+  updateDungeonUI(rpgState);
+  updateWorldMapUI(rpgState);
+
+  if (rpgState.environment !== window.lastRpgEnvironment || rpgState.current_region !== window.lastRpgRegion) {
+    window.lastRpgEnvironment = rpgState.environment;
+    window.lastRpgRegion = rpgState.current_region;
+    triggerBackgroundSeeWorld();
   }
 }
 
@@ -1843,7 +2023,8 @@ function renderChoices(choices = [], eventType = null) {
     "Đi đến gặp thương nhân",
     "Đi đến gặp kẻ lạ mặt",
     "Đi đến gặp kẻ lạ mặt từ xa",
-    "Thu thập vật phẩm cho vào túi"
+    "Thu thập vật phẩm cho vào túi",
+    "Tiến vào sâu bên trong để khám phá Dungeon"
   ];
 
   choices.forEach((choice, index) => {
@@ -1853,12 +2034,30 @@ function renderChoices(choices = [], eventType = null) {
 
     // Highlight Red border for special event trigger choices
     const isSpecial = index === 0 && triggers.includes(choice);
+    // Highlight Green border for region exploration choices
+    let isRegion = false;
+    if (index === 0 && gameState && gameState.offered_event) {
+      if (gameState.offered_event.startsWith("region:")) {
+        const regName = gameState.offered_event.substring(7);
+        if (choice === `Khám phá ${regName}`) {
+          isRegion = true;
+        }
+      } else if (gameState.offered_event.startsWith("dungeon:")) {
+        const dunName = gameState.offered_event.substring(8);
+        if (choice === `Tiến vào hầm ngục ${dunName}`) {
+          isRegion = true;
+        }
+      }
+    }
+
     if (isSpecial) {
       btn.classList.add("special-event-trigger");
+    } else if (isRegion) {
+      btn.classList.add("region-event-trigger");
     }
 
     btn.innerHTML = `
-      <span class="choice-bullet">${isSpecial ? "⚡" : `${index + 1}.`}</span>
+      <span class="choice-bullet">${isSpecial ? "⚡" : (isRegion ? "🗺️" : `${index + 1}.`)}</span>
       <span class="choice-text">${escapeHtml(choice)}</span>
     `;
 
@@ -1909,6 +2108,7 @@ async function handleChoiceClick(choiceIndex, choiceText, eventType) {
 
     // Process narrative results
     appendStoryBlock(res.story);
+    checkEndingConditions(res.story);
     renderChoices(res.choices, res.event_type);
     renderState(res.rpg_state);
     updatePointsDisplay();
@@ -1955,6 +2155,7 @@ function initRpgComposer() {
         });
 
         appendStoryBlock(res.story);
+        checkEndingConditions(res.story);
         renderChoices(res.choices, res.event_type);
         renderState(res.rpg_state);
         updatePointsDisplay();
@@ -1975,6 +2176,58 @@ function handleInventoryItemClick(item, itemIndex) {
   const shopModal = document.getElementById("rpgShopModal");
   if (shopModal && !shopModal.classList.contains("hidden")) {
     sellItemPrompt(item);
+    return;
+  }
+
+  if (item.name && item.name.startsWith("Mảnh vỡ chìa khoá vĩ đại ")) {
+    const confirmUse = confirm("Bạn có muốn kết hợp 7 mảnh vỡ để rèn thành [Chìa khoá Hư Không vĩ đại]?");
+    if (!confirmUse) return;
+
+    (async () => {
+      try {
+        const res = await rpgFetch(`${getApiBase()}/game/rpg/inventory/use`, {
+          method: "POST",
+          body: JSON.stringify({
+            session_id: currentSessionId,
+            character_id: "",
+            item_id: item.item_id
+          })
+        });
+        alert(res.message);
+        renderState(res.rpg_state);
+        if (res.rpg_state && res.rpg_state.combat && res.rpg_state.combat.is_active) {
+          showCombatOverlay(res.rpg_state.combat);
+        }
+      } catch (err) {
+        alert("Lỗi rèn chìa khóa: " + err.message);
+      }
+    })();
+    return;
+  }
+
+  if (item.name === "Chìa khoá Hư Không vĩ đại") {
+    const confirmUse = confirm("Bạn có muốn sử dụng [Chìa khoá Hư Không vĩ đại] mở Cánh Cổng Hư Không tiến vào khiêu chiến Final BOSS ALPHA?");
+    if (!confirmUse) return;
+
+    (async () => {
+      try {
+        const res = await rpgFetch(`${getApiBase()}/game/rpg/inventory/use`, {
+          method: "POST",
+          body: JSON.stringify({
+            session_id: currentSessionId,
+            character_id: "",
+            item_id: item.item_id
+          })
+        });
+        alert(res.message);
+        renderState(res.rpg_state);
+        if (res.rpg_state && res.rpg_state.combat && res.rpg_state.combat.is_active) {
+          showCombatOverlay(res.rpg_state.combat);
+        }
+      } catch (err) {
+        alert("Lỗi mở cổng hư không: " + err.message);
+      }
+    })();
     return;
   }
 
@@ -2000,7 +2253,7 @@ function handleInventoryItemClick(item, itemIndex) {
         alert("Trang bị lỗi: " + err.message);
       }
     });
-  } else if (item.item_type === "Consume") {
+  } else if (item.item_type === "Consume" || item.item_type === "Consumable") {
     // Show quick target selector to use consumable item
     showTargetSelector(item.name, "Sử dụng vật phẩm", targetChars, async (charId) => {
       try {
@@ -2054,7 +2307,7 @@ function showTargetSelector(itemName, headerText, characters, onSelect) {
     btn.style.display = "flex";
     btn.style.justifyContent = "space-between";
     btn.innerHTML = `
-      <span>${getRaceEmoji(c.race)} ${c.name} (${c.char_class})</span>
+      <span>${getRaceEmoji(c.race, c.name)} ${c.name} (${c.char_class})</span>
       <strong>HP: ${c.stats.hp}/${c.stats.max_hp}</strong>
     `;
     btn.addEventListener("click", () => {
@@ -2170,7 +2423,7 @@ function renderSellModalGrid() {
     const card = document.createElement("div");
     card.className = "shop-card";
     card.innerHTML = `
-      <h4 class="rpg-text-${item.rarity}">${getItemEmoji(item.item_type)} ${item.name} ${item.quantity > 1 ? `(x${item.quantity})` : ""}</h4>
+      <h4 class="rpg-text-${item.rarity}">${getItemEmoji(item.item_type, item.name)} ${item.name} ${item.quantity > 1 ? `(x${item.quantity})` : ""}</h4>
       <p style="margin: 4px 0;">${item.description || "Bán vật phẩm này."}</p>
       <div class="shop-card-price" style="margin-bottom: 8px;">💰 Giá bán: ${price} Vàng</div>
       <button class="primary-btn shop-card-sell-btn" style="background:#e74c3c; border:none; box-shadow:0 4px 10px rgba(231,76,60,0.2); width:100%;">Bán</button>
@@ -2207,7 +2460,7 @@ function renderShopGrids(shop, inventory) {
   mercsGrid.innerHTML = "";
 
   const buyPrices = { "Mythic": 500, "Legendary": 400, "Epic": 300, "Rare": 150, "Uncommon": 80, "Common": 30 };
-  const mercPrices = { "Mythic": 800, "Legendary": 600, "Epic": 400, "Rare": 200, "Uncommon": 100, "Common": 50 };
+  const mercPrices = { "Mythic": 3999, "Legendary": 600, "Epic": 400, "Rare": 200, "Uncommon": 100, "Common": 50 };
 
   // Populating Items
   const items = shop.items_for_sale || [];
@@ -2219,7 +2472,7 @@ function renderShopGrids(shop, inventory) {
       const card = document.createElement("div");
       card.className = "shop-card";
       card.innerHTML = `
-        <h4 class="rpg-text-${item.rarity}">${getItemEmoji(item.item_type)} ${item.name}</h4>
+        <h4 class="rpg-text-${item.rarity}">${getItemEmoji(item.item_type, item.name)} ${item.name}</h4>
         <p>${item.description || "Tăng chỉ số nhân vật khi trang bị."}</p>
         <div class="shop-card-price">💰 ${price} Vàng</div>
         <button class="primary-btn shop-card-buy-btn" ${inventory.gold < price ? "disabled" : ""}>Mua</button>
@@ -2244,7 +2497,18 @@ function renderShopGrids(shop, inventory) {
         <div class="shop-card-price">💰 ${price} Vàng</div>
         <button class="primary-btn shop-card-buy-btn" ${inventory.gold < price ? "disabled" : ""}>Thuê</button>
       `;
-      card.querySelector("button").addEventListener("click", () => buyMercenary(index, merc.name, price));
+      card.querySelector("button").addEventListener("click", () => {
+        let customName = null;
+        if (merc.rarity !== "Mythic") {
+          const inputName = prompt(`Nhập tên tùy chọn cho đồng hành ${merc.name} (hoặc để trống để dùng tên mặc định):`, "");
+          if (inputName !== null) {
+            customName = inputName.trim() || null;
+          } else {
+            return;
+          }
+        }
+        buyMercenary(index, merc.name, price, customName);
+      });
       mercsGrid.appendChild(card);
     });
   }
@@ -2263,7 +2527,7 @@ function renderShopGrids(shop, inventory) {
         const card = document.createElement("div");
         card.className = "shop-card";
         card.innerHTML = `
-          <h4 class="rpg-text-${item.rarity}">${getItemEmoji(item.item_type)} ${item.name} ${item.quantity > 1 ? `(x${item.quantity})` : ""}</h4>
+          <h4 class="rpg-text-${item.rarity}">${getItemEmoji(item.item_type, item.name)} ${item.name} ${item.quantity > 1 ? `(x${item.quantity})` : ""}</h4>
           <p>${item.description || "Nhấp để bán vật phẩm này."}</p>
           <div class="shop-card-price">💰 Giá bán: ${price} Vàng</div>
           <button class="primary-btn shop-card-sell-btn" style="background:#e74c3c; border:none; box-shadow:0 4px 10px rgba(231,76,60,0.2);">Bán</button>
@@ -2292,16 +2556,18 @@ async function buyItem(index, itemName, price) {
   }
 }
 
-async function buyMercenary(index, mercName, price) {
+async function buyMercenary(index, mercName, price, customName = null) {
   try {
     const res = await rpgFetch(`${getApiBase()}/game/rpg/shop/buy-merc`, {
       method: "POST",
       body: JSON.stringify({
         session_id: currentSessionId,
-        merc_index: index
+        merc_index: index,
+        custom_name: customName
       })
     });
-    appendLogEntry(`Đã tuyển mộ đồng hành mới: ${mercName} (-${price} Vàng)`);
+    const displayName = customName ? `${customName} (${mercName})` : mercName;
+    appendLogEntry(`Đã tuyển mộ đồng hành mới: ${displayName} (-${price} Vàng)`);
     renderState(res.rpg_state);
     renderShopGrids(res.shop, res.inventory);
   } catch (err) {
@@ -2463,6 +2729,7 @@ async function handlePartySlotClick(slotId) {
 // ── COMBAT OVERLAY CONTROLLERS ───────────────────────────────────────────────
 
 function showCombatOverlay(combatState) {
+  if (!combatState) return;
   const overlay = document.getElementById("rpgCombatOverlay");
   if (!overlay) return;
 
@@ -2474,7 +2741,7 @@ function showCombatOverlay(combatState) {
   if (timelineSequence && combatState) {
     timelineSequence.innerHTML = "";
     const participants = [];
-    
+
     if (combatState.combat_party) {
       combatState.combat_party.forEach(c => {
         if (c.stats.hp > 0) {
@@ -2489,7 +2756,7 @@ function showCombatOverlay(combatState) {
         }
       });
     }
-    
+
     if (combatState.enemy && combatState.enemy.stats.hp > 0) {
       participants.push({
         name: combatState.enemy.name,
@@ -2500,10 +2767,10 @@ function showCombatOverlay(combatState) {
         id: "enemy"
       });
     }
-    
+
     // Sort descending by speed (SPD)
     participants.sort((a, b) => b.spd - a.spd);
-    
+
     // Render timeline units
     participants.forEach((p, idx) => {
       const unit = document.createElement("div");
@@ -2578,7 +2845,7 @@ function showCombatOverlay(combatState) {
     card.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <div style="display:flex; align-items:center; gap:5px;">
-          <h4 class="rpg-text-${c.rarity}" style="margin:0; font-size:0.85rem;">${getRaceEmoji(c.race)} ${c.name}</h4>
+          <h4 class="rpg-text-${c.rarity}" style="margin:0; font-size:0.85rem;">${getRaceEmoji(c.race, c.name)} ${c.name}</h4>
           <button class="ghost-btn rpg-combat-char-details-btn" data-id="${c.character_id}" type="button" style="padding:0; font-size:0.65rem; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; border-color:rgba(255,255,255,0.15); color:rgba(255,255,255,0.5); cursor:pointer; flex-shrink:0;" title="Xem chi tiết chỉ số">?</button>
         </div>
         <span style="font-size:0.75rem;opacity:0.75;">Lv.${c.level}</span>
@@ -2616,7 +2883,8 @@ function showCombatOverlay(combatState) {
   let firstEnabledAttacker = null;
   aliveMembers.forEach(c => {
     const hasStunOrFear = c.debuffs && c.debuffs.some(d => (d.name === "Choáng" || d.name === "Sợ hãi") && d.duration > 0);
-    const isAutoFiring = c.special_skills && c.special_skills.skill_1_activating;
+    const isAutoFiring = c.special_skills && c.special_skills.skill_1_activating &&
+      c.char_class === "Sniper" && c.special_skills.skill_1 === "Khóa mục tiêu";
     const opt = document.createElement("option");
     opt.value = c.character_id;
     if (hasStunOrFear) {
@@ -2720,27 +2988,44 @@ function showCombatOverlay(combatState) {
 
     // Active skills if exists
     const skillsObj = selectedAttacker.special_skills || {};
-    if (skillsObj.skill_1) {
+
+    // Fallback: if special_skills is missing/null but we know the race's skills, reconstruct them
+    const raceSkillMap = {
+      "Elf": { skill_1: "Mưa tên" },
+      "Angel": { skill_1: "Lá chắn", skill_2: "Thiên lôi" },
+      "Devil": { skill_1: "Hấp thụ", skill_2: "Huyết quỷ thuật" },
+      "Royalty": { skill_1: "Phong tước" },
+    };
+    const fallbackSkills = !skillsObj.skill_1 && raceSkillMap[selectedAttacker.race]
+      ? raceSkillMap[selectedAttacker.race]
+      : {};
+    const effectiveSkills = Object.assign({}, fallbackSkills, skillsObj);
+
+    if (effectiveSkills.skill_1) {
       const opt = document.createElement("option");
       opt.value = "skill_1";
-      const cooldown = skillsObj.skill_1_countdown || 0;
-      if (cooldown > 0) {
-        opt.textContent = `Chiêu 1: ${skillsObj.skill_1} [Hồi chiêu: ${cooldown}t]`;
+      const cooldown = effectiveSkills.skill_1_countdown || 0;
+      const isOneTimeUsed = effectiveSkills.skill_1_activated === true;
+      if (isOneTimeUsed) {
+        opt.textContent = `Chiêu 1: ${effectiveSkills.skill_1} [Đã dùng]`;
+        opt.disabled = true;
+      } else if (cooldown > 0) {
+        opt.textContent = `Chiêu 1: ${effectiveSkills.skill_1} [Hồi chiêu: ${cooldown}t]`;
         opt.disabled = true;
       } else {
-        opt.textContent = `Chiêu 1: ${skillsObj.skill_1}`;
+        opt.textContent = `Chiêu 1: ${effectiveSkills.skill_1}`;
       }
       skillSelect.appendChild(opt);
     }
-    if (skillsObj.skill_2) {
+    if (effectiveSkills.skill_2) {
       const opt = document.createElement("option");
       opt.value = "skill_2";
-      const cooldown = skillsObj.skill_2_countdown || 0;
+      const cooldown = effectiveSkills.skill_2_countdown || 0;
       if (cooldown > 0) {
-        opt.textContent = `Tuyệt Kỹ: ${skillsObj.skill_2} [Hồi chiêu: ${cooldown}t]`;
+        opt.textContent = `Tuyệt Kỹ: ${effectiveSkills.skill_2} [Hồi chiêu: ${cooldown}t]`;
         opt.disabled = true;
       } else {
-        opt.textContent = `Tuyệt Kỹ: ${skillsObj.skill_2}`;
+        opt.textContent = `Tuyệt Kỹ: ${effectiveSkills.skill_2}`;
       }
       skillSelect.appendChild(opt);
     }
@@ -2790,7 +3075,9 @@ function showCombatOverlay(combatState) {
       });
 
       // Update Combat details
-      showCombatOverlay(res.combat_state);
+      if (res.combat_state) {
+        showCombatOverlay(res.combat_state);
+      }
 
       // Trigger hit animations based on HP decrease
       if (res.combat_state) {
@@ -2836,7 +3123,33 @@ function showCombatOverlay(combatState) {
       // If combat has concluded, show post victory selection or death
       if (res.is_combat_over) {
         if (res.result === "win") {
-          document.getElementById("rpgCombatEndOverlay").classList.remove("hidden");
+          if (!res.combat_state) {
+            // Special victory (Alpha or Dummy) - clean up and return to normal flow
+            hideCombatOverlay();
+            appendStoryBlock(res.story);
+            renderChoices(res.choices || [], res.rpg_state ? res.rpg_state.current_event : null);
+            renderState(res.rpg_state);
+            updatePointsDisplay();
+          } else if (res.rpg_state && res.rpg_state.dungeon_state && res.rpg_state.dungeon_state.active) {
+            try {
+              const endActionRes = await rpgFetch(`${getApiBase()}/game/rpg/combat/end-action`, {
+                method: "POST",
+                body: JSON.stringify({
+                  session_id: currentSessionId,
+                  action: "loot"
+                })
+              });
+              hideCombatOverlay();
+              appendStoryBlock(endActionRes.story);
+              renderChoices(endActionRes.choices, endActionRes.event_type);
+              renderState(endActionRes.rpg_state);
+              updatePointsDisplay();
+            } catch (err) {
+              alert("Lỗi thám hiểm tự động loot: " + err.message);
+            }
+          } else {
+            document.getElementById("rpgCombatEndOverlay").classList.remove("hidden");
+          }
         } else if (res.result === "lose") {
           alert("THẤT BẠI: Đội ngũ của bạn đã gục ngã trước sức mạnh kẻ địch!");
           triggerGameOver();
@@ -2859,11 +3172,34 @@ function hideCombatOverlay() {
 }
 
 function initCombatOverlayController() {
+  // Bind enemy info button
+  const enemyInfoBtn = document.getElementById("rpgCombatEnemyInfoBtn");
+  if (enemyInfoBtn) {
+    enemyInfoBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (gameState && gameState.combat && gameState.combat.enemy) {
+        showCharacterDetails(gameState.combat.enemy, true);
+      }
+    });
+  }
+
   // Bind post-victory buttons
   const endActionBtns = document.querySelectorAll("#rpgCombatEndOverlay .end-action-btn");
   endActionBtns.forEach(btn => {
     btn.addEventListener("click", async () => {
       const action = btn.dataset.action; // "loot", "recruit", "leave"
+      let customName = null;
+      if (action === "recruit") {
+        const enemy = (gameState && gameState.combat && gameState.combat.enemy) || (gameState && gameState.current_stranger);
+        if (enemy && enemy.rarity !== "Mythic") {
+          customName = prompt(`Nhập tên mới cho đồng hành của bạn (${enemy.race} ${enemy.char_class}):`, enemy.name);
+          if (customName === null) {
+            btn.disabled = false;
+            return;
+          }
+          customName = customName.trim();
+        }
+      }
 
       btn.disabled = true;
       try {
@@ -2871,7 +3207,8 @@ function initCombatOverlayController() {
           method: "POST",
           body: JSON.stringify({
             session_id: currentSessionId,
-            action: action
+            action: action,
+            custom_name: customName
           })
         });
 
@@ -2929,6 +3266,58 @@ function triggerGameOver() {
       window.showPage(document.getElementById("landingPage"));
     }
   });
+}
+
+function triggerGameCompleted(endingType, storyText) {
+  hideCombatOverlay();
+  hidePartyManagementModal();
+  hideShopModal();
+
+  const existingOverlay = document.getElementById("rpgGameCompletedOverlay");
+  if (existingOverlay) existingOverlay.remove();
+
+  const overlay = document.createElement("div");
+  overlay.id = "rpgGameCompletedOverlay";
+  overlay.className = "rpg-combat-overlay";
+  overlay.style.zIndex = "1006";
+
+  const isGood = endingType === "good";
+  const title = isGood ? "KHẢI HOÀN KHÚC ✨" : "HƯ VÔ VĨNH HẰNG 💀";
+  const titleColor = isGood ? "#a273ff" : "#ff2a2a";
+  const textShadow = isGood ? "rgba(162, 115, 255, 0.6)" : "rgba(255, 42, 42, 0.6)";
+
+  overlay.innerHTML = `
+    <div class="combat-end-overlay glass-panel" style="display:flex !important; flex-direction:column; align-items:center; max-width:600px; padding:40px; text-align:center;">
+      <h1 style="color:${titleColor}; font-family:var(--rpg-font-cinzel); font-size:2.8rem; margin-bottom:15px; text-shadow:0 0 15px ${textShadow}">${title}</h1>
+      <div style="font-size:0.95rem; line-height:1.6; margin-bottom:30px; max-height: 250px; overflow-y: auto; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px dashed rgba(255,255,255,0.1); width: 100%; box-sizing: border-box; text-align: left;">
+        ${storyText.replace(/\n/g, "<br>")}
+      </div>
+      <button class="primary-btn big-btn" id="rpgGameCompletedReturnBtn" style="width:100%;">
+        Quay Lại Sảnh Chính 🏛
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  overlay.querySelector("#rpgGameCompletedReturnBtn").addEventListener("click", () => {
+    overlay.remove();
+    if (typeof window.resetRpgSetupWizard === "function") {
+      window.resetRpgSetupWizard();
+    }
+    if (window.showPage) {
+      window.showPage(document.getElementById("landingPage"));
+    }
+  });
+}
+
+function checkEndingConditions(storyText) {
+  if (!storyText) return;
+  if (storyText.includes("GOOD ENDING:") || storyText.includes("✨ GOOD ENDING")) {
+    triggerGameCompleted("good", storyText);
+  } else if (storyText.includes("BAD ENDING:") || storyText.includes("💀 BAD ENDING")) {
+    triggerGameCompleted("bad", storyText);
+  }
 }
 
 // ── INITIALIZATION & GLOBAL EXPOSURE ─────────────────────────────────────────
@@ -3000,51 +3389,71 @@ function initRpgImagesController() {
   const worldImgSpinnerText = document.getElementById("rpgWorldImgSpinnerText");
 
   if (seeWorldBtn && worldImgModal) {
-    seeWorldBtn.addEventListener("click", async () => {
+    seeWorldBtn.addEventListener("click", () => {
       // Open modal
       worldImgModal.classList.remove("hidden");
+
+      const apiBase = getApiBase();
+      const baseUrl = apiBase.startsWith("http") ? apiBase : (apiBase === "/api" ? "/api" : "");
+      const cleanBaseUrl = baseUrl.replace(/\/+$/, "");
+      const fallbackUrl = `${cleanBaseUrl}/assets/generated/${currentSessionId}_see_the_world.png`;
+      const targetUrl = window.lastSeeWorldImageUrl || fallbackUrl;
+
       // Show spinner, hide image
       worldImgSpinner.style.display = "flex";
       worldImgView.style.display = "none";
       if (worldImgSpinnerText) {
-        worldImgSpinnerText.textContent = "Đang kết nối backend sinh hình ảnh thế giới...";
+        worldImgSpinnerText.textContent = "Đang tải ảnh từ bộ nhớ tạm...";
       }
 
-      try {
-        const url = `${getApiBase()}/game/rpg/image/see-world?session_id=${encodeURIComponent(currentSessionId)}`;
-        const res = await rpgFetch(url, { method: "POST" });
-        if (res && res.success && res.image_url) {
-          // Bypass browser cache by appending current timestamp
-          const apiBase = getApiBase();
-          const baseUrl = apiBase.startsWith("http") ? apiBase : (apiBase === "/api" ? "/api" : "");
-          const cleanBaseUrl = baseUrl.replace(/\/+$/, "");
-          let imgUrl = res.image_url;
-          if (!imgUrl.startsWith("http")) {
-            if (imgUrl.startsWith("/")) {
-              imgUrl = imgUrl.substring(1);
-            }
-            imgUrl = `${cleanBaseUrl}/${imgUrl}`;
-          }
-          worldImgView.src = `${imgUrl}?t=${Date.now()}`;
-          worldImgView.onload = () => {
-            worldImgSpinner.style.display = "none";
-            worldImgView.style.display = "block";
-          };
-          worldImgView.onerror = () => {
-            worldImgSpinner.style.display = "flex";
-            if (worldImgSpinnerText) {
-              worldImgSpinnerText.textContent = "Lỗi khi hiển thị hình ảnh tải về.";
-            }
-          };
-        } else {
-          throw new Error("Không nhận được đường dẫn ảnh từ server.");
-        }
-      } catch (err) {
+      const loadFromApi = async () => {
         if (worldImgSpinnerText) {
-          worldImgSpinnerText.textContent = "Lỗi sinh ảnh: " + err.message;
+          worldImgSpinnerText.textContent = "Đang kết nối backend sinh hình ảnh thế giới...";
         }
-        console.error("Lỗi xem thế giới:", err);
-      }
+        try {
+          const url = `${getApiBase()}/game/rpg/image/see-world?session_id=${encodeURIComponent(currentSessionId)}`;
+          const res = await rpgFetch(url, { method: "POST" });
+          if (res && res.success && res.image_url) {
+            let imgUrl = res.image_url;
+            if (!imgUrl.startsWith("http")) {
+              if (imgUrl.startsWith("/")) {
+                imgUrl = imgUrl.substring(1);
+              }
+              imgUrl = `${cleanBaseUrl}/${imgUrl}`;
+            }
+            window.lastSeeWorldImageUrl = imgUrl;
+            worldImgView.src = `${imgUrl}?t=${Date.now()}`;
+            worldImgView.onload = () => {
+              worldImgSpinner.style.display = "none";
+              worldImgView.style.display = "block";
+            };
+            worldImgView.onerror = () => {
+              worldImgSpinner.style.display = "flex";
+              if (worldImgSpinnerText) {
+                worldImgSpinnerText.textContent = "Lỗi khi hiển thị hình ảnh tải về.";
+              }
+            };
+          } else {
+            throw new Error("Không nhận được đường dẫn ảnh từ server.");
+          }
+        } catch (err) {
+          if (worldImgSpinnerText) {
+            worldImgSpinnerText.textContent = "Lỗi sinh ảnh: " + err.message;
+          }
+          console.error("Lỗi xem thế giới:", err);
+        }
+      };
+
+      worldImgView.src = `${targetUrl}?t=${Date.now()}`;
+      worldImgView.onload = () => {
+        worldImgSpinner.style.display = "none";
+        worldImgView.style.display = "block";
+      };
+      worldImgView.onerror = () => {
+        // Cached/fallback image failed to load, call API
+        console.log("Cached/fallback image failed to load, requesting from API...");
+        loadFromApi();
+      };
     });
 
     const hideWorldModal = () => {
@@ -3069,9 +3478,9 @@ function initRpgImagesController() {
     } else if (gameState.current_event === "stranger" && gameState.current_stranger) {
       return gameState.current_stranger;
     } else if (gameState.current_event === "monk") {
-      return { character_id: "monk", name: "monk" };
+      return gameState.current_monk;
     } else if (gameState.current_event === "merchant") {
-      return { character_id: "merchant", name: "merchant" };
+      return gameState.current_merchant;
     }
     return null;
   };
@@ -3093,7 +3502,7 @@ function initRpgImagesController() {
       e.stopPropagation();
       const char = getActiveNpc();
       if (!char) return;
-      
+
       const charId = char.character_id || char.name;
       if (npcLoading) npcLoading.classList.remove("hidden");
       try {
@@ -3121,18 +3530,18 @@ function initRpgSettingsDrawer() {
   const settingsDrawer = document.getElementById("rpgSettingsDrawer");
   const closeSettingsBtn = document.getElementById("rpgCloseSettingsBtn");
   const backdrop = document.getElementById("rpgSettingsDrawerBackdrop");
-  
+
   if (settingsBtn && settingsDrawer) {
     // Open drawer
     settingsBtn.addEventListener("click", () => {
       settingsDrawer.classList.add("active");
     });
-    
+
     // Close drawer handlers
     const closeDrawer = () => settingsDrawer.classList.remove("active");
     if (closeSettingsBtn) closeSettingsBtn.addEventListener("click", closeDrawer);
     if (backdrop) backdrop.addEventListener("click", closeDrawer);
-    
+
     // 1. Text Speed Setting
     const textSpeedSelect = document.getElementById("settingsTextSpeed");
     if (textSpeedSelect) {
@@ -3142,7 +3551,7 @@ function initRpgSettingsDrawer() {
         console.log("RPG Text Speed updated to:", currentTextSpeed);
       });
     }
-    
+
     // 2. Weather Toggle Setting
     const toggleWeatherCheckbox = document.getElementById("settingsToggleWeather");
     if (toggleWeatherCheckbox) {
@@ -3157,7 +3566,7 @@ function initRpgSettingsDrawer() {
         }
       });
     }
-    
+
     // 3. Export Save Button
     const exportBtn = document.getElementById("settingsExportSaveBtn");
     if (exportBtn) {
@@ -3166,14 +3575,14 @@ function initRpgSettingsDrawer() {
           alert("Không tìm thấy dữ liệu game hiện tại để tải về.");
           return;
         }
-        
+
         const exportData = {
           session_id: currentSessionId,
           game_state: gameState,
           saved_at: new Date().toISOString(),
           app: "AI Story Adventure RPG Mode"
         };
-        
+
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
         const downloadAnchor = document.createElement("a");
         downloadAnchor.setAttribute("href", dataStr);
@@ -3184,20 +3593,20 @@ function initRpgSettingsDrawer() {
         console.log("RPG Save exported successfully.");
       });
     }
-    
+
     // 4. Import Save Button & File Input trigger
     const importTrigger = document.getElementById("settingsImportSaveTrigger");
     const importInput = document.getElementById("settingsImportSaveInput");
-    
+
     if (importTrigger && importInput) {
       importTrigger.addEventListener("click", () => {
         importInput.click();
       });
-      
+
       importInput.addEventListener("change", (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        
+
         const reader = new FileReader();
         reader.onload = async (evt) => {
           try {
@@ -3205,7 +3614,7 @@ function initRpgSettingsDrawer() {
             if (!importedData.game_state || !importedData.session_id) {
               throw new Error("Tệp JSON không chứa session_id hoặc game_state hợp lệ.");
             }
-            
+
             const apiBase = getApiBase();
             const response = await fetch(`${apiBase}/game/rpg/session/restore`, {
               method: "POST",
@@ -3220,7 +3629,7 @@ function initRpgSettingsDrawer() {
               alert("Khôi phục save game thành công! Đang tải lại phiên chơi...");
               currentSessionId = importedData.session_id;
               gameState = importedData.game_state;
-              
+
               // Load view
               const setupPage = document.getElementById("rpgSetupPage");
               const rpgPage = document.getElementById("rpgPage");
@@ -3231,7 +3640,7 @@ function initRpgSettingsDrawer() {
                   window.showPage("rpgPage");
                 }
               }
-              
+
               renderState(gameState);
               appendStoryBlock("♻️ *Đã khôi phục thành công phiên chơi từ file save JSON của bạn! Hãy tiếp tục cuộc hành trình.*");
               closeDrawer();
@@ -3259,6 +3668,13 @@ function initRPGApp() {
   initRpgImagesController();
   initRpgSettingsDrawer();
 
+  initRpgQuestController();
+  initRpgMapController();
+  initRpgDungeonController();
+  initRpgHelpController();
+  initRpgDebugConsoleController();
+  initRpgKeyboardShortcuts();
+
   // Saves tab navigation binding
   const savesBtn = document.getElementById("rpgSavesNavBtn");
   if (savesBtn) {
@@ -3266,6 +3682,35 @@ function initRPGApp() {
       // Toggle global Saves view in main app
       const savesTabBtn = document.getElementById("savesTabBtn");
       if (savesTabBtn) savesTabBtn.click();
+    });
+  }
+
+  // Leave region button binding
+  const leaveRegionBtn = document.getElementById("rpgLeaveRegionBtn");
+  if (leaveRegionBtn) {
+    leaveRegionBtn.addEventListener("click", async () => {
+      if (!currentSessionId) return;
+      if (confirm("Bạn có chắc chắn muốn rời khỏi địa điểm này và quay lại bản đồ hoang dã?")) {
+        try {
+          const res = await rpgFetch(`${getApiBase()}/game/rpg/leave-region`, {
+            method: "POST",
+            body: JSON.stringify({
+              session_id: currentSessionId
+            })
+          });
+
+          appendStoryBlock(res.story);
+          renderChoices(res.choices, res.event_type);
+          renderState(res.rpg_state);
+          updatePointsDisplay();
+
+          if (res.notifications) {
+            res.notifications.forEach((notif) => appendLogEntry(notif));
+          }
+        } catch (err) {
+          alert("Lỗi khi rời khu vực: " + err.message);
+        }
+      }
     });
   }
 }
@@ -3296,6 +3741,1081 @@ function clearSession() {
   if (typeof window.resetRpgSetupWizard === "function") {
     window.resetRpgSetupWizard();
   }
+}
+
+let isRpgMapEditMode = false;
+
+// ── NEW FEATURE CONTROLLERS ──────────────────────────────────────────────────
+
+function updateQuestAchievementUI(rpgState) {
+  // 1. Quests UI
+  const questsList = document.getElementById("rpgQuestsList");
+  if (questsList) {
+    questsList.innerHTML = "";
+    const quests = rpgState.active_quests || [];
+    quests.forEach((q) => {
+      const qDiv = document.createElement("div");
+      qDiv.className = `quest-card ${q.completed ? "completed" : ""}`;
+      qDiv.style.background = "rgba(255, 255, 255, 0.03)";
+      qDiv.style.border = "1px solid rgba(255, 255, 255, 0.08)";
+      qDiv.style.padding = "10px";
+      qDiv.style.borderRadius = "8px";
+      qDiv.style.display = "flex";
+      qDiv.style.justifyContent = "space-between";
+      qDiv.style.alignItems = "center";
+
+      const infoDiv = document.createElement("div");
+      infoDiv.style.flex = "1";
+      infoDiv.innerHTML = `
+        <div style="font-weight: bold; font-size: 0.9rem; color: ${q.completed ? "#2ecc71" : "#fff"};">
+          ${q.completed ? "✅ " : "⏳ "}${q.description}
+        </div>
+        <div style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.6); margin-top: 4px;">
+          Tiến độ: ${q.current}/${q.target} | Thưởng: 💰 ${q.gold_reward} vàng, ✨ ${q.exp_reward} EXP
+        </div>
+      `;
+      qDiv.appendChild(infoDiv);
+
+      if (!q.completed) {
+        const refreshBtn = document.createElement("button");
+        refreshBtn.type = "button";
+        refreshBtn.className = "ghost-btn small-btn";
+        refreshBtn.textContent = "Đổi (2💰)";
+        refreshBtn.style.padding = "4px 8px";
+        refreshBtn.style.fontSize = "0.75rem";
+        refreshBtn.addEventListener("click", () => refreshQuest(q.quest_id));
+        qDiv.appendChild(refreshBtn);
+      }
+
+      questsList.appendChild(qDiv);
+    });
+  }
+
+  // 2. Achievements UI
+  const achievementsList = document.getElementById("rpgAchievementsList");
+  if (achievementsList) {
+    achievementsList.innerHTML = "";
+    const progress = rpgState.achievements_progress || {};
+    const unlocked = progress.unlocked || [];
+
+    const achievementsConfig = [
+      { id: "billionaire", name: "Tỷ phú lục địa", desc: "Tích lũy đạt 10,000 vàng.", field: "gold_accumulated", target: 10000 },
+      { id: "bounty_hunter", name: "Thợ săn tiền thưởng", desc: "Hoàn thành 300 nhiệm vụ.", field: "quests_completed", target: 300 },
+      { id: "butcher", name: "Kẻ đồ tể", desc: "Kết liễu 500 Kẻ lạ mặt.", field: "strangers_killed", target: 500 },
+      { id: "silver_warrior", name: "Dũng sĩ giáp bạc", desc: "Tiêu diệt 50 BOSS Elite 1.", field: "elite1_defeated", target: 50 },
+      { id: "gold_knight", name: "Hiệp sĩ giáp vàng", desc: "Tiêu diệt 20 BOSS Elite 2.", field: "elite2_defeated", target: 20 },
+      { id: "epic_hero", name: "Anh hùng sử thi", desc: "Tiêu diệt 1 Final BOSS Alpha.", field: "final_boss_defeated", target: 1 },
+      { id: "chatterbox", name: "Kẻ nhiều chuyện", desc: "Nói chuyện 1000 lần với NPC.", field: "conversations", target: 1000 },
+      { id: "nomad", name: "Kẻ du mục", desc: "Di chuyển 300 lần giữa các khu vực.", field: "travels", target: 300 },
+      { id: "savior", name: "Thánh nhân cứu rỗi", desc: "Tha bổng cho Kẻ lạ mặt 500 lần.", field: "strangers_spared", target: 500 }
+    ];
+
+    achievementsConfig.forEach((ach) => {
+      const isUnlocked = unlocked.includes(ach.id);
+      const current = progress[ach.field] || 0;
+      const percent = Math.min(100, (current / ach.target) * 100);
+
+      const achCard = document.createElement("div");
+      achCard.className = `achievement-card ${isUnlocked ? "unlocked" : "locked"}`;
+      achCard.style.background = isUnlocked ? "rgba(162, 115, 255, 0.1)" : "rgba(255, 255, 255, 0.02)";
+      achCard.style.border = `1px solid ${isUnlocked ? "rgba(162, 115, 255, 0.3)" : "rgba(255, 255, 255, 0.05)"}`;
+      achCard.style.padding = "10px";
+      achCard.style.borderRadius = "8px";
+      achCard.style.boxShadow = isUnlocked ? "0 0 10px rgba(162, 115, 255, 0.1)" : "none";
+
+      achCard.innerHTML = `
+        <div style="font-weight: bold; font-size: 0.85rem; color: ${isUnlocked ? "#a273ff" : "#888"};">
+          ${isUnlocked ? "🏆 " : "🔒 "}${ach.name}
+        </div>
+        <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 3px; min-height: 28px;">
+          ${ach.desc}
+        </div>
+        <div style="margin-top: 6px;">
+          <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:rgba(255,255,255,0.4); margin-bottom:2px;">
+            <span>Tiến độ</span>
+            <span>${current}/${ach.target}</span>
+          </div>
+          <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow:hidden;">
+            <div style="width: ${percent}%; height: 100%; background: ${isUnlocked ? "#a273ff" : "#888"};"></div>
+          </div>
+        </div>
+      `;
+      achievementsList.appendChild(achCard);
+    });
+  }
+}
+
+async function refreshQuest(questId) {
+  if (confirm("Bạn có chắc chắn muốn dùng 2 Vàng để làm mới nhiệm vụ này?")) {
+    try {
+      const res = await rpgFetch(`${getApiBase()}/game/rpg/quest/refresh`, {
+        method: "POST",
+        body: JSON.stringify({
+          session_id: currentSessionId,
+          quest_id: questId
+        })
+      });
+      appendLogEntry(res.message);
+      renderState(res.rpg_state);
+    } catch (err) {
+      alert("Làm mới nhiệm vụ thất bại: " + err.message);
+    }
+  }
+}
+
+function updateDungeonUI(rpgState) {
+  const dState = rpgState.dungeon_state;
+  if (dState && dState.active && dState.in_safe_zone) {
+    const dungeonModal = document.getElementById("rpgDungeonModal");
+    if (dungeonModal && dungeonModal.classList.contains("hidden")) {
+      dungeonModal.classList.remove("hidden");
+    }
+
+    // Update texts
+    document.getElementById("rpgDungeonFloorText").textContent = `Ải ${dState.floor}/3`;
+    document.getElementById("rpgDungeonGoldText").textContent = `${dState.accumulated_gold} vàng`;
+    document.getElementById("rpgDungeonExpText").textContent = `${dState.accumulated_exp} EXP`;
+
+    // Update items
+    const itemsList = document.getElementById("rpgDungeonItemsList");
+    if (itemsList) {
+      itemsList.innerHTML = "";
+      const items = dState.accumulated_items || [];
+      if (items.length === 0) {
+        itemsList.innerHTML = `<span style="font-size:0.8rem; font-style:italic; color:rgba(255,255,255,0.4);">Chưa có vật phẩm nào</span>`;
+      } else {
+        items.forEach((it) => {
+          const chip = document.createElement("span");
+          chip.className = `rpg-badge rarity rpg-glow-${it.rarity} rpg-text-${it.rarity}`;
+          chip.style.fontSize = "0.75rem";
+          chip.style.padding = "2px 6px";
+          chip.style.margin = "2px";
+          chip.textContent = it.name;
+          itemsList.appendChild(chip);
+        });
+      }
+    }
+  } else {
+    hideDungeonModal();
+  }
+}
+
+function hideDungeonModal() {
+  const dungeonModal = document.getElementById("rpgDungeonModal");
+  if (dungeonModal && !dungeonModal.classList.contains("hidden")) {
+    dungeonModal.classList.add("hidden");
+  }
+}
+
+const MAP_ENVIRONMENTS = [
+  { name: "Đồng bằng", major: "Vương đô Victoria", defaultPos: { top: 60, left: 20 }, icon: "🌾" },
+  { name: "Đồi núi", major: "Long kinh thành", defaultPos: { top: 40, left: 35 }, icon: "🏔️" },
+  { name: "Rừng rậm", major: "Vương đô Londinium", defaultPos: { top: 70, left: 45 }, icon: "🌳" },
+  { name: "Núi lửa", major: "Tòa Thành Chúa Quỷ", defaultPos: { top: 25, left: 65 }, icon: "🌋" },
+  { name: "Hoang mạc", major: "Thành Phố Tự Do", defaultPos: { top: 80, left: 75 }, icon: "🏜️" },
+  { name: "Núi tuyết", major: "Pháo Đài Mùa Đông", defaultPos: { top: 15, left: 80 }, icon: "❄️" },
+  { name: "Thiên giới", major: "Thánh Đường Tối Cao The Light Heavens", defaultPos: { top: 50, left: 85 }, icon: "👼" }
+];
+
+const MAP_GRAPH = {
+  "Đồng bằng": ["Hoang mạc", "Rừng rậm", "Đồi núi"],
+  "Hoang mạc": ["Đồng bằng", "Núi lửa", "Rừng rậm", "Núi tuyết"],
+  "Núi lửa": ["Hoang mạc"],
+  "Núi tuyết": ["Hoang mạc", "Đồi núi"],
+  "Đồi núi": ["Đồng bằng", "Núi tuyết", "Thiên giới"],
+  "Rừng rậm": ["Đồng bằng", "Hoang mạc", "Thiên giới"],
+  "Thiên giới": ["Đồi núi", "Rừng rậm"]
+};
+
+function getMapDistance(start, end) {
+  if (start === end) return 0;
+  const queue = [[start, 0]];
+  const visited = new Set([start]);
+  while (queue.length > 0) {
+    const [curr, dist] = queue.shift();
+    if (curr === end) return dist;
+    const neighbors = MAP_GRAPH[curr] || [];
+    for (const neighbor of neighbors) {
+      if (!visited.has(neighbor)) {
+        visited.add(neighbor);
+        queue.push([neighbor, dist + 1]);
+      }
+    }
+  }
+  return 1; // Fallback
+}
+
+function updateWorldMapUI(rpgState) {
+  const mapArea = document.getElementById("rpgMapArea");
+  if (!mapArea) return;
+  mapArea.innerHTML = "";
+
+  MAP_ENVIRONMENTS.forEach((env) => {
+    let pos = env.defaultPos;
+    const saved = localStorage.getItem(`rpg_map_pin_${env.name}`);
+    if (saved) {
+      try {
+        pos = JSON.parse(saved);
+      } catch (e) { }
+    }
+
+    const pin = document.createElement("div");
+    pin.className = "map-pin";
+
+    const isCurrent = (rpgState.environment === env.name) || (rpgState.environment === env.major);
+    const isUnlocked = rpgState.unlocked_fast_travel && rpgState.unlocked_fast_travel.includes(env.major);
+
+    pin.style.position = "absolute";
+    pin.style.top = `${pos.top}%`;
+    pin.style.left = `${pos.left}%`;
+    pin.style.transform = "translate(-50%, -50%)";
+
+    // Circle Pin styling
+    pin.style.width = "38px";
+    pin.style.height = "38px";
+    pin.style.borderRadius = "50%";
+    pin.style.display = "flex";
+    pin.style.alignItems = "center";
+    pin.style.justifyContent = "center";
+    pin.style.fontSize = "1.25rem";
+    pin.style.transition = "transform 0.2s ease, box-shadow 0.2s ease";
+    pin.style.zIndex = isCurrent ? "100" : "10";
+    pin.style.cursor = isRpgMapEditMode ? "grab" : "pointer";
+
+    const distance = getMapDistance(rpgState.environment, env.name);
+    const cost = distance * 100;
+
+    if (isCurrent) {
+      pin.className = "map-pin current-env-pin";
+      pin.style.background = "rgba(46, 204, 113, 0.35)";
+      pin.style.border = "2px solid #2ecc71";
+      pin.style.color = "#fff";
+      pin.style.boxShadow = "0 0 15px rgba(46, 204, 113, 0.8), inset 0 0 5px rgba(255,255,255,0.3)";
+    } else {
+      if (isUnlocked) {
+        pin.className = "map-pin unlocked-env-pin";
+        pin.style.background = "rgba(162, 115, 255, 0.35)";
+        pin.style.border = "2px solid #a273ff";
+        pin.style.color = "#fff";
+        pin.style.boxShadow = "0 0 10px rgba(162, 115, 255, 0.6)";
+      } else {
+        pin.className = "map-pin locked-env-pin";
+        pin.style.background = "rgba(15, 10, 25, 0.85)";
+        pin.style.border = "2px solid rgba(255,255,255,0.25)";
+        pin.style.color = "rgba(255,255,255,0.5)";
+        pin.style.boxShadow = "0 4px 8px rgba(0,0,0,0.5)";
+      }
+    }
+
+    pin.addEventListener("mouseenter", () => {
+      pin.style.transform = "translate(-50%, -50%) scale(1.15)";
+      if (isCurrent) {
+        pin.style.boxShadow = "0 0 20px rgba(46, 204, 113, 1), inset 0 0 8px rgba(255,255,255,0.5)";
+      } else if (isUnlocked) {
+        pin.style.boxShadow = "0 0 15px rgba(162, 115, 255, 0.9)";
+      } else {
+        pin.style.boxShadow = "0 0 12px rgba(255,255,255,0.4)";
+      }
+    });
+    pin.addEventListener("mouseleave", () => {
+      pin.style.transform = "translate(-50%, -50%) scale(1)";
+      if (isCurrent) {
+        pin.style.boxShadow = "0 0 15px rgba(46, 204, 113, 0.8), inset 0 0 5px rgba(255,255,255,0.3)";
+      } else if (isUnlocked) {
+        pin.style.boxShadow = "0 0 10px rgba(162, 115, 255, 0.6)";
+      } else {
+        pin.style.boxShadow = "0 4px 8px rgba(0,0,0,0.5)";
+      }
+    });
+
+    pin.innerHTML = `<span>${env.icon}</span>`;
+
+    // Create detailed tooltip
+    const tooltip = document.createElement("div");
+    tooltip.className = "rpg-map-pin-tooltip";
+
+    tooltip.style.position = "absolute";
+    tooltip.style.display = "none";
+    tooltip.style.width = "220px";
+    tooltip.style.background = "rgba(10, 8, 20, 0.95)";
+    tooltip.style.border = "1px solid rgba(162, 115, 255, 0.35)";
+    tooltip.style.borderRadius = "8px";
+    tooltip.style.padding = "10px 12px";
+    tooltip.style.boxShadow = "0 8px 32px rgba(0,0,0,0.8)";
+    tooltip.style.backdropFilter = "blur(12px)";
+    tooltip.style.zIndex = "2000";
+    tooltip.style.color = "#fff";
+    tooltip.style.fontFamily = "var(--rpg-font-outfit)";
+    tooltip.style.pointerEvents = "auto";
+    tooltip.style.opacity = "1";
+    tooltip.style.textAlign = "left";
+    tooltip.style.whiteSpace = "normal";
+
+    // Smart position helper to prevent overflow/clipping
+    if (pos.top < 35) {
+      tooltip.style.top = "44px";
+      tooltip.style.bottom = "auto";
+    } else {
+      tooltip.style.bottom = "44px";
+      tooltip.style.top = "auto";
+    }
+
+    if (pos.left < 25) {
+      tooltip.style.left = "0";
+      tooltip.style.transform = "none";
+    } else if (pos.left > 75) {
+      tooltip.style.right = "0";
+      tooltip.style.left = "auto";
+      tooltip.style.transform = "none";
+    } else {
+      tooltip.style.left = "50%";
+      tooltip.style.transform = "translateX(-50%)";
+    }
+
+    let statusText = "";
+    let actionBtnHtml = "";
+    if (isCurrent) {
+      statusText = `<span style="color:#2ecc71; font-weight:bold; font-size:0.75rem;">📍 Bạn đang ở đây</span>`;
+    } else if (isUnlocked) {
+      statusText = `<span style="color:#ffc837; font-size:0.75rem;">✨ Đã mở khóa dịch chuyển</span>`;
+      actionBtnHtml = `<button class="fast-travel-btn" style="margin-top:8px; padding:6px; font-size:0.75rem; width:100%; border:none; background: linear-gradient(135deg, #a273ff 0%, #ff4fa8 100%); color:white; font-weight:bold; border-radius:4px; cursor:pointer; box-shadow: 0 4px 10px rgba(162, 115, 255, 0.4); transition: filter 0.2s;" type="button">Dịch chuyển (${cost} vàng)</button>`;
+    } else {
+      statusText = `<span style="color:rgba(255,255,255,0.45); font-size:0.75rem;">🔒 Chưa mở khóa</span><div style="font-size:0.65rem; color:rgba(255,255,255,0.35); margin-top:2px;">Khám phá khu vực này để mở khóa dịch chuyển</div>`;
+    }
+
+    tooltip.innerHTML = `
+      <div style="font-weight:bold; font-size:0.9rem; color:#fff; display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+        <span>${env.icon}</span> <span>${env.name}</span>
+      </div>
+      <div style="font-size:0.78rem; color:rgba(255,255,255,0.6); margin-bottom:6px; font-style:italic;">🏰 ${env.major}</div>
+      <div style="border-top:1px solid rgba(255,255,255,0.1); padding-top:6px; margin-top:4px;">
+        ${statusText}
+      </div>
+      ${actionBtnHtml}
+    `;
+
+    pin.appendChild(tooltip);
+
+    if (actionBtnHtml) {
+      const travelBtn = tooltip.querySelector(".fast-travel-btn");
+      if (travelBtn) {
+        travelBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          triggerFastTravel(env.major, cost, env.name);
+        });
+      }
+    }
+
+    pin.addEventListener("click", (e) => {
+      if (isRpgMapEditMode) return;
+      e.stopPropagation();
+
+      const isVisible = tooltip.style.display === "block";
+
+      // Close all other tooltips first
+      const allTooltips = mapArea.querySelectorAll(".rpg-map-pin-tooltip");
+      allTooltips.forEach(t => t.style.display = "none");
+
+      if (!isVisible) {
+        tooltip.style.display = "block";
+      }
+    });
+
+    setupDragAndDrop(pin, env.name);
+    mapArea.appendChild(pin);
+  });
+
+  // Close tooltips when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".map-pin")) {
+      const allTooltips = mapArea.querySelectorAll(".rpg-map-pin-tooltip");
+      allTooltips.forEach(t => t.style.display = "none");
+    }
+  });
+}
+
+function setupDragAndDrop(pinEl, envName) {
+  let isDragging = false;
+  let startX, startY, startLeft, startTop;
+
+  pinEl.addEventListener("mousedown", (e) => {
+    if (!isRpgMapEditMode) return;
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+
+    const rect = pinEl.getBoundingClientRect();
+    const parentRect = document.getElementById("rpgMapArea").getBoundingClientRect();
+    startLeft = rect.left - parentRect.left;
+    startTop = rect.top - parentRect.top;
+
+    pinEl.style.cursor = "grabbing";
+    e.preventDefault();
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+    const parent = document.getElementById("rpgMapArea");
+    const parentRect = parent.getBoundingClientRect();
+
+    let left = startLeft + (e.clientX - startX);
+    let top = startTop + (e.clientY - startY);
+
+    left = Math.max(0, Math.min(parentRect.width - pinEl.offsetWidth, left));
+    top = Math.max(0, Math.min(parentRect.height - pinEl.offsetHeight, top));
+
+    const leftPercent = (left / parentRect.width) * 100;
+    const topPercent = (top / parentRect.height) * 100;
+
+    pinEl.style.left = `${leftPercent}%`;
+    pinEl.style.top = `${topPercent}%`;
+  });
+
+  document.addEventListener("mouseup", () => {
+    if (!isDragging) return;
+    isDragging = false;
+    pinEl.style.cursor = isRpgMapEditMode ? "grab" : "pointer";
+
+    const leftPercent = parseFloat(pinEl.style.left);
+    const topPercent = parseFloat(pinEl.style.top);
+    localStorage.setItem(`rpg_map_pin_${envName}`, JSON.stringify({ left: leftPercent, top: topPercent }));
+  });
+}
+
+async function triggerFastTravel(targetRegion, cost, targetEnv) {
+  if (gameState && gameState.combat && gameState.combat.is_active) {
+    alert("Không thể dịch chuyển nhanh khi đang trong chiến đấu!");
+    return;
+  }
+  if (gameState && gameState.dungeon_state && gameState.dungeon_state.active) {
+    alert("Không thể dịch chuyển nhanh khi đang thám hiểm hầm ngục!");
+    return;
+  }
+
+  const currentGold = (gameState && gameState.inventory && gameState.inventory.gold) || 0;
+  if (currentGold < cost) {
+    alert(`Không đủ vàng! Dịch chuyển đến [${targetRegion}] yêu cầu ${cost} vàng, nhưng bạn chỉ có ${currentGold} vàng.`);
+    return;
+  }
+
+  if (confirm(`Bạn muốn dịch chuyển nhanh đến vương đô [${targetRegion}] của vùng đất [${targetEnv}]?\nChi phí: ${cost} vàng.`)) {
+    try {
+      const res = await rpgFetch(`${getApiBase()}/game/rpg/fast-travel`, {
+        method: "POST",
+        body: JSON.stringify({
+          session_id: currentSessionId,
+          target_region: targetRegion
+        })
+      });
+
+      const mapModal = document.getElementById("rpgMapModal");
+      if (mapModal) mapModal.classList.add("hidden");
+
+      appendStoryBlock(res.story);
+      renderChoices(res.choices, res.event_type);
+      renderState(res.rpg_state);
+      updatePointsDisplay();
+
+      if (res.notifications) {
+        res.notifications.forEach((notif) => appendLogEntry(notif));
+      }
+    } catch (err) {
+      alert("Dịch chuyển nhanh thất bại: " + err.message);
+    }
+  }
+}
+
+async function triggerBackgroundSeeWorld() {
+  if (!currentSessionId) return;
+  try {
+    const url = `${getApiBase()}/game/rpg/image/see-world?session_id=${encodeURIComponent(currentSessionId)}`;
+    const res = await rpgFetch(url, { method: "POST" });
+    if (res && res.success && res.image_url) {
+      const apiBase = getApiBase();
+      const baseUrl = apiBase.startsWith("http") ? apiBase : (apiBase === "/api" ? "/api" : "");
+      const cleanBaseUrl = baseUrl.replace(/\/+$/, "");
+      let imgUrl = res.image_url;
+      if (!imgUrl.startsWith("http")) {
+        if (imgUrl.startsWith("/")) {
+          imgUrl = imgUrl.substring(1);
+        }
+        imgUrl = `${cleanBaseUrl}/${imgUrl}`;
+      }
+
+      window.lastSeeWorldImageUrl = imgUrl;
+
+      const ambient = document.getElementById("rpgAmbientOverlay");
+      if (ambient) {
+        ambient.style.backgroundImage = `url('${imgUrl}?t=${Date.now()}')`;
+        ambient.style.backgroundSize = "cover";
+        ambient.style.backgroundPosition = "center";
+        ambient.style.opacity = "0.15";
+      }
+    }
+  } catch (err) {
+    console.error("Background see-world error:", err);
+  }
+}
+
+function initRpgQuestController() {
+  const questModal = document.getElementById("rpgQuestModal");
+  const closeQuestBtn = document.getElementById("rpgCloseQuestBtn");
+  const questBackdrop = document.getElementById("rpgQuestBackdrop");
+  const questNavBtn = document.getElementById("rpgQuestBtn"); // Topbar button
+
+  if (closeQuestBtn && questModal) {
+    closeQuestBtn.addEventListener("click", () => questModal.classList.add("hidden"));
+  }
+  if (questBackdrop && questModal) {
+    questBackdrop.addEventListener("click", () => questModal.classList.add("hidden"));
+  }
+  if (questNavBtn && questModal) {
+    questNavBtn.addEventListener("click", () => {
+      questModal.classList.toggle("hidden");
+      if (!questModal.classList.contains("hidden") && gameState) {
+        updateQuestAchievementUI(gameState);
+      }
+    });
+  }
+
+  const tabQuestsBtn = document.getElementById("rpgTabQuestsBtn");
+  const tabAchievementsBtn = document.getElementById("rpgTabAchievementsBtn");
+  const tabQuestsContent = document.getElementById("rpgTabQuestsContent");
+  const tabAchievementsContent = document.getElementById("rpgTabAchievementsContent");
+
+  if (tabQuestsBtn && tabAchievementsBtn && tabQuestsContent && tabAchievementsContent) {
+    tabQuestsBtn.addEventListener("click", () => {
+      tabQuestsBtn.classList.add("active-tab-btn");
+      tabQuestsBtn.style.color = "white";
+      tabQuestsBtn.style.fontWeight = "bold";
+
+      tabAchievementsBtn.classList.remove("active-tab-btn");
+      tabAchievementsBtn.style.color = "rgba(255,255,255,0.5)";
+      tabAchievementsBtn.style.fontWeight = "normal";
+
+      tabQuestsContent.classList.remove("hidden");
+      tabAchievementsContent.classList.add("hidden");
+    });
+
+    tabAchievementsBtn.addEventListener("click", () => {
+      tabAchievementsBtn.classList.add("active-tab-btn");
+      tabAchievementsBtn.style.color = "white";
+      tabAchievementsBtn.style.fontWeight = "bold";
+
+      tabQuestsBtn.classList.remove("active-tab-btn");
+      tabQuestsBtn.style.color = "rgba(255,255,255,0.5)";
+      tabQuestsBtn.style.fontWeight = "normal";
+
+      tabAchievementsContent.classList.remove("hidden");
+      tabQuestsContent.classList.add("hidden");
+    });
+  }
+}
+
+function initRpgMapController() {
+  const mapModal = document.getElementById("rpgMapModal");
+  const closeMapBtn = document.getElementById("rpgCloseMapBtn");
+  const mapBackdrop = document.getElementById("rpgMapBackdrop");
+  const mapNavBtn = document.getElementById("rpgMapBtn"); // Topbar button
+
+  if (closeMapBtn && mapModal) {
+    closeMapBtn.addEventListener("click", () => mapModal.classList.add("hidden"));
+  }
+  if (mapBackdrop && mapModal) {
+    mapBackdrop.addEventListener("click", () => mapModal.classList.add("hidden"));
+  }
+  if (mapNavBtn && mapModal) {
+    mapNavBtn.addEventListener("click", () => {
+      if (gameState && gameState.combat && gameState.combat.is_active) return;
+      mapModal.classList.toggle("hidden");
+      if (!mapModal.classList.contains("hidden")) {
+        if (document.activeElement) document.activeElement.blur();
+        if (gameState) {
+          updateWorldMapUI(gameState);
+        }
+      }
+    });
+  }
+}
+
+function toggleRpgMapMode() {
+  isRpgMapEditMode = !isRpgMapEditMode;
+  const badge = document.getElementById("rpgMapModeBadge");
+  const subtitle = document.getElementById("rpgMapSubtitle");
+  if (isRpgMapEditMode) {
+    if (badge) {
+      badge.textContent = "Chỉnh sửa 🛠️";
+      badge.style.background = "rgba(231, 76, 60, 0.12)";
+      badge.style.borderColor = "rgba(231, 76, 60, 0.3)";
+      badge.style.color = "#e74c3c";
+    }
+    if (subtitle) {
+      subtitle.textContent = "🛠️ CHẾ ĐỘ CHỈNH SỬA: Kéo thả các vùng đất để tùy biến vị trí bản đồ thế giới của riêng bạn.";
+    }
+  } else {
+    if (badge) {
+      badge.textContent = "Xem 👁️";
+      badge.style.background = "rgba(162, 115, 255, 0.12)";
+      badge.style.borderColor = "rgba(162, 115, 255, 0.3)";
+      badge.style.color = "#b862ff";
+    }
+    if (subtitle) {
+      subtitle.textContent = "Khám phá các vùng đất. Dịch chuyển nhanh đến kiến trúc lớn đã mở khóa.";
+    }
+  }
+  if (gameState) updateWorldMapUI(gameState);
+}
+
+function initRpgDungeonController() {
+  const dungeonModal = document.getElementById("rpgDungeonModal");
+  const closeDungeonBtn = document.getElementById("rpgCloseDungeonBtn");
+  const dungeonBackdrop = document.getElementById("rpgDungeonBackdrop");
+
+  if (closeDungeonBtn && dungeonModal) {
+    closeDungeonBtn.addEventListener("click", () => dungeonModal.classList.add("hidden"));
+  }
+  if (dungeonBackdrop && dungeonModal) {
+    dungeonBackdrop.addEventListener("click", () => dungeonModal.classList.add("hidden"));
+  }
+
+  const continueBtn = document.getElementById("rpgDungeonContinueBtn");
+  const leaveBtn = document.getElementById("rpgDungeonLeaveBtn");
+
+  if (continueBtn && leaveBtn) {
+    continueBtn.addEventListener("click", () => {
+      dungeonModal.classList.add("hidden");
+      handleChoiceClick(0, "Tiếp tục thám hiểm hầm ngục", null);
+    });
+
+    leaveBtn.addEventListener("click", () => {
+      dungeonModal.classList.add("hidden");
+      handleChoiceClick(1, "Rút lui khỏi hầm ngục", null);
+    });
+  }
+}
+
+function initRpgHelpController() {
+  const helpModal = document.getElementById("rpgHelpModal");
+  const closeHelpBtn = document.getElementById("rpgCloseHelpBtn");
+  const helpBackdrop = document.getElementById("rpgHelpBackdrop");
+  const helpNavBtn = document.getElementById("rpgHelpNavBtn");
+
+  if (closeHelpBtn && helpModal) {
+    closeHelpBtn.addEventListener("click", () => helpModal.classList.add("hidden"));
+  }
+  if (helpBackdrop && helpModal) {
+    helpBackdrop.addEventListener("click", () => helpModal.classList.add("hidden"));
+  }
+  if (helpNavBtn && helpModal) {
+    helpNavBtn.addEventListener("click", () => helpModal.classList.remove("hidden"));
+  }
+}
+
+function validateDebugCommand(cmd) {
+  const c = cmd.trim();
+  if (!c) {
+    return "Vui lòng nhập câu lệnh.";
+  }
+
+  // 1. game_over
+  if (c === "game_over") return null;
+
+  // 2. gain_gold_{n}
+  let match = c.match(/^gain_gold_(\d+)$/);
+  if (match) {
+    const val = parseInt(match[1], 10);
+    if (isNaN(val) || val < 0) return "Số vàng n phải lớn hơn hoặc bằng 0.";
+    return null;
+  }
+  if (c.startsWith("gain_gold_")) {
+    return "Sai cú pháp lệnh gain_gold_{n}. Ví dụ: gain_gold_500";
+  }
+
+  // 3. gain_exp_{n}
+  match = c.match(/^gain_exp_(\d+)$/);
+  if (match) {
+    const val = parseInt(match[1], 10);
+    if (isNaN(val) || val < 0) return "Số exp n phải lớn hơn hoặc bằng 0.";
+    return null;
+  }
+  if (c.startsWith("gain_exp_")) {
+    return "Sai cú pháp lệnh gain_exp_{n}. Ví dụ: gain_exp_1000";
+  }
+
+  // 4. gain_maxlvl
+  if (c === "gain_maxlvl") return null;
+
+  // 5. revive
+  if (c === "revive") return null;
+
+  // 6. gain_{type}_{rarity}_{n}
+  match = c.match(/^gain_(weapon|armor|consume)_(mythic|legendary|epic|rare|uncommon|common)_(\d+)$/i);
+  if (match) {
+    const val = parseInt(match[3], 10);
+    if (isNaN(val) || val <= 0) return "Số lượng vật phẩm n phải lớn hơn 0.";
+    return null;
+  }
+  if (c.startsWith("gain_") && c.split("_").length >= 4) {
+    const parts = c.split("_");
+    if (["weapon", "armor", "consume"].includes(parts[1].toLowerCase())) {
+      return "Sai cú pháp lệnh gain_{type}_{rarity}_{n}. type phải là weapon/armor/consume, rarity phải là mythic/legendary/epic/rare/uncommon/common, n phải là số nguyên dương.";
+    }
+  }
+
+  // 7. go_to_{direct}_{region}
+  match = c.match(/^go_to_(M|W|E|NE|SW|SE|NW)_(main|sub|dungeon|none)$/i);
+  if (match) return null;
+  if (c.startsWith("go_to_")) {
+    return "Sai cú pháp lệnh go_to_{direct}_{region}. Hướng direct phải là M/W/E/NE/SW/SE/NW, region phải là main/sub/dungeon/none.";
+  }
+
+  // 8. meet_{character}
+  match = c.match(/^meet_(merchant|monk|npc|mythic|legendary|epic|rare|uncommon|common)$/i);
+  if (match) {
+    const target = match[1].toLowerCase();
+    if (gameState) {
+      const currentLoc = gameState.current_region;
+      if (target === "mythic") {
+        const allowedVươngĐô = [
+          "Vương đô Victoria", "Long kinh thành", "Tòa Thành Chúa Quỷ",
+          "Pháo Đài Mùa Đông", "Thánh Đường Tối Cao The Light Heavens"
+        ];
+        if (!allowedVươngĐô.includes(currentLoc)) {
+          return `Không thể gặp Mythic tại vị trí này. Mythic chỉ xuất hiện tại các vương đô lớn.`;
+        }
+      }
+
+      if (currentLoc === "Hang tối") {
+        if (["merchant", "monk", "npc", "epic", "rare", "mythic"].includes(target)) {
+          return `Vị trí Hang tối không hỗ trợ gặp ${target}. (Chỉ cho phép Legendary, Uncommon, Common)`;
+        }
+      }
+    }
+    return null;
+  }
+  if (c.startsWith("meet_")) {
+    return "Sai cú pháp lệnh meet_{character}. Nhân vật/độ hiếm phải là merchant/monk/npc hoặc mythic/legendary/epic/rare/uncommon/common.";
+  }
+
+  // 9. recruit_{race}_{class}_{gender}
+  match = c.match(/^recruit_(valkyrie|angel|devil|elf|royalty|orc|goblin|human)_(defender|guard|caster|sniper|supporter)_(male|female)$/i);
+  if (match) {
+    const race = match[1].toLowerCase();
+    const cls = match[2].toLowerCase();
+
+    const raceClasses = {
+      valkyrie: ["defender", "guard", "caster", "sniper"],
+      angel: ["caster", "supporter"],
+      devil: ["defender", "caster"],
+      elf: ["sniper", "supporter"],
+      royalty: ["guard", "supporter"],
+      orc: ["defender", "guard"],
+      goblin: ["guard", "sniper"],
+      human: ["defender", "guard", "caster", "sniper", "supporter"]
+    };
+
+    const allowed = raceClasses[race] || [];
+    if (!allowed.includes(cls)) {
+      return `Chủng tộc ${race.toUpperCase()} không thể có lớp nhân vật ${cls.toUpperCase()}. Lớp hợp lệ: ${allowed.map(x => x.toUpperCase()).join(", ")}.`;
+    }
+    return null;
+  }
+  if (c.startsWith("recruit_")) {
+    return "Sai cú pháp lệnh recruit_{race}_{class}_{gender}. race phải là valkyrie/angel/devil/elf/royalty/orc/goblin/human, class phải là defender/guard/caster/sniper/supporter, gender phải là male/female.";
+  }
+
+  // 10. found_item
+  if (c === "found_item") return null;
+
+  // 11. gain_keys
+  if (c === "gain_keys") return null;
+
+  // 12. good_ending
+  if (c === "good_ending") return null;
+
+  // 13. bad_ending
+  if (c === "bad_ending") return null;
+
+  // 14. continue_ending
+  if (c === "continue_ending") return null;
+
+  // 15. combat_{type}
+  match = c.match(/^combat_(kill|recruit|forgive)$/i);
+  if (match) {
+    if (!gameState || !gameState.combat || !gameState.combat.is_active) {
+      return "Lệnh này chỉ có thể sử dụng khi đang chiến đấu.";
+    }
+    const type = match[1].toLowerCase();
+    if ((type === "recruit" || type === "forgive") && gameState.dungeon_state && gameState.dungeon_state.active) {
+      return "Lệnh combat_recruit và combat_forgive không áp dụng trong Hầm ngục.";
+    }
+    return null;
+  }
+
+  // 16. dummy_combat and dummy_*
+  if (c === "dummy_combat") return null;
+  if (c === "dummy_kill" || c === "dummy_reset" || c === "dummy_recharge" || c === "dummy_revive" || c === "dummy_restore") {
+    if (!gameState || !gameState.combat || !gameState.combat.is_active || gameState.combat.enemy.character_id !== "dummy") {
+      return "Lệnh này chỉ có thể sử dụng khi đang đấu tập với Dummy.";
+    }
+    return null;
+  }
+
+  match = c.match(/^dummy_drain_(\d+)$/);
+  if (match) {
+    if (!gameState || !gameState.combat || !gameState.combat.is_active || gameState.combat.enemy.character_id !== "dummy") {
+      return "Lệnh này chỉ có thể sử dụng khi đang đấu tập với Dummy.";
+    }
+    const n = parseInt(match[1], 10);
+    if (isNaN(n) || n < 1 || n >= 100) return "Tỷ lệ n phải nằm trong khoảng từ 1 đến 99.";
+    return null;
+  }
+
+  match = c.match(/^dummy_drain_party_(\d+)$/);
+  if (match) {
+    if (!gameState || !gameState.combat || !gameState.combat.is_active || gameState.combat.enemy.character_id !== "dummy") {
+      return "Lệnh này chỉ có thể sử dụng khi đang đấu tập với Dummy.";
+    }
+    const n = parseInt(match[1], 10);
+    if (isNaN(n) || n < 1 || n >= 100) return "Tỷ lệ n phải nằm trong khoảng từ 1 đến 99.";
+    return null;
+  }
+
+  // 17. boss_e1_{character}_combat
+  match = c.match(/^boss_e1_(medusa|goblin|werewolf|dracula|golem)_combat$/i);
+  if (match) return null;
+
+  // 18. boss_e2_{character}_combat
+  match = c.match(/^boss_e2_(fishman|devil|dragon|undead)_combat$/i);
+  if (match) return null;
+
+  // 19. final_boss_combat
+  if (c === "final_boss_combat") return null;
+
+  return "Không nhận diện được lệnh debug. Vui lòng kiểm tra lại cú pháp.";
+}
+
+function initRpgDebugConsoleController() {
+  const debugModal = document.getElementById("rpgDebugConsoleModal");
+  const closeBtn = document.getElementById("rpgCloseDebugConsoleBtn");
+  const backdrop = document.getElementById("rpgDebugConsoleBackdrop");
+  const submitBtn = document.getElementById("rpgSubmitDebugBtn");
+  const inputEl = document.getElementById("rpgDebugInput");
+  const errorEl = document.getElementById("rpgDebugError");
+  const successEl = document.getElementById("rpgDebugSuccess");
+
+  if (closeBtn && debugModal) {
+    closeBtn.addEventListener("click", () => debugModal.classList.add("hidden"));
+  }
+  if (backdrop && debugModal) {
+    backdrop.addEventListener("click", () => debugModal.classList.add("hidden"));
+  }
+
+  async function handleSubmit() {
+    if (!currentSessionId) {
+      if (errorEl) {
+        errorEl.textContent = "Không tìm thấy session game đang chạy.";
+        errorEl.style.display = "block";
+      }
+      return;
+    }
+    const cmd = inputEl.value.trim();
+    if (errorEl) errorEl.style.display = "none";
+    if (successEl) successEl.style.display = "none";
+
+    const validationError = validateDebugCommand(cmd);
+    if (validationError) {
+      if (errorEl) {
+        errorEl.textContent = validationError;
+        errorEl.style.display = "block";
+      }
+      return;
+    }
+
+    try {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Đang thực thi...";
+
+      const res = await rpgFetch(`${getApiBase()}/game/rpg/debug/command`, {
+        method: "POST",
+        body: JSON.stringify({
+          session_id: currentSessionId,
+          command: cmd
+        })
+      });
+
+      if (successEl) {
+        successEl.textContent = "Thực thi lệnh debug thành công!";
+        successEl.style.display = "block";
+      }
+
+      // Sync state and render
+      if (res.rpg_state) {
+        renderState(res.rpg_state);
+        if (!res.rpg_state.combat || !res.rpg_state.combat.is_active) {
+          hideCombatOverlay();
+        }
+      }
+
+      // Append narrative log
+      if (res.story) {
+        appendStoryBlock(res.story);
+      }
+
+      // If narrative choices are returned, render them
+      if (res.choices && res.choices.length > 0) {
+        renderChoices(res.choices, res.rpg_state ? res.rpg_state.current_event : null);
+      }
+
+      // Clear input
+      inputEl.value = "";
+
+      // Close modal after brief delay to show success
+      setTimeout(() => {
+        debugModal.classList.add("hidden");
+      }, 800);
+
+    } catch (err) {
+      if (errorEl) {
+        errorEl.textContent = "Lỗi thực thi: " + err.message;
+        errorEl.style.display = "block";
+      }
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Thực thi lệnh";
+    }
+  }
+
+  if (submitBtn && inputEl) {
+    submitBtn.addEventListener("click", handleSubmit);
+    inputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        handleSubmit();
+        e.preventDefault();
+      }
+    });
+  }
+}
+
+function initRpgKeyboardShortcuts() {
+  document.addEventListener("keydown", (e) => {
+    const rpgPage = document.getElementById("rpgPage");
+    if (!rpgPage || !rpgPage.classList.contains("active")) {
+      return;
+    }
+
+    const key = e.key.toUpperCase();
+    const mapModal = document.getElementById("rpgMapModal");
+    const isMapOpen = mapModal && !mapModal.classList.contains("hidden");
+
+    // If map modal is open, prioritize map hotkeys even if input is focused
+    if (isMapOpen) {
+      if (key === "E") {
+        toggleRpgMapMode();
+        e.preventDefault();
+        return;
+      }
+      if (key === "M" || e.key === "Escape") {
+        mapModal.classList.add("hidden");
+        e.preventDefault();
+        return;
+      }
+    }
+
+    const activeEl = document.activeElement;
+    if (activeEl && (
+      activeEl.tagName === "INPUT" ||
+      activeEl.tagName === "TEXTAREA" ||
+      activeEl.isContentEditable
+    )) {
+      return;
+    }
+
+    if (key === "T") {
+      const debugModal = document.getElementById("rpgDebugConsoleModal");
+      if (debugModal) {
+        debugModal.classList.toggle("hidden");
+        if (!debugModal.classList.contains("hidden")) {
+          const input = document.getElementById("rpgDebugInput");
+          if (input) {
+            input.value = "";
+            setTimeout(() => input.focus(), 50);
+          }
+          const errDiv = document.getElementById("rpgDebugError");
+          const succDiv = document.getElementById("rpgDebugSuccess");
+          if (errDiv) errDiv.style.display = "none";
+          if (succDiv) succDiv.style.display = "none";
+        }
+      }
+      e.preventDefault();
+    }
+
+    if (key === "Q") {
+      const questModal = document.getElementById("rpgQuestModal");
+      if (questModal) {
+        questModal.classList.toggle("hidden");
+        if (!questModal.classList.contains("hidden") && gameState) {
+          updateQuestAchievementUI(gameState);
+        }
+      }
+      e.preventDefault();
+    }
+
+    if (key === "M") {
+      if (gameState && gameState.combat && gameState.combat.is_active) {
+        return;
+      }
+      if (mapModal) {
+        mapModal.classList.toggle("hidden");
+        if (!mapModal.classList.contains("hidden")) {
+          if (document.activeElement) document.activeElement.blur();
+          if (gameState) {
+            updateWorldMapUI(gameState);
+          }
+        }
+      }
+      e.preventDefault();
+    }
+
+    if (key === "E") {
+      if (mapModal && !mapModal.classList.contains("hidden")) {
+        toggleRpgMapMode();
+      }
+      e.preventDefault();
+    }
+
+    if (key === "I") {
+      const container = document.querySelector(".rpg-grid-container");
+      if (container) {
+        container.classList.toggle("player-hidden");
+      }
+      e.preventDefault();
+    }
+
+    if (key === "N") {
+      const container = document.querySelector(".rpg-grid-container");
+      if (container) {
+        container.classList.toggle("npc-hidden");
+      }
+      e.preventDefault();
+    }
+
+    if (key === "S") {
+      const seeWorldBtn = document.getElementById("rpgSeeWorldBtn");
+      if (seeWorldBtn) {
+        seeWorldBtn.click();
+      }
+      e.preventDefault();
+    }
+
+    if (e.key === "?") {
+      const helpModal = document.getElementById("rpgHelpModal");
+      if (helpModal) {
+        helpModal.classList.toggle("hidden");
+      }
+      e.preventDefault();
+    }
+  });
 }
 
 // Expose to window namespace for main app integration

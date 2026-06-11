@@ -94,8 +94,8 @@ class Settings(BaseSettings):
         prov = self.text_provider.lower().strip()
         if prov == "round_robin":
             return (
-                f"round_robin(gemini:{self.gemini_model},"
-                f"groq:{self.groq_model},"
+                f"round_robin(groq:{self.groq_model},"
+                f"gemini:{self.gemini_model},"
                 f"ollama:{self.ollama_model})"
             )
         if prov == "openai":

@@ -18,11 +18,12 @@ class RPGTurnRequest(BaseModel):
 class RPGPromptTurnRequest(BaseModel):
     session_id: str
     player_input: str = Field(min_length=1, max_length=4000)
-    target_words: int = Field(default=600, ge=100, le=2000)
+    target_words: int = Field(default=100, ge=100, le=2000)
 
 class RPGEventActionRequest(BaseModel):
     session_id: str
     action: str  # Action name (e.g. "Trò chuyện", "Nhận phước lành", "Tạm biệt", "Tấn công", "Xem hàng hóa", "Tránh xung đột", "Thu thập")
+    custom_name: str | None = None
 
 class RPGCombatActionRequest(BaseModel):
     session_id: str
@@ -38,10 +39,23 @@ class RPGShopBuyRequest(BaseModel):
 class RPGShopBuyMercRequest(BaseModel):
     session_id: str
     merc_index: int
+    custom_name: str | None = None
 
 class RPGShopSellRequest(BaseModel):
     session_id: str
     item_id: str
+
+class RPGQuestRefreshRequest(BaseModel):
+    session_id: str
+    quest_id: str
+
+class RPGFastTravelRequest(BaseModel):
+    session_id: str
+    target_region: str
+
+class RPGLeaveRegionRequest(BaseModel):
+    session_id: str
+
 
 class RPGPartySwapRequest(BaseModel):
     session_id: str
@@ -66,7 +80,7 @@ class RPGTurnResponse(BaseModel):
 class RPGCombatResponse(BaseModel):
     session_id: str
     combat_log: list[str]
-    combat_state: dict[str, Any]
+    combat_state: dict[str, Any] | None = None
     is_combat_over: bool = False
     result: str | None = None  # "win" / "lose" / None
     story: str | None = None
