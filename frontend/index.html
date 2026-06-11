@@ -8,9 +8,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=JetBrains+Mono:wght@400;500&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=JetBrains+Mono:wght@400;500&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=player-app-38" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=player-app-41" />
   <link rel="stylesheet" href="rpg_style.css?v=5" />
   <!-- Primary Meta Tags -->
   <meta name="title" content="AI Story Adventure" />
@@ -1489,6 +1492,34 @@
                   </p>
                 </div>
               </button>
+
+              <button type="button" class="about-mode-tab-btn" data-mode="rpg">
+                <span class="tab-badge">03</span>
+                <div class="tab-btn-content">
+                  <h3>
+                    <span class="lang-en">RPG Mode</span>
+                    <span class="lang-vi">Chế độ Nhập vai</span>
+                  </h3>
+                  <p>
+                    <span class="lang-en">Turn-based tactical combat, party management, and level-up system.</span>
+                    <span class="lang-vi">Chiến đấu theo lượt, quản lý tổ đội và nâng cấp sức mạnh.</span>
+                  </p>
+                </div>
+              </button>
+
+              <button type="button" class="about-mode-tab-btn" data-mode="creator">
+                <span class="tab-badge">04</span>
+                <div class="tab-btn-content">
+                  <h3>
+                    <span class="lang-en">Creator Mode</span>
+                    <span class="lang-vi">Chế độ Sáng tạo</span>
+                  </h3>
+                  <p>
+                    <span class="lang-en">Forge custom world seeds, lore entries, and write questions for players.</span>
+                    <span class="lang-vi">Thiết lập thế giới tùy chỉnh, xây dựng truyền thuyết và câu hỏi phụ.</span>
+                  </p>
+                </div>
+              </button>
             </div>
 
             <div class="about-modes-terminal-preview glass-panel">
@@ -1997,76 +2028,42 @@
           <div class="trust-hero-orbit trust-hero-orbit-two"></div>
 
           <div class="trust-hero-copy">
-            <p class="eyebrow">Trust & Safety</p>
-            <h1>Clear rules for a living AI story world.</h1>
+            <p class="eyebrow">Tin cậy & An toàn</p>
+            <h1>Quy tắc rõ ràng cho thế giới cốt truyện AI.</h1>
             <p>
-              This page explains how AI Story Adventure handles data, AI-generated content,
-              player conduct, and support requests.
-            </p>
-            <p class="trust-vi">
-              Trang này giải thích cách AI Story Adventure xử lý dữ liệu, nội dung do AI tạo,
-              quy tắc sử dụng và yêu cầu hỗ trợ/xóa dữ liệu.
+              Trang này giải thích cách hệ thống xử lý dữ liệu người chơi, nội dung do AI tạo ra, quy tắc ứng xử và các cam kết về an toàn thông tin trong khuôn khổ đồ án tốt nghiệp này.
             </p>
           </div>
 
           <div class="trust-actions">
             <button id="trustBackToLoginBtn" type="button" class="ghost big-btn">
-              Back to Login
+              Quay lại Đăng nhập
             </button>
             <button id="trustHomeBtn" type="button" class="primary-btn big-btn">
-              Continue
+              Tiếp tục Trải nghiệm
             </button>
           </div>
         </section>
 
         <section class="trust-section glass-panel">
           <div class="trust-section-heading">
-            <p class="eyebrow">Privacy Policy</p>
-            <h2>What we collect and why</h2>
+            <p class="eyebrow">Chính sách Bảo mật</p>
+            <h2>Thu thập và xử lý dữ liệu</h2>
           </div>
 
-          <div class="trust-language-grid">
-            <article>
-              <h3>English</h3>
+          <div class="trust-language-grid" style="grid-template-columns: 1fr;">
+            <article style="grid-column: span 1;">
               <p>
-                AI Story Adventure uses Firebase Authentication to identify your account,
-                including your email, display name, avatar, provider, and account metadata when available.
+                Hệ thống sử dụng dịch vụ <strong>Firebase Authentication</strong> để xác thực tài khoản người chơi (gồm địa chỉ email, tên hiển thị, ảnh đại diện và thông tin định danh cơ bản khác).
               </p>
               <p>
-                When you create or save a story, the app stores your sessions, world profile,
-                story summaries, important facts, choices, and messages needed to continue the story.
-                Manual save controls whether a story appears in History.
+                Khi bạn khởi tạo hoặc lưu trữ tiến trình chơi, cơ sở dữ liệu <strong>Cloud Firestore</strong> sẽ lưu lại thông tin phiên chơi (session), hồ sơ thế giới, tóm tắt câu chuyện, các sự kiện quan trọng và lịch sử tin nhắn để duy trì mạch truyện liên tục.
               </p>
               <p>
-                The backend may store safe AI usage metadata such as user id, session id, action,
-                provider/model, success/error state, latency, estimated or actual token counts,
-                and points spent. This is used for cost control, abuse prevention, and debugging.
+                Để tối ưu hóa mạch truyện dài, hệ thống tích hợp <strong>Cơ sở dữ liệu Vector (Qdrant/ChromaDB)</strong> nhằm lưu trữ và truy xuất các nhúng (embeddings) ký ức dài hạn một cách nhất quán dựa trên ngữ cảnh phiên chơi.
               </p>
               <p>
-                ChromaDB/vector memory can store story memory so long sessions keep continuity.
-                Admin tools are designed to show metadata and short previews, not full conversation logs.
-              </p>
-            </article>
-
-            <article lang="vi">
-              <h3>Tiếng Việt</h3>
-              <p>
-                AI Story Adventure dùng Firebase Authentication để xác định tài khoản của bạn,
-                gồm email, tên hiển thị, ảnh đại diện, nhà cung cấp đăng nhập và metadata tài khoản nếu có.
-              </p>
-              <p>
-                Khi bạn tạo hoặc lưu truyện, ứng dụng lưu session, hồ sơ thế giới, tóm tắt truyện,
-                sự kiện quan trọng, lựa chọn và tin nhắn cần thiết để tiếp tục câu chuyện.
-                Chỉ truyện đã bấm Save mới hiện trong History.
-              </p>
-              <p>
-                Backend có thể lưu metadata an toàn về việc dùng AI như user id, session id, hành động,
-                provider/model, trạng thái thành công/lỗi, độ trễ, token ước tính hoặc thực tế,
-                và điểm đã tiêu. Dữ liệu này dùng để kiểm soát chi phí, chống lạm dụng và debug.
-              </p>
-              <p>
-                ChromaDB/vector memory có thể lưu ký ức truyện để session dài giữ được mạch truyện.
-                Công cụ admin được thiết kế để xem metadata và preview ngắn, không hiển thị toàn bộ hội thoại.
+                Chúng tôi thu thập dữ liệu sử dụng AI (ID người dùng, ID phiên chơi, số lượng token tiêu thụ, độ trễ phản hồi, số điểm tiêu tốn) để phục vụ mục đích kiểm soát chi phí API, giám sát hiệu năng hệ thống và gỡ lỗi (debugging).
               </p>
             </article>
           </div>
@@ -2074,30 +2071,18 @@
 
         <section class="trust-section glass-panel">
           <div class="trust-section-heading">
-            <p class="eyebrow">Terms of Service</p>
-            <h2>Player responsibilities</h2>
+            <p class="eyebrow">Điều khoản Sử dụng</p>
+            <h2>Trách nhiệm của người chơi</h2>
           </div>
 
-          <div class="trust-language-grid">
-            <article>
-              <h3>English</h3>
+          <div class="trust-language-grid" style="grid-template-columns: 1fr;">
+            <article style="grid-column: span 1;">
               <ul class="trust-list">
-                <li>Do not spam, abuse rate limits, or intentionally waste AI resources.</li>
-                <li>Do not attempt to jailbreak, bypass safety rules, or attack the backend.</li>
-                <li>Do not use the app for illegal, harmful, harassing, or exploitative content.</li>
-                <li>Accounts may be banned or limited for abuse, and the site may enter maintenance mode.</li>
-                <li>Points, rate limits, and manual save rules may be used to control cost and reliability.</li>
-              </ul>
-            </article>
-
-            <article lang="vi">
-              <h3>Tiếng Việt</h3>
-              <ul class="trust-list">
-                <li>Không spam, lạm dụng giới hạn, hoặc cố tình làm tốn tài nguyên AI.</li>
-                <li>Không cố jailbreak, vượt luật an toàn, hoặc tấn công backend.</li>
-                <li>Không dùng app cho nội dung vi phạm pháp luật, gây hại, quấy rối hoặc bóc lột.</li>
-                <li>Tài khoản có thể bị ban/giới hạn nếu lạm dụng, và web có thể bật chế độ bảo trì.</li>
-                <li>Hệ thống điểm, rate limit và manual save có thể được dùng để kiểm soát chi phí và độ ổn định.</li>
+                <li>Không spam, thực hiện các hành vi tấn công hoặc cố tình gây lãng phí tài nguyên API của hệ thống.</li>
+                <li>Nghiêm cấm mọi nỗ lực vượt rào (jailbreak), tấn công prompt injection hoặc phá hoại bộ lọc kiểm duyệt từ ngữ (Safety Filter).</li>
+                <li>Không sử dụng ứng dụng để tạo ra các nội dung vi phạm pháp luật Việt Nam, kích động bạo lực, quấy rối hoặc bôi nhọ người khác.</li>
+                <li>Tài khoản vi phạm có thể bị hạn chế truy cập hoặc khóa vĩnh viễn nhằm đảm bảo sự ổn định chung của dịch vụ.</li>
+                <li>Hệ thống áp dụng cơ chế Điểm số (Points) và Giới hạn lượt chơi hàng ngày để duy trì tính công bằng và cân bằng chi phí vận hành.</li>
               </ul>
             </article>
           </div>
@@ -2105,32 +2090,17 @@
 
         <section class="trust-section glass-panel">
           <div class="trust-section-heading">
-            <p class="eyebrow">AI Content Notice</p>
-            <h2>Generated stories need human judgment</h2>
+            <p class="eyebrow">Nội dung do AI tạo dựng</p>
+            <h2>Tuyên bố miễn trừ trách nhiệm</h2>
           </div>
 
-          <div class="trust-language-grid">
-            <article>
-              <h3>English</h3>
+          <div class="trust-language-grid" style="grid-template-columns: 1fr;">
+            <article style="grid-column: span 1;">
               <p>
-                Story text, choices, world details, and character events may be generated by AI.
-                AI output can be inaccurate, inconsistent, unexpected, or inappropriate.
+                Toàn bộ văn bản cốt truyện, hình ảnh minh họa và các tùy chọn hành động đều được dệt nên tự động bởi mô hình Trí tuệ nhân tạo (AI). Nội dung do AI tạo ra có thể không chính xác, thiếu nhất quán, hoặc xuất hiện những chi tiết bất ngờ nằm ngoài tầm kiểm soát của nhà phát triển.
               </p>
               <p>
-                The app is for entertainment and creative writing. AI output is not professional,
-                medical, legal, financial, or safety advice.
-              </p>
-            </article>
-
-            <article lang="vi">
-              <h3>Tiếng Việt</h3>
-              <p>
-                Nội dung truyện, lựa chọn, chi tiết thế giới và sự kiện nhân vật có thể do AI tạo.
-                Kết quả AI có thể sai, thiếu nhất quán, bất ngờ hoặc không phù hợp.
-              </p>
-              <p>
-                Ứng dụng phục vụ giải trí và sáng tác. Nội dung AI không phải lời khuyên chuyên môn,
-                y tế, pháp lý, tài chính hoặc an toàn.
+                Ứng dụng được thiết kế hoàn toàn cho mục đích học thuật, giải trí và sáng tác nghệ thuật. Các thông tin hoặc lời khuyên do AI đưa ra trong cốt truyện không có giá trị thay thế cho các lời khuyên chuyên môn về y tế, pháp lý, tài chính hoặc an toàn thực tế.
               </p>
             </article>
           </div>
@@ -2138,40 +2108,24 @@
 
         <section class="trust-section trust-contact glass-panel">
           <div class="trust-section-heading">
-            <p class="eyebrow">Contact & Data Deletion</p>
-            <h2>Support and deletion requests</h2>
+            <p class="eyebrow">Liên hệ & Yêu cầu Xóa dữ liệu</p>
+            <h2>Hỗ trợ người dùng</h2>
           </div>
 
-          <div class="trust-language-grid">
-            <article>
-              <h3>English</h3>
+          <div class="trust-language-grid" style="grid-template-columns: 1fr;">
+            <article style="grid-column: span 1;">
               <p>
-                To request support, report abuse, or ask for account/story data deletion,
-                email us from the account address when possible.
+                Nếu bạn cần hỗ trợ kỹ thuật, báo cáo hành vi lạm dụng, hoặc có nhu cầu xóa toàn bộ dữ liệu tài khoản và lịch sử câu chuyện đã lưu trên hệ thống, xin vui lòng gửi email yêu cầu trực tiếp về địa chỉ:
               </p>
               <a class="trust-email-link"
                 href="mailto:caoban170106@gmail.com?subject=AI%20Story%20Adventure%20Support%20Request">
                 caoban170106@gmail.com
               </a>
             </article>
-
-            <article lang="vi">
-              <h3>Tiếng Việt</h3>
-              <p>
-                Để yêu cầu hỗ trợ, báo cáo lạm dụng hoặc yêu cầu xóa tài khoản/dữ liệu truyện,
-                hãy gửi email bằng địa chỉ tài khoản nếu có thể.
-              </p>
-              <a class="trust-email-link"
-                href="mailto:caoban170106@gmail.com?subject=AI%20Story%20Adventure%20Data%20Deletion">
-                caoban170106@gmail.com
-              </a>
-            </article>
           </div>
 
           <p class="trust-disclaimer">
-            This baseline notice is provided for product transparency and is not a substitute for professional legal
-            advice.
-            Thông báo cơ bản này nhằm minh bạch sản phẩm và không thay thế tư vấn pháp lý chuyên nghiệp.
+            Thông báo này được cung cấp nhằm minh bạch hóa hoạt động vận hành của đồ án tốt nghiệp "AI Story Adventure" và không thay thế cho các văn bản pháp lý chuyên nghiệp.
           </p>
         </section>
       </div>
@@ -3221,7 +3175,7 @@
         style="border: 0; border-top: 1px solid var(--border-accent); margin-bottom: 1rem; opacity: 0.3;" />
 
       <div id="storyReaderContent" class="story-log novel-reader story-reader-content"
-        style="flex: 1; overflow-y: auto; padding-right: 0.5rem; text-align: left; max-height: 50vh;">
+        style="flex: 1; overflow-y: auto; padding-right: 0.5rem; text-align: left; max-height: calc(85vh - 300px);">
         <!-- Story paragraphs will go here -->
       </div>
 
@@ -3809,7 +3763,7 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
   <script src="config.js?v=config-refresh-3"></script>
-  <script type="module" src="app.js?v=player-app-refresh-2"></script>
+  <script type="module" src="app.js?v=player-app-refresh-6"></script>
   <script type="module" src="rpg_app.js?v=7"></script>
 </body>
 

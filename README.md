@@ -1,93 +1,153 @@
-# AI Story Adventure
+# 🌟 AI Story Adventure: Hệ Thống Phiêu Lưu & Tương Tác Cốt Truyện AI Sinh Bản
 
-AI Story Adventure is a cinematic AI storytelling app with Adventure, Novel, History, Firebase auth, admin controls, usage/rate limits, and ChromaDB memory.
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![HTML5](https://img.shields.io/badge/Frontend-HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](#)
+[![CSS3](https://img.shields.io/badge/Styling-CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)](#)
+[![JavaScript](https://img.shields.io/badge/Logic-JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](#)
+[![Qdrant](https://img.shields.io/badge/VectorDB-Qdrant-red?style=for-the-badge&logo=qdrant&logoColor=white)](https://qdrant.tech/)
+[![Docker](https://img.shields.io/badge/Container-Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Cloudflare](https://img.shields.io/badge/Proxy-Cloudflare-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://www.cloudflare.com/)
 
-## Quick Start
+Hệ thống ứng dụng web tương tác câu chuyện thế hệ mới, tích hợp Trí tuệ Nhân tạo sinh bản (Generative AI) để dệt nên các thế giới phiêu lưu độc bản. Dự án kết hợp giữa công nghệ lưu trữ ký ức vector thông minh (Vector Memory Database) và hệ thống gameplay nhập vai sâu sắc.
 
-Backend:
+---
 
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-source venv/bin/activate
+## 🗺️ Bản Đồ Thế Giới Game RPG
+![Bản đồ thế giới RPG](frontend/assets/RPG_world_map_v2.png)
+*Bản đồ thế giới giả tưởng được tự động tích hợp trong Chế độ RPG*
+
+---
+
+## 🚀 Tính Năng Nổi Bật
+
+### 1. Bốn Chế Độ Chơi Đa Dạng (4 Gameplay Modes)
+*   **Novel Mode (Tiểu Thuyết Tương Tác)**: Trải nghiệm đọc truyện có hình minh họa sinh động từ AI. Từng chương truyện được dệt nên dựa trên các lựa chọn rẽ nhánh sâu sắc của người chơi.
+*   **Adventure Mode (Phiêu Lưu Chữ)**: Chế độ Text-Adventure cổ điển nhưng thông minh hơn. AI đóng vai trò làm Quản trò (Dungeon Master) dẫn dắt bạn qua những vùng đất bí ẩn.
+*   **RPG Mode (Nhập Vai RPG)**:
+    *   Hệ thống Quản lý Tổ đội (Party Management) với các thuộc tính Chỉ số, Cấp độ, Phẩm chất (Rarity) chuẩn xác.
+    *   Hệ thống Bản đồ, Nhiệm vụ (Quests), Phó bản (Dungeons) và tính năng dịch chuyển nhanh (Fast Travel).
+    *   Hệ thống Chiến đấu theo lượt (Turn-based Combat) kết hợp Cửa hàng thương nhân (Merchant Shop) mua bán vật phẩm bằng Vàng.
+*   **Creator Mode (Sáng Tạo Thế Giới)**: Công cụ dành cho các tác giả tự do thiết lập cốt truyện gốc, mô tả thế giới, bối cảnh nhân vật và xuất bản lên thư viện cộng đồng (Discover).
+
+### 2. Trình Đọc Sách Discover Book Reader Tối Ưu
+*   Giao diện đọc sách premium với phông chữ serif tinh tế, hỗ trợ hiển thị tiếng Việt hoàn chỉnh không lỗi dấu.
+*   Hiệu ứng kính mờ (Glassmorphic Opaque Backdrop) giúp người dùng tập trung hoàn toàn vào nội dung câu chuyện, tránh bị rối mắt bởi giao diện nền.
+*   Nội dung hội thoại phân tách chương rõ ràng, lồng ghép trực quan các hộp quyết định của người chơi.
+
+### 3. Hệ Thống Ký Ức Vector (Vector Memory)
+*   Sử dụng cơ sở dữ liệu vector **Qdrant** và **ChromaDB** để ghi nhớ các mốc sự kiện quan trọng trong quá trình chơi của bạn.
+*   AI có thể truy hồi lại các quyết định trước đó của người chơi để phát triển mạch truyện tiếp theo một cách logic và nhất quán, khắc phục giới hạn context window của các LLM thông thường.
+
+### 4. Cơ Chế Trust & Safety (An Toàn Học Thuật)
+*   Tích hợp bộ lọc kiểm duyệt (Safety Filter) bảo mật cấp độ cao nhằm chống Prompt Injection hoặc các nội dung không phù hợp.
+*   Bảo mật tài khoản người chơi tích hợp hệ thống xác thực **Firebase Authentication**.
+
+---
+
+## 📸 Hình Ảnh Thế Giới Trong Game
+Để mang lại trải nghiệm nhập vai chân thực nhất, người chơi có thể khám phá nhiều thế giới độc đáo:
+
+| Vùng đất Hollow Sea | Vương quốc Sunless Realm | Khối ký ức thế giới |
+|:---:|:---:|:---:|
+| ![Hollow Sea](frontend/assets/world-hollow-sea.png) | ![Sunless Realm](frontend/assets/world-sunless-realm.png) | ![World Memory](frontend/assets/world-memory.png) |
+
+---
+
+## 🛠️ Công Nghệ Sử Dụng
+
+### Frontend
+*   **Core**: HTML5, Vanilla JavaScript (ES6 Modules)
+*   **Styling**: Vanilla CSS3 (Giao diện tối màu Glassmorphism cao cấp)
+*   **Hiệu ứng**: GSAP & ScrollTrigger cho các chuyển động mượt mà
+*   **Auth**: Firebase Client SDK
+
+### Backend
+*   **Framework**: FastAPI (Python 3.10+)
+*   **Database**: Qdrant / ChromaDB (Vector Search), SQLite (Local data)
+*   **Authentication**: Firebase Admin SDK
+*   **LLM Integration**: Google Gemini API / OpenAI API
+
+---
+
+## 📂 Cấu Trúc Dự Án
+
+```text
+ai-story-tnt/
+├── app/                  # Backend code (FastAPI)
+│   ├── api/              # Các cổng định tuyến HTTP API (endpoints)
+│   ├── domain/           # Định nghĩa Model dữ liệu (Pydantic / RPG models)
+│   ├── services/         # Logic xử lý chính (Gemini, RPG Engine, Safety Filter)
+│   └── main.py           # File khởi chạy server Backend
+├── frontend/             # Giao diện Client (HTML, CSS, JS)
+│   ├── assets/           # Hình ảnh thế giới, bản đồ, biểu tượng
+│   ├── app.js            # Điều phối logic ứng dụng Client chính
+│   ├── rpg_app.js        # Logic điều khiển giao diện game RPG
+│   ├── index.html        # Giao diện chính của game
+│   └── style.css         # Hệ thống định kiểu CSS toàn cục
+├── deploy/               # Cấu hình Deploy (Coolify, Docker)
+├── requirements.txt      # Thư viện Python dependencies
+├── package.json          # Quản lý thư viện JS (nếu có)
+└── .gitignore            # Cấu hình bỏ qua các tệp không cần thiết
 ```
 
-Frontend:
+---
 
-```bash
-cd frontend
-python -m http.server 5500
-```
-uvicorn app.main:app --reload --port 8002 --host 0.0.0.0
-python3 -m http.server 5500
-Open:
+## 💻 Hướng Dẫn Cài Đặt & Chạy Cục Bộ
 
-- Player: `http://localhost:5500`
-- Admin: `http://localhost:5500/admin.html`
+### 1. Thiết Lập Backend (Python)
 
-The frontend reads `frontend/config.js` for the backend URL. Local default:
+1.  Di chuyển vào thư mục dự án và khởi tạo môi trường ảo (virtual environment):
+    ```bash
+    python -m venv venv
+    venv\Scripts\activate      # Trên Windows
+    source venv/bin/activate    # Trên macOS/Linux
+    ```
 
-```js
-API_BASE: "http://127.0.0.1:8000"
-```
+2.  Cài đặt các thư viện cần thiết:
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-## API
+3.  Tạo tệp `.env` dựa trên tệp cấu hình mẫu và điền API keys của bạn:
+    ```bash
+    cp .env.example .env
+    ```
+    *Cấu hình các API key cần thiết như `GEMINI_API_KEY`, cấu hình Firebase Admin SDK JSON, và đường dẫn tới Qdrant.*
 
-- `POST /game/start`
-- `POST /game/turn`
-- `GET /game/{session_id}`
-- `GET /game/sessions`
-- `GET /game/worlds`
-- `GET /status`
-- `GET /admin/me`
+4.  Khởi chạy server backend:
+    ```bash
+    uvicorn app.main:app --reload --port 8002
+    ```
 
-## Configuration Notes
+### 2. Thiết Lập Frontend
 
-For local testing before configuring Firebase/API keys:
+1.  Bạn chỉ cần khởi chạy một server tĩnh để phục vụ thư mục `frontend/`. 
+2.  Nếu dùng VS Code, bạn có thể nhấn chuột phải vào `frontend/index.html` và chọn **Open with Live Server** (mặc định chạy ở cổng `5500`).
+3.  Truy cập vào địa chỉ: `http://127.0.0.1:5500/index.html` trên trình duyệt để trải nghiệm game.
 
-```env
-TEXT_PROVIDER=mock
-USE_LOCAL_STORE_IF_FIREBASE_MISSING=true
-```
+---
 
-OpenAI:
+## 🚢 Hướng Dẫn Deploy (PaaS Coolify & Cloudflare)
 
-```env
-TEXT_PROVIDER=openai
-TEXT_MODEL=gpt-4o-mini
-OPENAI_API_KEY=...
-```
+Dự án hỗ trợ deploy tự động thông qua **Coolify** kết hợp dịch vụ proxy bảo mật **Cloudflare Tunnel**:
 
-Gemini:
+1.  **Coolify**: Cấu hình tệp `docker-compose` hoặc Dockerfile trong thư mục `deploy/` để build ứng dụng.
+2.  **Cloudflare Tunnel**:
+    *   Mở cấu hình tunnel cục bộ để trỏ tên miền chính tới cổng Docker:
+        ```bash
+        nano /root/.cloudflared/config.yml
+        ```
+    *   Đồng bộ cấu hình và khởi động lại dịch vụ Cloudflare daemon:
+        ```bash
+        sudo cp /root/.cloudflared/config.yml /etc/cloudflared/config.yml
+        sudo systemctl restart cloudflared
+        ```
+    *   Kiểm tra kết nối SSL và định tuyến:
+        ```bash
+        curl -Iv https://aistoryadventure.xyz
+        ```
 
-```env
-TEXT_PROVIDER=gemini
-TEXT_MODEL=gemini-2.5-flash
-GEMINI_API_KEY=...
-```
+---
 
-Ollama:
-
-```env
-TEXT_PROVIDER=ollama
-TEXT_MODEL=llama3:latest
-OLLAMA_BASE_URL=http://127.0.0.1:11434
-```
-
-Firebase uses `FIREBASE_CREDENTIALS_PATH` or `FIREBASE_SERVICE_ACCOUNT_JSON`.
-
-## Production
-
-Use:
-
-- `.env.production.example` for backend environment shape.
-- `deploy/frontend/config.production.js.example` for production API base.
-- `DEPLOYMENT.md` for VPS/domain/Caddy notes.
-- `deploy/README.md` for the copy-ready VPS deployment pack.
-- `BACKUP_RESTORE.md` for local runtime backup and restore steps.
-
-Never commit real `.env`, Firebase admin JSON, or provider API keys.
-
-Before public beta, check `/status` and the admin Readiness panel. Production should use `APP_ENV=production` and should reach readiness `ok`.
+## 🛡️ Bản Quyền & Giấy Phép
+Dự án được phát triển nhằm mục đích phục vụ nghiên cứu công nghệ AI tương tác thế hệ mới. Toàn bộ mã nguồn và tài nguyên thiết kế thuộc bản quyền nhóm phát triển dự án AI Story Adventure.

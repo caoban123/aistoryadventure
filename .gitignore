@@ -14,3 +14,20 @@ restore_rollback/
 *.firebase-adminsdk-*.json
 aistoryadventure-*-firebase-adminsdk-*.json
 firebase-admin.json
+scratch/
+SHOP THƯƠNG NHÂN/
+update/
+/*.docx
+/*.pdf
+/curl_*.txt
+/*.png
+/scratch_*.py
+/SHOP THƯƠNG NHÂN.zip
+/walkthrough.md
+/implementation_plan.md
+/frontend/assets/generated/*
+/README1.md
+/README2.md
+/README.2md
+/README[0-9]*.md
+/README.[0-9]*.md

@@ -29,8 +29,8 @@
   --radius-md: 18px;
   --radius-lg: 26px;
   --radius-xl: 34px;
-  --font-display: "Cinzel", "Be Vietnam Pro", serif;
-  --font-body: 'Lora', Georgia, serif;
+  --font-display: "Cinzel", "Playfair Display", "Be Vietnam Pro", serif;
+  --font-body: 'Lora', 'Merriweather', 'Be Vietnam Pro', Georgia, serif;
   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
 }
 
@@ -4496,11 +4496,11 @@ body[data-page="novelCharacterPage"] #particleCanvas {
 
   background:
     radial-gradient(circle at 50% 20%,
-      rgba(224, 173, 82, 0.12),
-      transparent 36%),
-    rgba(0, 0, 0, 0.72);
+      rgba(224, 173, 82, 0.08),
+      transparent 45%),
+    rgba(8, 8, 10, 0.96);
 
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(15px);
 }
 
 .create-modal-panel {
@@ -4832,6 +4832,12 @@ body[data-page="novelCharacterPage"] #particleCanvas {
   color: #c7a7ff;
   background: rgba(155, 108, 255, 0.14);
   border-color: rgba(155, 108, 255, 0.24);
+}
+
+.save-mode.rpg {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.14);
+  border-color: rgba(255, 107, 107, 0.24);
 }
 
 .save-date {
@@ -13004,4 +13010,81 @@ body[data-theme="sepia"] .preset-detail-hero {
   100% {
     box-shadow: none;
   }
+}
+
+/* Story Reader (Discover Mode) styling mimicking the exported book style */
+.story-reader-content {
+  font-family: 'Merriweather', Georgia, serif !important;
+  line-height: 1.95 !important;
+  color: #fcfaf2 !important; /* Premium cream text for dark modal */
+  padding: 0 1rem 0 0 !important; /* Align left with header, keep right padding for scrollbar */
+  background: transparent !important;
+  border: none !important;
+}
+
+.story-reader-content h2 {
+  font-family: 'Playfair Display', serif !important;
+  font-size: 1.6rem !important;
+  color: #ffc837 !important; /* Golden title */
+  margin-top: 2rem !important;
+  margin-bottom: 1rem !important;
+  border-bottom: 1px solid rgba(255, 200, 55, 0.2);
+  padding-bottom: 0.5rem;
+}
+
+.story-reader-content h2:first-of-type {
+  margin-top: 0 !important;
+}
+
+.story-reader-content .chapter-content {
+  margin-bottom: 1.5rem !important;
+  font-size: 1.05rem !important;
+  white-space: pre-wrap !important;
+}
+
+.story-reader-content .user-decision {
+  background: rgba(255, 200, 55, 0.06) !important;
+  border-left: 3px solid #ffc837 !important;
+  padding: 0.8rem 1.2rem !important;
+  margin: 1.5rem 0 !important;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.95rem !important;
+}
+
+.story-reader-content .user-decision strong {
+  color: #ffc837 !important;
+}
+
+.story-reader-content .user-decision em {
+  font-style: italic;
+  color: #e0e0e0;
+}
+
+.story-reader-content .book-illustration {
+  margin: 1.5rem auto !important;
+  text-align: center;
+  max-width: 100%;
+}
+
+.story-reader-content .book-illustration img {
+  max-width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.story-reader-content .illustration-caption {
+  font-size: 0.8rem !important;
+  color: var(--muted);
+  margin-top: 0.5rem !important;
+  font-style: italic;
+}
+
+/* Modal Header styling for Story Reader to support Vietnamese diacritics */
+#storyReaderTitle {
+  font-family: 'Playfair Display', Georgia, serif !important;
+}
+
+#storyReaderDesc {
+  font-family: 'Merriweather', Georgia, serif !important;
 }

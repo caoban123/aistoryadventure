@@ -4695,6 +4695,7 @@ function updateSavesStats() {
 }
 
 function getSessionMode(session) {
+  if (session?.mode === "rpg") return "rpg";
   return session?.mode === "novel" ? "novel" : "adventure";
 }
 
@@ -4818,7 +4819,7 @@ function renderSavedSessions() {
 
     const mode = getSessionMode(session);
     const modeLabel =
-      mode === "novel" ? "Novel" : "Adventure";
+      mode === "novel" ? "Novel" : (mode === "rpg" ? "RPG" : "Adventure");
 
     const preview =
       getSessionPreview(session) ||
@@ -5526,7 +5527,7 @@ function renderSavePreview(data) {
   const session = data?.session || {};
   const messages = Array.isArray(data?.messages) ? data.messages : [];
   const mode = getSessionMode(session);
-  const modeLabel = mode === "novel" ? "Novel" : "Adventure";
+  const modeLabel = mode === "novel" ? "Novel" : (mode === "rpg" ? "RPG" : "Adventure");
   const title = session.title || "Untitled Story";
   const foundation =
     data?.foundation_text ||
@@ -8192,6 +8193,22 @@ function initAboutInteractiveFeatures() {
         { text: "Configuring Tone: Cyber-noir, melancholic, rich prose", type: "system" },
         { text: "> The neon rain fell like liquid silver, painting the narrow alleys of District 9 in fractured reflections. Detective Kael adjusted his collar, the hum of his cybernetic arm a faint companion in the dark. 'She was here,' he muttered to the database. 'I can still feel the heat signature.'", type: "story" },
         { text: "> Direction: Detail Kael's next move or describe the approaching footsteps?", type: "system" }
+      ],
+      rpg: [
+        { text: "Initializing Tactical RPG Engine...", type: "system" },
+        { text: "Registering Party: Sang (Defender), Lemuen (Sniper)...", type: "system" },
+        { text: "Active Region: Frostfire Peak | Party Gold: 240", type: "system" },
+        { text: "> A howling blizzard strikes. Out of the white mist, a level 5 Orc Chieftain raises his battleaxe, roaring a bloodthirsty challenge.", type: "story" },
+        { text: "[1] Order Sang to raise his Aegis Shield (Block 50% dmg)", type: "choice" },
+        { text: "[2] Trigger Lemuen's Special Skill: Pierce Shot (Deals magic dmg)", type: "choice" },
+        { text: "[3] Open Inventory: Consume health potion (+50 HP)", type: "choice" }
+      ],
+      creator: [
+        { text: "Initializing Cosmic Seed Editor...", type: "system" },
+        { text: "Parsing Custom Lore Document: 'The Deep Core'", type: "system" },
+        { text: "Generating World Profile and Opening Narrative...", type: "system" },
+        { text: "> AI generates prologue: Deep within the Rust-Valleys steampunk metropolis, the colossal gears grind endlessly. The faction leaders seek the Eternal Hearth you carry.", type: "story" },
+        { text: "> Enter custom choice or type next direction for the AI...", type: "system" }
       ]
     },
     vi: {
@@ -8210,6 +8227,22 @@ function initAboutInteractiveFeatures() {
         { text: "Định cấu hình Văn phong: U tối, điện ảnh, giàu cảm xúc", type: "system" },
         { text: "> Cơn mưa neon rơi như bạc lỏng, nhuộm những con hẻm nhỏ của Quận 9 trong những hình ảnh phản chiếu vỡ vụn. Thám tử Kael chỉnh lại cổ áo, tiếng cánh tay cơ khí kêu rì rì nhỏ trong bóng tối. 'Cô ấy đã ở đây,' anh lẩm bẩm với cơ sở dữ liệu. 'Tôi vẫn cảm nhận được nhiệt lượng.'", type: "story" },
         { text: "> Định hướng tiếp theo: Mô tả chi tiết hành động của Kael hay mô tả tiếng bước chân đang đến gần?", type: "system" }
+      ],
+      rpg: [
+        { text: "Đang khởi tạo Động cơ Nhập vai...", type: "system" },
+        { text: "Đăng ký Đội hình: Sang (Hộ vệ), Lemuen (Xạ thủ)...", type: "system" },
+        { text: "Khu vực: Đỉnh Núi Băng Hỏa | Vàng của đội: 240", type: "system" },
+        { text: "> Cơn bão tuyết gầm rú. Từ trong màn sương trắng, một Orc Thủ lĩnh cấp 5 vung rìu chiến, gầm vang thách thức đầy khát máu.", type: "story" },
+        { text: "[1] Lệnh cho Sang giương Khiên Aegis (Chặn 50% sát thương)", type: "choice" },
+        { text: "[2] Kích hoạt kỹ năng Lemuen: Bắn xuyên phá (Sát thương ma pháp)", type: "choice" },
+        { text: "[3] Mở kho đồ: Sử dụng thuốc hồi máu (+50 HP)", type: "choice" }
+      ],
+      creator: [
+        { text: "Đang khởi tạo Trình chỉnh sửa hạt giống...", type: "system" },
+        { text: "Trích xuất tài liệu truyền thuyết: 'Lõi sâu thế giới'", type: "system" },
+        { text: "Đang kiến tạo Hồ sơ thế giới và Lời mở đầu...", type: "system" },
+        { text: "> AI dệt nên khởi đầu: Sâu trong thành phố hơi nước Rust-Valleys, những bánh răng khổng lồ quay không ngừng. Thủ lĩnh các phe đang săn lùng Trái tim Vĩnh cửu bạn mang theo.", type: "story" },
+        { text: "> Nhập lựa chọn tự do hoặc định hướng tiếp theo để AI tiếp tục...", type: "system" }
       ]
     }
   };
@@ -8558,6 +8591,15 @@ async function openStoryReaderModal(world) {
   descEl.textContent = world.description;
   contentEl.innerHTML = "<p class='muted'>Loading story logs...</p>";
 
+  // Force inline styles to override any cached CSS
+  contentEl.style.setProperty("background", "transparent", "important");
+  contentEl.style.setProperty("background-color", "transparent", "important");
+  contentEl.style.setProperty("border", "none", "important");
+  contentEl.style.setProperty("border-radius", "0px", "important");
+  contentEl.style.setProperty("box-shadow", "none", "important");
+  contentEl.style.setProperty("padding", "0 1.5rem 3.5rem 0", "important");
+  contentEl.style.setProperty("max-height", "calc(85vh - 300px)", "important");
+
   modal.classList.remove("hidden");
   modal.classList.add("visible");
 
@@ -8575,13 +8617,35 @@ async function openStoryReaderModal(world) {
       if (storyMessages.length === 0) {
         contentEl.innerHTML = "<p class='muted'>No messages found in this story log.</p>";
       } else {
+        let chapterCount = 1;
         storyMessages.forEach(msg => {
-          const p = document.createElement("p");
-          p.className = msg.role === "user" ? "user-message-log" : "ai-message-log";
-          p.innerHTML = msg.role === "user" 
-            ? `<strong>&gt; ${escapeHtml(msg.content)}</strong>` 
-            : escapeHtml(msg.content).replace(/\n/g, "<br/>");
-          contentEl.appendChild(p);
+          if (msg.role === "ai") {
+            let imgHTML = "";
+            if (msg.image_url) {
+              imgHTML = `
+                <div class="book-illustration">
+                  <img src="${msg.image_url}" alt="Illustration for Chapter ${chapterCount}" />
+                  <div class="illustration-caption">Scene Illustration</div>
+                </div>
+              `;
+            }
+            const div = document.createElement("div");
+            div.className = "chapter";
+            div.innerHTML = `
+              <h2>Chương ${chapterCount}</h2>
+              ${imgHTML}
+              <div class="chapter-content">${escapeHtml(msg.content).replace(/\n/g, "<br>")}</div>
+            `;
+            contentEl.appendChild(div);
+            chapterCount++;
+          } else if (msg.role === "user") {
+            const div = document.createElement("div");
+            div.className = "user-decision";
+            div.innerHTML = `
+              <strong>Quyết định của bạn:</strong> <em>"${escapeHtml(msg.content)}"</em>
+            `;
+            contentEl.appendChild(div);
+          }
         });
       }
     } else {

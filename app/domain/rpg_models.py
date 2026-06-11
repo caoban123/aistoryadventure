@@ -117,6 +117,9 @@ class RPGCharacter(BaseModel):
                 "Common": 50
             }
             self.max_level = rarity_max.get(self.rarity, 50)
+            # Ensure level doesn't exceed max_level for this rarity
+            if self.level > self.max_level:
+                self.level = self.max_level
         return self
 
 # ==================== PARTY ====================
