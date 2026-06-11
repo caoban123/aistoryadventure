@@ -21,7 +21,7 @@ Hệ thống ứng dụng web tương tác câu chuyện thế hệ mới, tích
 ## 🚀 Tính Năng Nổi Bật
 
 ### 1. Bốn Chế Độ Chơi Đa Dạng (4 Gameplay Modes)
-*   **Novel Mode (Tiểu Thuyết Tương Tác)**: Trải nghiệm đọc truyện có hình minh họa sinh động từ AI. Từng chương truyện được dệt nên dựa trên các lựa chọn rẽ nhánh sâu sắc của người chơi.
+*   **Novel Mode (Tiểu Thuyết Tương Tác)**: Trải nghiệm đọc truyện . Từng chương truyện được dệt nên dựa trên các lựa chọn rẽ nhánh sâu sắc của người chơi.
 *   **Adventure Mode (Phiêu Lưu Chữ)**: Chế độ Text-Adventure cổ điển nhưng thông minh hơn. AI đóng vai trò làm Quản trò (Dungeon Master) dẫn dắt bạn qua những vùng đất bí ẩn.
 *   **RPG Mode (Nhập Vai RPG)**:
     *   Hệ thống Quản lý Tổ đội (Party Management) với các thuộc tính Chỉ số, Cấp độ, Phẩm chất (Rarity) chuẩn xác.
