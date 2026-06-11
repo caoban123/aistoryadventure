@@ -4,7 +4,7 @@ import sys
 # Set output encoding to UTF-8
 sys.stdout.reconfigure(encoding='utf-8')
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "http://127.0.0.1:8001"
 HEADERS = {
     "Authorization": "Bearer guest",
     "Content-Type": "application/json"

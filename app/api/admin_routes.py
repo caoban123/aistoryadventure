@@ -279,3 +279,45 @@ async def admin_delete_announcement(
     return {"message": "Đã xóa thông báo thành công."}
 
 
+class SafetyTestRequest(BaseModel):
+    text: str
+
+
+@router.get("/safety/rules")
+async def admin_get_safety_rules(user=Depends(require_admin_user)):
+    await admin_service.ensure_user_state(user)
+    from app.services.safety_service import SafetyFilterService
+    sf = SafetyFilterService()
+    return sf.categories
+
+
+@router.post("/safety/test")
+async def admin_test_safety(
+    request: SafetyTestRequest,
+    user=Depends(require_admin_user)
+):
+    await admin_service.ensure_user_state(user)
+    from app.services.safety_service import SafetyFilterService
+    sf = SafetyFilterService()
+    try:
+        sf.validate_input(request.text, "Văn bản kiểm thử")
+        censored = sf.censor_output(request.text)
+        is_censored = censored != request.text
+        return {
+            "safe": True,
+            "censored_result": censored,
+            "was_censored": is_censored,
+            "message": "Văn bản hợp lệ và an toàn."
+        }
+    except ValueError as exc:
+        censored = sf.censor_output(request.text)
+        return {
+            "safe": False,
+            "error_detail": str(exc),
+            "censored_result": censored,
+            "was_censored": True,
+            "message": "Văn bản vi phạm quy chuẩn nội dung."
+        }
+
+
+

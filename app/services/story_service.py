@@ -416,14 +416,35 @@ class StoryService:
 
         return {"success": True}
     def _parse_json(self, raw: str) -> dict:
+        import re
+        import json
         from app.ai.output_parser import _try_parse_json
-        data = _try_parse_json(raw)
-        if isinstance(data, dict):
-            return data
-        text = raw.strip()
-        if text.startswith("```"):
-            text = text.replace("```json", "").replace("```", "").strip()
-        return json.loads(text)
+        
+        try:
+            data = _try_parse_json(raw)
+            if isinstance(data, dict):
+                return data
+            text = raw.strip()
+            if text.startswith("```"):
+                text = text.replace("```json", "").replace("```", "").strip()
+            return json.loads(text)
+        except Exception as e:
+            print(f"Failed to parse JSON in _parse_json: {e}")
+            # Try to extract the first JSON object using a non-greedy regex
+            match = re.search(r'(\{.*?\})', raw, re.DOTALL)
+            if match:
+                try:
+                    return json.loads(match.group(1))
+                except Exception:
+                    pass
+            # Try a greedy match as final fallback
+            match_greedy = re.search(r'(\{.*\})', raw, re.DOTALL)
+            if match_greedy:
+                try:
+                    return json.loads(match_greedy.group(1))
+                except Exception:
+                    pass
+            return {}
     async def start_novel_world(
         self,
         request: NovelStartRequest,

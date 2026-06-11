@@ -82,6 +82,7 @@
         <button class="admin-tab" type="button" data-admin-tab="sessions">Phiên Chơi</button>
         <button class="admin-tab" type="button" data-admin-tab="system">Cấu Hình</button>
         <button class="admin-tab" type="button" data-admin-tab="moderation">Duyệt Thế Giới</button>
+        <button class="admin-tab" type="button" data-admin-tab="safety">Kiểm Duyệt Từ Ngữ</button>
         <button class="admin-tab" type="button" data-admin-tab="audit">Nhật Ký Tác Vụ</button>
         <button class="admin-tab" type="button" data-admin-tab="announcements">Thông Báo</button>
       </nav>
@@ -407,6 +408,52 @@
             <div id="adminAnnouncementsList" class="admin-list" aria-live="polite" style="margin-top: 15px;">
               <p class="admin-muted">Đang tải danh sách thông báo...</p>
             </div>
+          </article>
+        </section>
+      </section>
+
+      <!-- TAB PANEL: KIỂM DUYỆT TỪ NGỮ -->
+      <section class="admin-tab-panel" data-admin-panel="safety">
+        <section class="admin-grid">
+          <article class="admin-card">
+            <p class="eyebrow">Cấu hình</p>
+            <h2>Danh Sách Từ Ngữ Kiểm Duyệt</h2>
+            <p class="admin-muted" style="margin-bottom: 15px;">
+              Các từ khóa nhạy cảm, bạo lực, hoặc tục tĩu được cấu hình để tự động kiểm duyệt và lọc bỏ.
+            </p>
+            
+            <div class="safety-categories-container" style="display: flex; flex-direction: column; gap: 20px;">
+              <div>
+                <h4 style="color: var(--accent); margin-bottom: 8px;">1. Từ ngữ Bạo lực (Violence & Self-Harm)</h4>
+                <textarea id="safetyBannedViolence" readonly style="width: 100%; height: 90px; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #222; color: #fff; font-family: monospace; font-size: 0.9rem; resize: none;"></textarea>
+              </div>
+              <div>
+                <h4 style="color: var(--accent); margin-bottom: 8px;">2. Nội dung Người lớn (Adult Content & Sex)</h4>
+                <textarea id="safetyBannedAdult" readonly style="width: 100%; height: 90px; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #222; color: #fff; font-family: monospace; font-size: 0.9rem; resize: none;"></textarea>
+              </div>
+              <div>
+                <h4 style="color: var(--accent); margin-bottom: 8px;">3. Từ ngữ Thô tục (Vulgarity & Swear Words)</h4>
+                <textarea id="safetyBannedVulgarity" readonly style="width: 100%; height: 90px; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #222; color: #fff; font-family: monospace; font-size: 0.9rem; resize: none;"></textarea>
+              </div>
+            </div>
+          </article>
+          
+          <article class="admin-card">
+            <p class="eyebrow">Trình kiểm thử</p>
+            <h2>Công Cụ Kiểm Thử Safety Filter</h2>
+            <p class="admin-muted" style="margin-bottom: 15px;">
+              Nhập nội dung bất kỳ để kiểm thử xem nó có vi phạm bộ lọc từ ngữ hay không.
+            </p>
+            
+            <form id="safetyTestForm" class="admin-form">
+              <div style="margin-bottom: 15px;">
+                <label for="safetyTestInput" style="display: block; margin-bottom: 6px; font-weight: bold;">Nội dung kiểm thử:</label>
+                <textarea id="safetyTestInput" placeholder="Nhập văn bản cần kiểm thử tại đây..." required style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #444; background: #222; color: #fff; font-family: inherit; resize: vertical; height: 120px;"></textarea>
+              </div>
+              <button type="submit" class="primary-btn" style="width: 100%; padding: 10px; font-weight: bold;">Kiểm Tra Ngay</button>
+            </form>
+            
+            <div id="safetyTestResult" class="admin-output" style="margin-top: 20px; display: none; padding: 12px; border: 1px solid #444; border-radius: 6px; background: rgba(0,0,0,0.3); font-family: monospace; font-size: 0.9rem; line-height: 1.5; white-space: pre-wrap; word-break: break-all;"></div>
           </article>
         </section>
       </section>

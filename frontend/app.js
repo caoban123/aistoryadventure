@@ -3631,12 +3631,10 @@ function renderChoicesFromArray(choices = []) {
 }
 
 async function submitAction(actionText) {
-  const action = String(actionText || customAction?.value || "").trim();
+  let action = String(actionText || customAction?.value || "").trim();
 
   if (!action) {
-    setComposerStatus("Write a direction before sending.", true);
-    customAction?.focus();
-    return;
+    action = "continue";
   }
 
   if (!sessionId || isRequesting) return;
@@ -3648,6 +3646,7 @@ async function submitAction(actionText) {
     resizeComposer();
   }
 
+  let success = false;
   let turnWasCancelled = false;
 
   try {
@@ -3683,6 +3682,7 @@ async function submitAction(actionText) {
     renderChoicesFromArray(choices);
     addLocalNotification("New Turn", `Executed action: "${action.length > 30 ? action.slice(0, 30) + '...' : action}".`);
     fetchPlayerProfile();
+    success = true;
   } catch (err) {
     console.error(err);
     if (isRetryCancelledError(err)) {
@@ -3693,13 +3693,17 @@ async function submitAction(actionText) {
   } finally {
     removeChoicesLoading();
     setTurnLoading(false);
-    if (turnWasCancelled) {
+    if (!success) {
       pendingUserMessage?.remove();
       if (customAction) {
-        customAction.value = action;
+        customAction.value = action === "continue" ? "" : action;
         resizeComposer();
       }
-      setComposerStatus("AI request cancelled. You can edit and send again.");
+      setComposerStatus(
+        turnWasCancelled
+          ? "AI request cancelled. You can edit and send again."
+          : "Action failed. Please edit and try again."
+      );
     }
     updateScrollFade();
   }
@@ -8673,7 +8677,7 @@ pureReadModeBtn?.addEventListener("click", () => {
   pureReadModeBtn.classList.toggle("active", isActive);
 
   if (isActive) {
-    pureReadModeBtn.innerHTML = "Play";
+    pureReadModeBtn.innerHTML = "Continue";
     const composerStatus = document.getElementById("composerStatus");
     if (composerStatus) composerStatus.textContent = "Pure reading mode activated.";
   } else {

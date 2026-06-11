@@ -20,6 +20,7 @@ Frontend:
 cd frontend
 python -m http.server 5500
 ```
+uvicorn app.main:app --reload --port 8002 --host 0.0.0.0
 python3 -m http.server 5500
 Open:
 

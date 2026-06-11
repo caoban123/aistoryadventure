@@ -73,6 +73,13 @@ const usersList = $("adminUsersList");
 const sessionsList = $("adminSessionsList");
 const auditOutput = $("adminOutput");
 
+const safetyBannedViolence = $("safetyBannedViolence");
+const safetyBannedAdult = $("safetyBannedAdult");
+const safetyBannedVulgarity = $("safetyBannedVulgarity");
+const safetyTestForm = $("safetyTestForm");
+const safetyTestInput = $("safetyTestInput");
+const safetyTestResult = $("safetyTestResult");
+
 const maintenanceToggle = $("adminMaintenanceToggle");
 const maintenanceMessage = $("adminMaintenanceMessage");
 const pointsToggle = $("adminPointsToggle");
@@ -136,7 +143,8 @@ function setBusy(isBusy) {
 }
 
 async function requestJson(url, options = {}) {
-  const user = auth.currentUser;
+  const isBypass = window.AI_STORY_CONFIG?.BYPASS_FIREBASE;
+  const user = isBypass ? { uid: "guest", getIdToken: async () => "guest" } : auth.currentUser;
   if (!user) throw new Error("Yêu cầu đăng nhập tài khoản quản trị.");
 
   let token = await user.getIdToken(true);
@@ -233,7 +241,7 @@ async function loadDashboard() {
   });
 
   try {
-    const [overview, users, sessions, audit, usage, usageUsers, errors, submissions, announcements] = await Promise.all([
+    const [overview, users, sessions, audit, usage, usageUsers, errors, submissions, announcements, safetyRules] = await Promise.all([
       requestJson(`${API_BASE}/admin/overview`),
       safeRequest(requestJson(`${API_BASE}/admin/users?limit=100`), { items: [] }),
       safeRequest(requestJson(`${API_BASE}/admin/sessions?limit=40`), { items: [] }),
@@ -243,6 +251,7 @@ async function loadDashboard() {
       safeRequest(requestJson(`${API_BASE}/admin/errors?limit=50`), { items: [] }),
       safeRequest(requestJson(`${API_BASE}/admin/submissions`), []),
       safeRequest(requestJson(`${API_BASE}/admin/announcements`), []),
+      safeRequest(requestJson(`${API_BASE}/admin/safety/rules`), {}),
     ]);
 
     currentOverview = overview;
@@ -258,6 +267,7 @@ async function loadDashboard() {
     renderAudit(audit.items || []);
     renderSubmissions(submissions || []);
     renderAnnouncements(announcements || []);
+    renderSafetyRules(safetyRules);
     setStatus("Dữ liệu hệ thống đã được đồng bộ trực tiếp.", "ok");
   } catch (err) {
     setStatus(err.message || "Không thể tải dữ liệu quản trị.", "error");
@@ -844,6 +854,11 @@ document.querySelectorAll("[data-admin-tab]").forEach((button) => {
 onAuthStateChanged(auth, async (user) => {
   setLoginStatus("", "muted");
 
+  const isBypass = window.AI_STORY_CONFIG?.BYPASS_FIREBASE;
+  if (isBypass) {
+    user = { uid: "guest" };
+  }
+
   if (!user) {
     isAdmin = false;
     showOnly(loginView);
@@ -1005,3 +1020,49 @@ announcementForm?.addEventListener("submit", async (event) => {
     setBusy(false);
   }
 });
+
+function renderSafetyRules(rules = {}) {
+  if (safetyBannedViolence) safetyBannedViolence.value = (rules.violence || []).join("\n");
+  if (safetyBannedAdult) safetyBannedAdult.value = (rules.adult || []).join("\n");
+  if (safetyBannedVulgarity) safetyBannedVulgarity.value = (rules.vulgarity || []).join("\n");
+}
+
+safetyTestForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const text = safetyTestInput?.value?.trim() || "";
+  if (!text) return;
+
+  if (safetyTestResult) {
+    safetyTestResult.style.display = "block";
+    safetyTestResult.textContent = "Đang kiểm tra...";
+    safetyTestResult.style.color = "#aaa";
+  }
+
+  try {
+    const res = await requestJson(`${API_BASE}/admin/safety/test`, {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    });
+
+    if (safetyTestResult) {
+      if (res.safe) {
+        safetyTestResult.style.color = "#55efc4";
+        safetyTestResult.innerHTML = `<strong>Kết quả: HỢP LỆ (AN TOÀN)</strong><br/>
+<span>Văn bản không vi phạm bộ lọc nào.</span>
+${res.was_censored ? `<br/><br/><strong>Bản kiểm duyệt (censor_output):</strong><br/>${escapeHtml(res.censored_result)}` : ""}`;
+      } else {
+        safetyTestResult.style.color = "#ff7675";
+        safetyTestResult.innerHTML = `<strong>Kết quả: VI PHẠM (KHÔNG AN TOÀN)</strong><br/>
+<span>Chi tiết lỗi: ${escapeHtml(res.error_detail)}</span><br/><br/>
+<strong>Bản kiểm duyệt (censor_output):</strong><br/>
+<span>${escapeHtml(res.censored_result)}</span>`;
+      }
+    }
+  } catch (err) {
+    if (safetyTestResult) {
+      safetyTestResult.style.color = "#ff7675";
+      safetyTestResult.textContent = "Lỗi khi kiểm tra: " + (err.message || err);
+    }
+  }
+});
+
