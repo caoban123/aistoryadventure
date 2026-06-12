@@ -69,6 +69,26 @@ Hệ thống ứng dụng web tương tác câu chuyện thế hệ mới, tích
 
 ---
 
+## 🧠 Chi Tiết Các Kỹ Thuật Chuyên Sâu (Advanced Technical Details)
+
+### 1. Kiến Trúc RAG & Bộ Nhớ Dài Hạn Ngữ Nghĩa (Semantic Memory RAG Pipeline)
+*   **Vectorization (Offline Embedding):** Khi người chơi kết thúc một cảnh, hệ thống không lưu toàn bộ text thô mà dùng mô hình cục bộ `BAAI/bge-small-en-v1.5` của thư viện **FastEmbed** để sinh vector embedding 384 chiều cực nhanh và tiết kiệm chi phí tính toán.
+*   **Semantic Retrieval:** Khi người chơi gửi hành động mới, hệ thống tự động tìm kiếm Top-5 ký ức có độ tương đồng Cosine (Cosine Similarity) cao nhất trong Qdrant DB. Các ký ức này được đưa ngược vào Prompt dưới dạng ngữ cảnh quá khứ để LLM duy trì sự nhất quán của cốt truyện.
+*   **Background Memory Condensation (Tóm tắt bất đồng bộ):** Nhằm giảm độ trễ (latency) của game, quá trình tóm tắt phân cảnh và ghi nhận ký ức vào Qdrant được đẩy vào **FastAPI BackgroundTasks** chạy ngầm để người chơi không phải chờ đợi trực tiếp.
+
+### 2. Chuỗi Dự Phòng AI Tự Động (AI Fallback & Round-Robin Chain)
+*   Để đối phó với các lỗi quá tải API (Quota Exceeded / Rate Limit) hoặc sự cố đường truyền của nhà cung cấp chính (ví dụ: Google Gemini API), hệ thống sử dụng một chuỗi xử lý lỗi dự phòng (**API Exception Handler Chain**).
+*   Nếu Gemini gặp sự cố, hệ thống sẽ tự động chuyển tiếp request sang **OpenAI (GPT-4o-mini)** hoặc **Groq (LLaMA-3)** một cách mượt mà mà người chơi không hề bị ngắt quãng trải nghiệm.
+
+### 3. Bộ Máy Tính Toán RPG Tất Định (Deterministic RPG Combat Engine)
+*   Để giữ game được cân bằng và tránh các lỗi logic ngớ ngẩn do sự ngẫu nhiên của LLM, toàn bộ logic trận chiến, tính sát thương, né tránh, chí mạng và quản lý vật phẩm đều được tính toán bằng thuật toán thuần Python định sẵn (`app/services/rpg_engine.py`) dựa trên các thuộc tính của nhân vật.
+*   AI chỉ đóng vai trò nhận các dữ liệu số liệu tất định này để "dệt" thành những câu mô tả trận đánh sống động và đầy màu sắc văn học.
+
+### 4. Giao Tiếp Stream Thời Gian Thực qua Server-Sent Events (SSE)
+*   Thay vì bắt người dùng đợi hàng chục giây cho đến khi AI viết xong toàn bộ chương truyện, Backend sử dụng giao thức **SSE (Server-Sent Events)** thông qua `StreamingResponse` của FastAPI để đẩy từng từ được sinh ra về phía Client ngay lập tức, tạo hiệu ứng chữ gõ (typing effect) thời gian thực mượt mà.
+
+---
+
 ## 📂 Cấu Trúc Dự Án
 
 ```text
