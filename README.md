@@ -102,49 +102,61 @@ ai-story-tnt/
     venv\Scripts\activate      # Trên Windows
     source venv/bin/activate    # Trên macOS/Linux
     ```
-
 2.  Cài đặt các thư viện cần thiết:
     ```bash
     pip install -r requirements.txt
     ```
-
-3.  Tạo tệp `.env` dựa trên tệp cấu hình mẫu và điền API keys của bạn:
-    ```bash
-    cp .env.example .env
-    ```
-    *Cấu hình các API key cần thiết như `GEMINI_API_KEY`, cấu hình Firebase Admin SDK JSON, và đường dẫn tới Qdrant.*
-
-4.  Khởi chạy server backend:
+3.  Tạo tệp `.env` dựa trên tệp cấu hình mẫu `.env.example` và cấu hình các API Key của Gemini/OpenAI, cấu hình Firebase và Qdrant DB.
+4.  Khởi chạy server backend trên cổng `8002` (cổng API mặc định được cấu hình trong `frontend/config.js`):
     ```bash
     uvicorn app.main:app --reload --port 8002
     ```
 
 ### 2. Thiết Lập Frontend
 
-1.  Bạn chỉ cần khởi chạy một server tĩnh để phục vụ thư mục `frontend/`. 
-2.  Nếu dùng VS Code, bạn có thể nhấn chuột phải vào `frontend/index.html` và chọn **Open with Live Server** (mặc định chạy ở cổng `5500`).
-3.  Truy cập vào địa chỉ: `http://127.0.0.1:5500/index.html` trên trình duyệt để trải nghiệm game.
+1.  Khởi chạy một máy chủ tĩnh phục vụ thư mục `frontend/` ở cổng `5500`:
+    *   **Cách 1 (Sử dụng dòng lệnh Python):**
+        ```bash
+        cd frontend
+        python -m http.server 5500
+        ```
+    *   **Cách 2 (Sử dụng VS Code Live Server):** Nhấp chuột phải vào file `frontend/index.html` và chọn **Open with Live Server** (mặc định chạy ở cổng `5500`).
+2.  Truy cập vào trình duyệt:
+    *   Trang người chơi: `http://localhost:5500`
+    *   Trang quản trị (Admin Console): `http://localhost:5500/admin.html`
 
 ---
 
-## 🚢 Hướng Dẫn Deploy (PaaS Coolify & Cloudflare)
+## 🚢 Hướng Dẫn Deploy (Coolify + WSL + Cloudflare Tunnel)
 
-Dự án hỗ trợ deploy tự động thông qua **Coolify** kết hợp dịch vụ proxy bảo mật **Cloudflare Tunnel**:
+Dự án hỗ trợ deploy tự động thông qua **Coolify PaaS** chạy trên môi trường **WSL 2 (Windows Subsystem for Linux)** cục bộ, kết hợp dịch vụ proxy bảo mật **Cloudflare Tunnel**:
 
-1.  **Coolify**: Cấu hình tệp `docker-compose` hoặc Dockerfile trong thư mục `deploy/` để build ứng dụng.
-2.  **Cloudflare Tunnel**:
-    *   Mở cấu hình tunnel cục bộ để trỏ tên miền chính tới cổng Docker:
+1.  **Thiết lập Coolify trên WSL:**
+    *   Kích hoạt WSL 2 Ubuntu trên Windows và cài đặt Docker Engine.
+    *   Cài đặt Coolify bằng lệnh terminal:
         ```bash
-        nano /root/.cloudflared/config.yml
+        curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
         ```
-    *   Đồng bộ cấu hình và khởi động lại dịch vụ Cloudflare daemon:
+2.  **Cấu hình Deploy:**
+    *   Coolify lắng nghe webhook từ kho GitHub để tự động build và cập nhật (CI/CD) khi có commit mới trên nhánh `main`.
+    *   Sử dụng cấu hình chạy dịch vụ đa container từ tệp `deploy/docker-compose.yml`.
+3.  **Cloudflare Tunnel:**
+    *   Cài đặt `cloudflared` trên WSL Ubuntu để tạo đường hầm mã hóa liên kết máy chủ cục bộ với Cloudflare Edge.
+    *   Định cấu hình định tuyến tên miền phụ trong tệp `~/.cloudflared/config.yml` trỏ về các cổng tương ứng của Docker container chạy trên WSL:
+        ```yaml
+        tunnel: YOUR_TUNNEL_UUID
+        credentials-file: /root/.cloudflared/YOUR_TUNNEL_UUID.json
+
+        ingress:
+          - hostname: aistoryadventure.xyz
+            service: http://localhost:5500      # Cổng Frontend
+          - hostname: api.aistoryadventure.xyz
+            service: http://localhost:8002      # Cổng Backend FastAPI
+          - service: http_status:404
+        ```
+    *   Kích hoạt chạy daemon dịch vụ tunnel:
         ```bash
-        sudo cp /root/.cloudflared/config.yml /etc/cloudflared/config.yml
         sudo systemctl restart cloudflared
-        ```
-    *   Kiểm tra kết nối SSL và định tuyến:
-        ```bash
-        curl -Iv https://aistoryadventure.xyz
         ```
 
 ---
